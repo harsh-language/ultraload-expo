@@ -1,0 +1,23 @@
+import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
+import { drizzle, type ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
+import * as schema from './schema';
+
+export const DATABASE_NAME = 'ultraload.db';
+
+let dbInstance: ExpoSQLiteDatabase<typeof schema> | null = null;
+
+export function getDatabase(): ExpoSQLiteDatabase<typeof schema> {
+  if (!dbInstance) {
+    const expoDb = openDatabaseSync(DATABASE_NAME, {
+      enableChangeListener: true,
+    });
+    dbInstance = drizzle(expoDb, { schema });
+  }
+  return dbInstance;
+}
+
+export function createDatabase(expoDb: SQLiteDatabase): ExpoSQLiteDatabase<typeof schema> {
+  return drizzle(expoDb, { schema });
+}
+
+export type AppDatabase = ExpoSQLiteDatabase<typeof schema>;

@@ -1,0 +1,151 @@
+phase: approved
+approved_at: 2026-06-22
+product_name: "UltraLoad"
+completion_pct: 100
+taxonomy_status: current  # draft | current
+next_section: null
+ui_block_mode: null
+sections:  # each: not_started | partial | blocked | complete
+  product_overview: complete
+  feature_requirements: complete
+  user_flows: complete
+  information_architecture: complete
+  data_model: complete
+  business_rules: complete
+  state_management: complete
+  architecture_overview: complete
+  technology_stack: complete
+  ui_specifications: complete
+  component_inventory: complete
+  navigation_structure: complete
+  key_interactions: complete
+  edge_cases: complete
+  security_privacy: complete
+  analytics_measurement: complete
+  testing_strategy: complete
+  implementation_roadmap: complete
+gaps: {}
+artifacts:
+  blueprint_md:
+    path: "docs/application-blueprint/blueprint.md"
+    role: "Approved application blueprint (source of truth)"
+    coverage: strong
+  implementation_plan:
+    path: "docs/plans/2026-06-22-001-feat-ultraload-v1-implementation-plan.md"
+    role: "Staged build plan (U0–U6)"
+    coverage: strong
+  figma_screens:
+    ref: "ultraload-v1 (~40 phone screens)"
+    role: "Screen inventory; pixel specs/tokens unconfirmed"
+    coverage: partial
+  figma_components:
+    ref: "v1-components (26 component sets, Geist, dark theme, Figma variables)"
+    role: "Component names known; states/variants/token values unconfirmed"
+    coverage: partial
+  strength_standards_pdf:
+    path: "docs/Strength Standards Report.pdf"
+    ref: "male 1RM @ 75kg reference"
+    role: "Basis for non-bodyweight slider ranges; derived numbers tabulated in blueprint §6"
+    coverage: strong
+artifact_gap_analysis:
+  completed: true
+  coverage_map:
+    product_overview: { evidence: strong, missing: [] }
+    feature_requirements: { evidence: strong, missing: [] }
+    user_flows: { evidence: strong, missing: [] }
+    information_architecture: { evidence: strong, missing: [] }
+    data_model: { evidence: strong, missing: ["physical schema / table definitions (build-time)"] }
+    business_rules: { evidence: strong, missing: [] }
+    state_management: { evidence: strong, missing: [] }
+    architecture_overview: { evidence: strong, missing: [] }
+    technology_stack: { evidence: strong, missing: [] }
+    ui_specifications: { evidence: strong, missing: [] }  # tokens resolved at build time via Figma MCP (contract)
+    component_inventory: { evidence: strong, missing: [] }  # states/variants resolved at build time via Figma MCP (contract)
+    navigation_structure: { evidence: strong, missing: [] }
+    key_interactions: { evidence: strong, missing: [] }  # motion matches Figma defaults (contract)
+    edge_cases: { evidence: strong, missing: [] }
+    security_privacy: { evidence: strong, missing: [] }
+    analytics_measurement: { evidence: strong, missing: [] }
+    testing_strategy: { evidence: strong, missing: [] }
+    implementation_roadmap: { evidence: strong, missing: [] }
+  implied_gaps:
+    - id: G1
+      section: ui_specifications
+      priority: high
+      source: figma_components
+      signal: "Dark theme + Geist + Figma variables in blueprint; exact token values resolved at build via Figma MCP (Stage 0)"
+      question: "Confirm exact color, spacing, and type-scale token values from Figma variables for §10."
+      status: answered
+      resolution: "Build-time token contract (D4): tokens pulled & verified 1:1 via Figma MCP at Stage 0; not invented in blueprint."
+    - id: G2
+      section: component_inventory
+      priority: high
+      source: figma_components
+      signal: "26 component sets named; per-component states/variants not enumerated"
+      question: "Confirm states/variants (default/active/disabled/error) and variable bindings for each component set in §11."
+      status: answered
+      resolution: "Build-time contract (D4): component set fixed; states/variants/bindings resolved via Figma MCP at Stage 0."
+    - id: G3
+      section: key_interactions
+      priority: medium
+      source: figma_screens
+      signal: "Interaction intent clear; motion/transition specs absent"
+      question: "Are there motion/transition specs (sheet open, timer, chart) to capture for §13, or match Figma defaults?"
+      status: answered
+      resolution: "D4: match Figma defaults; no custom motion specs in v1."
+    - id: G4
+      section: business_rules
+      priority: high
+      source: plan_md
+      signal: "Bodyweight exercises show total weight; ranges 'recompute immediately' but recompute formula not given"
+      question: "What is the exact formula to recompute bodyweight-exercise total-weight ranges when bodyweight changes (how 70-190 @75kg ref shifts)?"
+      status: answered
+      resolution: "D1/BR18: range = [0.5x, 2x] current bodyweight, recomputed live; supersedes 75kg-ref ranges for the 3 ◊ exercises."
+    - id: G5
+      section: business_rules
+      priority: medium
+      source: plan_md
+      signal: "Glute bridge curl ceiling = 2x bodyweight, no strength standard, warm-up n/a, increment listed as 1"
+      question: "Confirm glute bridge curl uses a 1 kg increment against the 2x bodyweight ceiling (no auto warm-up)."
+      status: answered
+      resolution: "D1: glute bridge curl now matches the other 2 ◊ exercises — 0.5x-2x bw range, 1 kg increment, warm-up at total <= bodyweight (BR18/BR26)."
+    - id: G6
+      section: analytics_measurement
+      priority: low
+      source: plan_md
+      signal: "Offline personal single-user app; no telemetry mentioned"
+      question: "Confirm §16 analytics = none for v1 (no event tracking)."
+      status: answered
+      resolution: "D2: none in v1; no telemetry; success measured qualitatively."
+    - id: G7
+      section: security_privacy
+      priority: low
+      source: plan_md
+      signal: "Local-only, no login/sync; optional personal fields stored on device"
+      question: "Confirm §15 has no PII handling, at-rest encryption, or export-redaction requirements."
+      status: answered
+      resolution: "D2: local-only, no encryption beyond OS, plain/unredacted export; no PII leaves device except user-initiated share."
+    - id: G8
+      section: ui_specifications
+      priority: low
+      source: plan_md
+      signal: "No accessibility expectations stated anywhere"
+      question: "Are there accessibility expectations (text scaling, contrast, screen reader) for v1, or explicitly out of scope?"
+      status: answered
+      resolution: "D2: match Figma + respect system dynamic text scaling; full a11y out of scope for v1 (future)."
+    - id: G9
+      section: state_management
+      priority: medium
+      source: plan_md
+      signal: "Zustand chosen; store shape and SQLite/in-memory boundary not specified"
+      question: "Confirm the Zustand store shape and which state is persisted vs transient for §7."
+      status: answered
+      resolution: "D3: SQLite source of truth + Zustand write-through cache; slices profile/plan/today/settings/timer; transient = timer countdown, sheet draft, History filter."
+cross_check_pass: true
+completion_criteria_pass: true
+approved_at: null
+doc_review:
+  completed: true
+  completed_at: 2026-06-22
+  safe_auto_applied: 2
+  awaiting_user_decisions: 10

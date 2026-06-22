@@ -1,0 +1,428 @@
+---
+type: feat
+origin: docs/application-blueprint/blueprint.md
+created: 2026-06-22
+status: ready
+---
+
+# feat: UltraLoad v1 — full app implementation
+
+## Summary
+
+Build **UltraLoad**, a personal offline strength-training app (Expo + TypeScript), from an empty repo through six implementation stages aligned to the approved [application blueprint](docs/application-blueprint/blueprint.md). Each stage ends with a **device checkpoint** compared to Figma. Shared UI (bottom sheet, sliders, log rows) is built once in Stage 0–1 and reused across Work Out and History.
+
+---
+
+## Problem Frame
+
+The blueprint is approved and complete (18/18 sections). The repo has spec artifacts only — no application code yet. This plan turns blueprint §18's staged roadmap into concrete implementation units an agent or developer can execute sequentially with clear done-when criteria.
+
+---
+
+## Requirements
+
+| ID | Requirement | Blueprint trace |
+|----|-------------|-----------------|
+| R1 | Expo + TypeScript app runs on iOS and Android (Expo Go early; dev build for native modules) | §9, Stage 0 |
+| R2 | SQLite (Drizzle) persists profile, plan, workouts; Zustand write-through cache | §7, §9 |
+| R3 | Editable catalogue seed module drives all exercise metadata (BR28–BR31) | §5–6, §9 |
+| R4 | 3-tab shell: Work Out (default), History, Settings | §4, §12 |
+| R5 | Onboarding: splash → bodyweight → exercise picker → rest → warm-up → Work Out | FL1, F2 |
+| R6 | Notepad logging: Add Set sheet, record/edit/delete, warm-up rules | FL2–3, F1, F4, BR4–5, BR18, BR26–27 |
+| R7 | Rest timer (optional, 3s–5min, background notification on dev build) | FL4, F5, BR20 |
+| R8 | Settings hub: bodyweight, plan edit, warm-up, per-exercise overrides (non-◊), units | FL8, FL12, F10–11, F16 |
+| R9 | History list + session detail + edit with progress math | FL5–6, F6–7, F9, BR6–12 |
+| R10 | History chart with exercise/muscle-group filters and time ranges | FL7, F8, BR13, BR23 |
+| R11 | Export/import JSON round-trip; reset wipes and replays onboarding | FL9–11, F12–14, T22–T24 |
+| R12 | UI matches Figma 1:1 (tokens via Figma MCP at Stage 0) | §10–13 |
+| R13 | Progress math unit tests (T1–T26 per blueprint §17) | §17 |
+| R14 | No analytics, no network, local-only security posture | §15–16 |
+
+---
+
+## Key Technical Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| **Expo managed workflow + dev client** | Blueprint §9; Expo Go for early UI; dev build when charts/notifications need native modules |
+| **React Navigation (not Expo Router)** | Blueprint specifies React Navigation; tab + stack for Settings sub-screen |
+| **Drizzle + expo-sqlite** | Typed schema, migrations, single source of truth (§7) |
+| **Zustand write-through slices** | profile, plan, today, settings persisted; timer + sheet draft transient (§7) |
+| **`src/data/exercise-catalogue.ts` single seed file** | BR28–31; all pickers/sliders/charts read catalogue by id |
+| **Domain logic in `src/domain/`** | Progress math, warm-up tagging, unit conversion, range derivation — testable without UI |
+| **react-native-gifted-charts** | Blueprint §9; Expo-compatible charting |
+| **Figma MCP at Stage 0** | Pull exact tokens/component states; no invented colors/spacing (§10 build-time contract) |
+| **Jest for domain unit tests** | T1–T26; no E2E framework in v1 — device checkpoints are manual per stage |
+
+---
+
+## High-Level Technical Design
+
+```mermaid
+flowchart TB
+  subgraph ui [UI Layer]
+    Screens[Screens SCR1-17]
+    Components[Shared components §11]
+  end
+  subgraph state [State]
+    Zustand[Zustand slices write-through]
+  end
+  subgraph domain [Domain]
+    Catalogue[exercise-catalogue.ts]
+    Progress[progress math]
+    Warmup[warm-up tagging]
+    Units[unit conversion]
+  end
+  subgraph persist [Persistence]
+    SQLite[(SQLite via Drizzle)]
+  end
+  Screens --> Zustand
+  Zustand --> SQLite
+  Screens --> domain
+  domain --> Catalogue
+  Progress --> SQLite
+```
+
+**Data flow (set logging):** User → Add Set sheet (transient draft) → validate against catalogue → write Set to SQLite → hydrate `todaySlice` → UI re-renders grouped by exercise.
+
+**Catalogue consumption:** Every picker, slider bound, warm-up rule, and chart muscle-group calculation resolves `exerciseId` → catalogue entry. Deprecated entries excluded from pickers (BR30); orphaned ids get fallback label (BR31).
+
+---
+
+## Output Structure
+
+```text
+ultraload/
+├── app.json / app.config.ts
+├── package.json
+├── src/
+│   ├── data/
+│   │   └── exercise-catalogue.ts      # BR28–31 seed data (v1 table from blueprint §6)
+│   ├── db/
+│   │   ├── schema.ts                  # Drizzle tables E1–E7
+│   │   ├── client.ts
+│   │   └── migrations/
+│   ├── domain/
+│   │   ├── progress.ts                # BR6–13, BR8–9
+│   │   ├── warmup.ts                  # BR4–5, BR26–27
+│   │   ├── ranges.ts                  # BR14–15, BR18–19, BR25
+│   │   ├── units.ts                   # BR17
+│   │   └── catalogue.ts               # lookup, deprecated filter, orphan fallback
+│   ├── stores/
+│   │   ├── profileSlice.ts
+│   │   ├── planSlice.ts
+│   │   ├── todaySlice.ts
+│   │   ├── settingsSlice.ts
+│   │   └── timerSlice.ts
+│   ├── components/                    # mapped from Figma v1-components
+│   ├── navigation/
+│   │   └── RootNavigator.tsx
+│   ├── screens/
+│   ├── theme/                         # tokens from Figma MCP
+│   └── utils/
+├── __tests__/domain/                  # T1–T26
+└── docs/
+    ├── application-blueprint/
+    └── plans/
+```
+
+---
+
+## Scope Boundaries
+
+**In scope:** Everything in blueprint MVP (F1–F16), Stages 0–6, T1–T26 domain tests, sideload distribution notes.
+
+**Deferred to follow-up work:**
+- Full accessibility audit (VoiceOver, contrast) — out of v1 per §10
+- App Store / cloud sync / multi-user
+- 8RM, rep-budget, stall detection
+- Id-migration tooling if catalogue ids must be renamed (BR29)
+- E2E automated UI tests
+
+**Non-goals:** Female strength standards; per-exercise rest timers; exercise renaming in-app.
+
+---
+
+## Risks & Dependencies
+
+| Risk | Mitigation |
+|------|------------|
+| Figma token drift | Stage 0 + Stage 1 design gate; block Stage 2 until checkpoint passes |
+| iOS import/share quirks | Validate export/import on device in Stage 6 |
+| Background rest timer on sideloaded iOS | Defer notification validation to dev build (Stage 2 done-when) |
+| Chart library limitations | Hand-check muscle-group calcs (T4) against blueprint worked example |
+| Catalogue edits break history | BR29–31 enforced in seed schema + T25–T26 |
+
+**External dependencies:** Figma file (ultraload-v1 + v1-components), Expo SDK, dev build for notifications.
+
+---
+
+## Implementation Units
+
+### U0. Foundation + design system (Stage 0)
+
+**Goal:** Runnable app shell with persistence, catalogue, theme, and core shared components.
+
+**Requirements:** R1–R4, R12 (partial), R14
+
+**Dependencies:** None
+
+**Files:**
+- `package.json`, `app.config.ts`, `tsconfig.json`
+- `src/db/schema.ts`, `src/db/client.ts`, `src/db/migrations/`
+- `src/data/exercise-catalogue.ts`
+- `src/domain/catalogue.ts`
+- `src/navigation/RootNavigator.tsx`
+- `src/theme/tokens.ts`, `src/theme/typography.ts`
+- `src/components/` — tab bar, buttons, sliders, toggle, log row, bottom sheet shell
+- `src/stores/*.ts` (skeleton write-through wiring)
+- `src/screens/PlaceholderTabs.tsx` (temporary until U1)
+
+**Approach:**
+1. `npx create-expo-app` with TypeScript template; add Drizzle, Zustand, React Navigation, expo-sqlite.
+2. Port all 25 exercises + multipliers from blueprint §6 into `exercise-catalogue.ts` with stable ids and `deprecated?: boolean`.
+3. Define Drizzle schema for Profile, WorkoutPlan, Workout, LoggedExercise, Set, Settings overrides.
+4. Pull Figma variables via MCP → `src/theme/tokens.ts`; load Geist font.
+5. Build 3–5 core components; render on device in a smoke screen.
+
+**Test scenarios:**
+- `src/domain/catalogue.test.ts`: lookup by id; deprecated excluded from `getSelectableExercises()`; orphan fallback label (T25, T26 partial)
+- Test expectation: none for pure theme/scaffold components
+
+**Verification:**
+- App opens to 3-tab shell on device (Expo Go)
+- Restart app → profile row persists in SQLite
+- Edit catalogue display name → picker label updates without UI file changes
+- 3–5 components match Figma spacing/type/color (visual checkpoint)
+
+---
+
+### U1. Core loop slice — design gate (Stage 1)
+
+**Goal:** First-launch onboarding + log one set on Work Out main page.
+
+**Requirements:** R5, R6 (record only), R12
+
+**Dependencies:** U0
+
+**Files:**
+- `src/screens/SplashScreen.tsx` (SCR1)
+- `src/screens/onboarding/*` (SCR2–5)
+- `src/screens/WorkOutScreen.tsx` (SCR6)
+- `src/components/AddSetSheet.tsx` (SCR7)
+- `src/screens/onboarding/ExercisePicker.tsx` (shared with Settings later)
+- `src/stores/*` — full onboarding + today write-through
+
+**Approach:**
+1. Onboarding flow FL1 with validation (bodyweight required, ≥1 exercise).
+2. Work Out empty state per Figma.
+3. Add Set sheet: exercise picker (plan only), reps slider, weight slider, warm-up toggle visible.
+4. Record Set → creates workout if first of day (BR1) → groups under exercise.
+
+**Test scenarios:**
+- `src/domain/warmup.test.ts`: ◊ total ≤ bodyweight tags warm-up (T9 partial)
+- `__tests__/domain/day-record.test.ts`: first set creates one workout per calendar day (T10)
+
+**Verification (design gate — do not proceed to U2 until passed):**
+- Fresh install → complete onboarding → log one set → appears under correct exercise
+- Compare splash, one onboarding step, Work Out main, Add Set sheet to Figma on device
+
+---
+
+### U2. Work Out complete (Stage 2)
+
+**Goal:** Full Work Out tab — edit, delete, warm-up auto-tag, rest timer.
+
+**Requirements:** R6, R7, R12
+
+**Dependencies:** U1
+
+**Files:**
+- `src/components/AddSetSheet.tsx` — edit mode (tap log row, FL3)
+- `src/components/DeleteConfirmOverlay.tsx` (SCR8)
+- `src/components/RestTimer.tsx` (SCR9)
+- `src/domain/warmup.ts`, `src/domain/ranges.ts`
+- `src/stores/timerSlice.ts`
+
+**Approach:**
+1. Tap logged set row → sheet in edit mode; delete → confirmation overlay.
+2. Implement BR4, BR5, BR26, BR27 auto-tag + one-set override.
+3. Default reps/weight from last set today (BR21).
+4. Rest timer user-triggered; wire expo-notifications on dev build.
+
+**Test scenarios:**
+- `warmup.test.ts`: override one set only (T12); global off (T23); warm-up excluded from totals (T1 partial)
+- `ranges.test.ts`: ◊ live recompute on bodyweight change (T8)
+
+**Verification:**
+- Full Work Out Figma inventory on device
+- Warm-up sets excluded from any totals on Work Out tab
+- Rest timer foreground OK; background notification on dev build
+
+---
+
+### U3. Settings (Stage 3)
+
+**Goal:** Settings hub + plan editing + units + bodyweight-driven ◊ ranges.
+
+**Requirements:** R8, R12
+
+**Dependencies:** U2
+
+**Files:**
+- `src/screens/SettingsScreen.tsx` (SCR14)
+- `src/screens/AddExercisesScreen.tsx` (SCR15)
+- `src/components/RemoveExerciseSheet.tsx` — confirmation bottom sheet (FL8)
+- `src/domain/units.ts`
+- `src/stores/settingsSlice.ts`, `src/stores/profileSlice.ts`
+
+**Approach:**
+1. Settings hub sections per blueprint §4.
+2. Bodyweight change → immediate ◊ range recompute (BR18).
+3. Plan toggle off → confirmation bottom sheet; toggle on → immediate.
+4. Per-exercise overrides for **non-◊ only** (BR29).
+5. Unit toggle kg/lbs/stone uniform display (BR17).
+
+**Test scenarios:**
+- `units.test.ts`: conversion rounds to 0.5 (T7)
+- `catalogue.test.ts`: deprecated not in picker (T25)
+
+**Verification:**
+- Change bodyweight → Work Out ◊ sliders updated without restart
+- Add/remove plan exercises updates pickers
+- Units apply uniformly across app
+
+---
+
+### U4. History list + progress math (Stage 4)
+
+**Goal:** History list, session detail, edit past sessions, full progress math with unit tests.
+
+**Requirements:** R9, R13
+
+**Dependencies:** U3
+
+**Files:**
+- `src/domain/progress.ts`
+- `__tests__/domain/progress.test.ts` (T1–T3, T5–T6, T13–T14)
+- `src/screens/HistoryListScreen.tsx` (SCR10)
+- `src/screens/SessionDetailScreen.tsx` (SCR12–13)
+- `src/components/HistoryNavigation.tsx`
+
+**Approach:**
+1. Implement all progress rules BR6–BR12; equal-weight day % (BR9).
+2. History list rows: day total + day % or "—".
+3. Session detail read-only + edit mode reusing Add Set sheet.
+4. Edit past day recalculates downstream % (BR12).
+5. Plan-removed exercises hidden; re-enable restores (BR3).
+
+**Test scenarios (progress.test.ts):**
+- T1 warm-up-only days
+- T2 missing prior → "—"
+- T3 day-% averaging
+- T5 re-enable after remove
+- T6 edit past day recalc
+- T13 day-total aggregation
+- T14 non-◊ range derivation
+
+**Verification:**
+- Log several varied days → list totals + % correct
+- Edit past set → list updates
+- All domain tests green
+
+---
+
+### U5. History chart (Stage 5)
+
+**Goal:** Chart view with filters, muscle-group weighting, time ranges.
+
+**Requirements:** R10, R13
+
+**Dependencies:** U4
+
+**Files:**
+- `src/screens/HistoryChartScreen.tsx` (SCR11)
+- `src/components/ChartFilters.tsx`
+- `src/domain/progress.ts` — muscle-group weighting (BR13)
+- `__tests__/domain/progress.test.ts` — T4, T20
+
+**Approach:**
+1. Integrate react-native-gifted-charts.
+2. Default Y = session total; filter by exercise or muscle group.
+3. Time ranges month/year/all-time; horizontal scroll; 10 latest visible.
+4. Shared History empty state.
+
+**Test scenarios:**
+- T4: Glutes filter = 7000 worked example
+- T20: filter set limited to 5 muscle groups
+
+**Verification:**
+- Chart renders real data; hand-checked filter values match
+- Matches Figma on device
+
+---
+
+### U6. Export, import, reset, polish (Stage 6)
+
+**Goal:** Data portability, reset, final platform pass.
+
+**Requirements:** R11, R14
+
+**Dependencies:** U5
+
+**Files:**
+- `src/domain/export.ts`, `src/domain/import.ts`
+- `src/components/ExportOverlay.tsx` (SCR16)
+- `src/components/ResetOverlay.tsx` (SCR17)
+- `__tests__/domain/export-import.test.ts` (T22, T24)
+- `__tests__/domain/reset.test.ts` (T21)
+
+**Approach:**
+1. Export JSON per blueprint §18 schema (profile, settings, plan, workouts).
+2. Import: validate schemaVersion + catalogue ids → confirm overwrite → hydrate.
+3. Reset: full wipe → onboarding replay.
+4. Final iOS + Android device pass.
+
+**Test scenarios:**
+- T22: export → import round-trip preserves all fields + ◊ weight semantics
+- T24: malformed / bad version / unknown id rejected
+- T21: reset clears and replays onboarding
+
+**Verification:**
+- Export → reset → re-import restores all data
+- Reset returns to first-launch onboarding
+- No blocking issues on target devices
+
+---
+
+## Open Questions (deferred to implementation)
+
+- Exact reps slider min/max/step (BR22) — match Figma during U1
+- Calendar-day timezone edge (BR1) — device local, default implementation
+- Rest timer: notification vs Live Activity wording — match platform capability in U2 dev build
+- Per-exercise Settings navigation UI — follow Figma during U3
+
+---
+
+## Sources & Research
+
+- **Origin:** [docs/application-blueprint/blueprint.md](docs/application-blueprint/blueprint.md) (approved 2026-06-22)
+- **Human summary:** [taxonomy.md](taxonomy.md)
+- **Design:** Figma ultraload-v1 + v1-components (links in blueprint frontmatter)
+- **Local codebase:** Greenfield — no prior patterns
+
+---
+
+## Execution Order
+
+```mermaid
+flowchart LR
+  U0[U0 Foundation] --> U1[U1 Core slice]
+  U1 --> U2[U2 Work Out]
+  U2 --> U3[U3 Settings]
+  U3 --> U4[U4 History list]
+  U4 --> U5[U5 Chart]
+  U5 --> U6[U6 Export polish]
+```
+
+**Start with U0.** Do not skip the U1 design gate.
