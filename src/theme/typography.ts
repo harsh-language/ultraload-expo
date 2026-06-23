@@ -13,7 +13,8 @@ type TypographyVariant =
   | 'bodyM'
   | 'bodyS'
   | 'labelS'
-  | 'captionXS';
+  | 'captionXS'
+  | 'para3';
 
 export const typography: Record<TypographyVariant, TextStyle> = {
   brandXL: {
@@ -57,5 +58,14 @@ export const typography: Record<TypographyVariant, TextStyle> = {
     lineHeight: tokens.font.height['XS-P'],
     letterSpacing: tokens.font.props.std,
     color: tokens.color.tokens['content-3'],
+  },
+  /** Para-3 — 15px Medium, lowercase (navigation tab labels) */
+  para3: {
+    fontFamily: fontFamilies.medium,
+    fontSize: tokens.font.size.S,
+    lineHeight: tokens.font.height['S-H'],
+    letterSpacing: tokens.font.props.std,
+    textTransform: 'lowercase',
+    color: tokens.color.tokens['content-1'],
   },
 };

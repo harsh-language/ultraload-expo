@@ -8,6 +8,7 @@
     "@react-navigation/bottom-tabs": "^7.18.2",
     "@react-navigation/native": "^7.3.3",
     "babel-preset-expo": "~56.0.0",
+    "central-icons": "npm:@central-icons-react-native/square-outlined-radius-0-stroke-2@^1.1.281",
     "drizzle-orm": "^0.45.2",
     "expo": "~56.0.12",
     "expo-font": "~56.0.7",
@@ -20,6 +21,7 @@
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.4",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
@@ -33,6 +35,8 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "preinstall": "node scripts/ensure-central-license-env.mjs",
+    "install:deps": "node scripts/with-env.mjs npm install",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
