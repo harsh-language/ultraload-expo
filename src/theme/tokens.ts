@@ -93,7 +93,6 @@ export const tokens = {
       's-21': 480,
       's-22': 540,
       's-23': 600,
-      icon: 20,
     },
     radius: {
       'r-pill': 999,

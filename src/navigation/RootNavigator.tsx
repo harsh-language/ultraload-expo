@@ -1,10 +1,17 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MainNavigation } from '../components/MainNavigation';
+import { MainNavigation, type MainTabKey } from '../components/MainNavigation';
+import { PlaceholderTabs } from '../screens/PlaceholderTabs';
 import { colors } from '../theme/tokens';
-import { MainTabPager } from './MainTabPager';
-import type { MainTabKey } from './mainTabs';
+
+export type RootTabParamList = {
+  WorkOut: undefined;
+  History: undefined;
+  Settings: undefined;
+};
+
+const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const navTheme = {
   ...DarkTheme,
@@ -18,14 +25,61 @@ const navTheme = {
   },
 };
 
-export function RootNavigator() {
-  const [selectedTab, setSelectedTab] = useState<MainTabKey>('workout');
+const TAB_KEYS: MainTabKey[] = ['workout', 'history', 'settings'];
+const ROUTE_NAMES: (keyof RootTabParamList)[] = ['WorkOut', 'History', 'Settings'];
 
+function TabBar({
+  state,
+  navigation,
+}: {
+  state: { index: number };
+  navigation: { navigate: (name: keyof RootTabParamList) => void };
+}) {
+  const selected = TAB_KEYS[state.index] ?? 'workout';
+
+  return (
+    <MainNavigation
+      selected={selected}
+      onSelect={(tab) => {
+        const index = TAB_KEYS.indexOf(tab);
+        const routeName = ROUTE_NAMES[index];
+        if (routeName) {
+          navigation.navigate(routeName);
+        }
+      }}
+    />
+  );
+}
+
+export function RootNavigator() {
   return (
     <NavigationContainer theme={navTheme}>
       <View style={styles.root}>
-        <MainTabPager selected={selectedTab} />
-        <MainNavigation selected={selectedTab} onSelect={setSelectedTab} />
+        <Tab.Navigator
+          initialRouteName="WorkOut"
+          screenOptions={{
+            headerShown: false,
+            sceneStyle: styles.scene,
+          }}
+          tabBar={(props) => (
+            <TabBar
+              state={props.state}
+              navigation={{
+                navigate: (name) => props.navigation.navigate(name),
+              }}
+            />
+          )}
+        >
+          <Tab.Screen name="WorkOut">
+            {() => <PlaceholderTabs tab="workout" />}
+          </Tab.Screen>
+          <Tab.Screen name="History">
+            {() => <PlaceholderTabs tab="history" />}
+          </Tab.Screen>
+          <Tab.Screen name="Settings">
+            {() => <PlaceholderTabs tab="settings" />}
+          </Tab.Screen>
+        </Tab.Navigator>
       </View>
     </NavigationContainer>
   );
@@ -34,6 +88,9 @@ export function RootNavigator() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: colors['bg-1'],
+  },
+  scene: {
     backgroundColor: colors['bg-1'],
   },
 });
