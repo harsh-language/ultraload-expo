@@ -2,12 +2,17 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetView,
+  useBottomSheetModal,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
-import { forwardRef, useCallback, useMemo, type ReactNode } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { forwardRef, useCallback, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, radii, spacing } from '../theme/tokens';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, spacing } from '../theme/tokens';
+import { resolveColorToken } from '../theme/resolveColorToken';
 import { typography } from '../theme/typography';
+import { BackIcon, IconLink } from './icons';
 
 interface AppBottomSheetProps {
   title: string;
@@ -15,9 +20,29 @@ interface AppBottomSheetProps {
   onDismiss?: () => void;
 }
 
+/** Figma color style `bg-gradient-bottom` — solid bg-1 + vertical bg-trans-1 → content-trans-light */
+const SHEET_GRADIENT_COLORS = [
+  colors['bg-trans-1'],
+  colors['content-trans-light'],
+] as const;
+
+function SheetHeader({ title }: { title: string }) {
+  const { dismiss } = useBottomSheetModal();
+
+  return (
+    <View style={styles.header}>
+      <IconLink accessibilityLabel="back" onPress={() => dismiss()}>
+        <BackIcon />
+      </IconLink>
+      <Text style={styles.title}>{title}</Text>
+    </View>
+  );
+}
+
 export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
   function AppBottomSheet({ title, children, onDismiss }, ref) {
-    const snapPoints = useMemo(() => ['50%', '85%'], []);
+    const insets = useSafeAreaInsets();
+    const bottomInset = Math.max(insets.bottom, spacing['s-8']);
 
     const renderBackdrop = useCallback(
       (props: BottomSheetBackdropProps) => (
@@ -25,7 +50,7 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
           {...props}
           appearsOnIndex={0}
           disappearsOnIndex={-1}
-          opacity={0.6}
+          opacity={resolveColorToken('bg-overlay').opacity}
         />
       ),
       [],
@@ -34,16 +59,30 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
     return (
       <BottomSheetModal
         ref={ref}
-        snapPoints={snapPoints}
-        enablePanDownToClose
+        enableDynamicSizing
+        enableContentPanningGesture={false}
+        enableHandlePanningGesture={false}
+        enablePanDownToClose={false}
+        bottomInset={bottomInset}
+        handleComponent={null}
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.sheetBackground}
-        handleIndicatorStyle={styles.handle}
         onDismiss={onDismiss}
       >
         <BottomSheetView style={styles.content}>
-          <Text style={typography.titleL}>{title}</Text>
-          <View style={styles.body}>{children}</View>
+          <View style={styles.sheetFill} pointerEvents="none">
+            <View style={styles.sheetBase} />
+            <LinearGradient
+              colors={[...SHEET_GRADIENT_COLORS]}
+              end={{ x: 0.5, y: 1 }}
+              start={{ x: 0.5, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
+          <View style={styles.inner}>
+            <SheetHeader title={title} />
+            <View style={styles.body}>{children}</View>
+          </View>
         </BottomSheetView>
       </BottomSheetModal>
     );
@@ -52,21 +91,39 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
 
 const styles = StyleSheet.create({
   sheetBackground: {
-    backgroundColor: colors['bg-2'],
-    borderTopLeftRadius: radii['r-h-36'],
-    borderTopRightRadius: radii['r-h-36'],
-  },
-  handle: {
-    backgroundColor: colors['content-4'],
-    width: spacing['s-13'],
+    backgroundColor: 'transparent',
   },
   content: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderTopWidth: spacing['s-1'],
+    borderTopColor: colors['border-2'],
+  },
+  sheetFill: {
+    ...StyleSheet.absoluteFill,
+  },
+  sheetBase: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors['bg-1'],
+  },
+  inner: {
+    paddingHorizontal: spacing['s-8'],
+    paddingTop: spacing['s-8'],
+    paddingBottom: spacing['s-11'],
+    gap: spacing['s-8'],
+    zIndex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing['s-8'],
+    minHeight: spacing['s-11'],
+  },
+  title: {
+    ...typography.brand3,
     flex: 1,
-    paddingHorizontal: spacing['s-7'],
-    paddingBottom: spacing['s-10'],
-    gap: spacing['s-7'],
   },
   body: {
-    gap: spacing['s-7'],
+    gap: spacing['s-8'],
   },
 });

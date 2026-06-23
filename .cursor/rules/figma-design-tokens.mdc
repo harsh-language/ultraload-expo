@@ -1,0 +1,51 @@
+---
+description: Use Figma design tokens for spacing, radius, borders, and colors in UI code
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# Figma design tokens
+
+Import `spacing`, `radii`, `colors`, and `tokens` from `src/theme/tokens.ts`. Never edit `tokens.ts` by hand — regenerate via `figma_export_tokens` when Figma variables change.
+
+## Figma → code mapping
+
+| Figma variable | Code |
+|----------------|------|
+| `layout/size/s-*` | `spacing['s-*']` |
+| `layout/size/icon` | `spacing.icon` |
+| `layout/radius/r-*` | `radii['r-*']` |
+| `color/tokens/border-*` | `colors['border-*']` |
+| `color/tokens/bg-trans-*` | `colors['bg-trans-*']` |
+| `layout/shadow/*` | `tokens.layout.shadow` |
+
+## Transparent color tokens (8-digit hex)
+
+Figma keeps one token per color+alpha (e.g. `bg-trans-2` = `#FFFFFF33`). Do not split into separate Figma variables.
+
+| API | Usage |
+|-----|--------|
+| `View` styles, `LinearGradient` | `colors['bg-trans-2']` directly |
+| `react-native-svg` stops, opacity-only props | `resolveColorToken('bg-trans-2')` → `{ color, opacity }` |
+
+Import `resolveColorToken` from `src/theme/resolveColorToken.ts`. Never pass 8-digit hex to `react-native-svg` `stopColor`.
+
+## Rules
+
+- Border widths: always `spacing['s-1']`, never literal `1`.
+- Border colors: use `border-*` role tokens, not `content-*` even when hex matches.
+- Before implementing from Figma: check variables via `figma_get_variables`; if a value is missing, add it in Figma first, then re-export.
+
+## Examples
+
+```tsx
+// BAD — SVG ignores alpha in 8-digit hex
+<Stop stopColor={colors['bg-trans-2']} stopOpacity={1} />
+
+// GOOD — token name visible, color + opacity from Figma hex
+const center = resolveColorToken('bg-trans-2');
+<Stop stopColor={center.color} stopOpacity={center.opacity} />
+
+// GOOD — LinearGradient supports 8-digit hex
+colors={[colors['bg-trans-1'], colors['content-trans-light']]}
+```

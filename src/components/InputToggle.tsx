@@ -1,11 +1,41 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { CheckmarkIcon } from './icons';
 
 interface InputToggleProps {
   label: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+}
+
+function toggleColors(selected: boolean, pressed: boolean) {
+  if (!selected && !pressed) {
+    return {
+      backgroundColor: colors['bg-2'],
+      borderColor: colors['border-2'],
+      checkColor: colors['content-4'],
+    };
+  }
+  if (!selected && pressed) {
+    return {
+      backgroundColor: colors['bg-1'],
+      borderColor: colors['border-2'],
+      checkColor: colors['content-4'],
+    };
+  }
+  if (selected && !pressed) {
+    return {
+      backgroundColor: colors['bg-trans-2'],
+      borderColor: colors['border-1'],
+      checkColor: colors['content-1'],
+    };
+  }
+  return {
+    backgroundColor: colors['bg-2'],
+    borderColor: colors['content-2'],
+    checkColor: colors['content-2'],
+  };
 }
 
 export function InputToggle({ label, value, onValueChange }: InputToggleProps) {
@@ -16,46 +46,49 @@ export function InputToggle({ label, value, onValueChange }: InputToggleProps) {
       onPress={() => onValueChange(!value)}
       style={styles.row}
     >
-      <Text style={typography.bodyM}>{label}</Text>
-      <View style={[styles.track, value && styles.trackOn]}>
-        <View style={[styles.thumb, value && styles.thumbOn]} />
-      </View>
+      {({ pressed }) => {
+        const { backgroundColor, borderColor, checkColor } = toggleColors(
+          value,
+          pressed,
+        );
+
+        return (
+          <>
+            <Text style={[typography.para2, styles.label]}>{label}</Text>
+            <View
+              style={[
+                styles.toggle,
+                { backgroundColor, borderColor },
+              ]}
+            >
+              <CheckmarkIcon color={checkColor} />
+            </View>
+          </>
+        );
+      }}
     </Pressable>
   );
 }
 
-const TRACK_WIDTH = spacing['s-12'];
-const THUMB_SIZE = spacing['s-8'];
+const TOGGLE_SIZE = spacing['s-12'];
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: spacing['s-11'],
+    gap: spacing['s-8'],
+    minHeight: TOGGLE_SIZE,
+    alignSelf: 'stretch',
   },
-  track: {
-    width: TRACK_WIDTH,
-    height: spacing['s-9'],
+  label: {
+    flex: 1,
+  },
+  toggle: {
+    width: TOGGLE_SIZE,
+    height: TOGGLE_SIZE,
     borderRadius: radii['r-pill'],
-    backgroundColor: colors['bg-trans-1'],
-    borderWidth: 1,
-    borderColor: colors['border-2'],
-    padding: spacing['s-1'],
+    borderWidth: spacing['s-1'],
+    alignItems: 'center',
     justifyContent: 'center',
-  },
-  trackOn: {
-    backgroundColor: colors['bg-5'],
-    borderColor: colors['bg-5'],
-  },
-  thumb: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: radii['r-pill'],
-    backgroundColor: colors['content-2'],
-  },
-  thumbOn: {
-    alignSelf: 'flex-end',
-    backgroundColor: colors['content-5'],
   },
 });

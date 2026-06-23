@@ -1,74 +1,278 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { getExerciseLabel } from '../domain/catalogue';
-import { colors, radii, spacing } from '../theme/tokens';
+import type { ReactNode } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { CloseIcon, IconLink, PencilIcon } from './icons';
 
-interface LogRowProps {
-  exerciseId: string;
+export type LogStatDirection = 'up' | 'down' | 'flat';
+
+type LogSetRowBaseProps = {
+  type: 'set';
   weight: number;
   reps: number;
-  warmUp: boolean;
   unit?: string;
+  /** Figma `button/info` — edit/delete icons on Work Out; hidden on History */
+  showActions?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onPress?: () => void;
+};
+
+export type LogSetRowProps = LogSetRowBaseProps &
+  (
+    | { warmUp: true; setIndex?: never }
+    | { warmUp?: false; setIndex: number }
+  );
+
+interface LogExerciseRowProps {
+  type: 'exercise';
+  title: string;
+  stat?: { label: string; direction: LogStatDirection };
+  showStat?: boolean;
   onPress?: () => void;
 }
 
-export function LogRow({
-  exerciseId,
-  weight,
-  reps,
-  warmUp,
-  unit = 'kg',
-  onPress,
-}: LogRowProps) {
-  const exerciseName = getExerciseLabel(exerciseId);
-  const summary = `${weight} ${unit} × ${reps}`;
+interface LogSessionRowProps {
+  type: 'session';
+  dateLabel: string;
+  totalLabel: string;
+  stat?: { label: string; direction: LogStatDirection };
+  showStat?: boolean;
+  onPress?: () => void;
+}
 
+interface LogSpaceRowProps {
+  type: 'space';
+}
+
+export type LogRowProps =
+  | LogSetRowProps
+  | LogExerciseRowProps
+  | LogSessionRowProps
+  | LogSpaceRowProps;
+
+export function LogRow(props: LogRowProps) {
+  switch (props.type) {
+    case 'set':
+      return <LogSetRow {...props} />;
+    case 'exercise':
+      return <LogExerciseRow {...props} />;
+    case 'session':
+      return <LogSessionRow {...props} />;
+    case 'space':
+      return <View style={styles.space} />;
+    default: {
+      const _exhaustive: never = props;
+      return _exhaustive;
+    }
+  }
+}
+
+function formatSetIndex(setIndex: number): string {
+  return String(setIndex).padStart(2, '0');
+}
+
+function RowPressable({
+  onPress,
+  bordered = false,
+  children,
+}: {
+  onPress?: () => void;
+  bordered?: boolean;
+  children: ReactNode;
+}) {
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={onPress ? 'button' : undefined}
       disabled={!onPress}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && onPress && styles.pressed]}
+      style={({ pressed }) => [
+        styles.row,
+        bordered && styles.rowBordered,
+        pressed && onPress && styles.pressed,
+      ]}
     >
-      <View style={styles.textBlock}>
-        <Text style={typography.labelS}>{exerciseName}</Text>
-        <Text style={typography.bodyS}>{summary}</Text>
-      </View>
-      {warmUp ? (
-        <View style={styles.warmUpBadge}>
-          <Text style={styles.warmUpLabel}>Warm-up</Text>
-        </View>
-      ) : null}
+      {children}
     </Pressable>
   );
 }
+
+function LogSetRow(props: LogSetRowProps) {
+  const {
+    weight,
+    reps,
+    unit = 'kg',
+    showActions = false,
+    onEdit,
+    onDelete,
+    onPress,
+  } = props;
+  const warmUp = props.warmUp === true;
+  const weightLabel = `${weight} ${unit}`;
+  const repsLabel = `${reps} reps`;
+  const prefixLabel = warmUp ? 'W' : formatSetIndex(props.setIndex);
+
+  return (
+    <RowPressable onPress={onPress} bordered>
+      <View style={styles.setContent}>
+        <Text style={styles.setPrefix}>{prefixLabel}</Text>
+        <Text style={styles.weight}>{weightLabel}</Text>
+        <Text style={styles.reps}>{repsLabel}</Text>
+      </View>
+      {showActions ? (
+        <View style={styles.actions}>
+          <IconLink accessibilityLabel="edit set" onPress={onEdit}>
+            <PencilIcon />
+          </IconLink>
+          <IconLink accessibilityLabel="delete set" onPress={onDelete}>
+            <CloseIcon />
+          </IconLink>
+        </View>
+      ) : null}
+    </RowPressable>
+  );
+}
+
+function LogExerciseRow({
+  title,
+  stat,
+  showStat = false,
+  onPress,
+}: LogExerciseRowProps) {
+  return (
+    <RowPressable onPress={onPress}>
+      <Text style={styles.primaryLabel} numberOfLines={1}>
+        {title}
+      </Text>
+      {showStat && stat ? (
+        <View style={styles.statGroup}>
+          <Text
+            style={[
+              styles.statValue,
+              stat.direction === 'down' && styles.statDown,
+            ]}
+          >
+            {stat.label}
+          </Text>
+        </View>
+      ) : null}
+    </RowPressable>
+  );
+}
+
+function LogSessionRow({
+  dateLabel,
+  totalLabel,
+  stat,
+  showStat = false,
+  onPress,
+}: LogSessionRowProps) {
+  return (
+    <RowPressable onPress={onPress} bordered>
+      <Text style={[styles.primaryLabel, styles.sessionDate]} numberOfLines={1}>
+        {dateLabel}
+      </Text>
+      <Text style={styles.sessionTotal} numberOfLines={1}>
+        {totalLabel}
+      </Text>
+      {showStat && stat ? (
+        <View style={[styles.statGroup, styles.sessionStat]}>
+          <Text
+            style={[
+              styles.statValue,
+              stat.direction === 'down' && styles.statDown,
+            ]}
+          >
+            {stat.label}
+          </Text>
+        </View>
+      ) : null}
+    </RowPressable>
+  );
+}
+
+const textVerticalCenter = Platform.select({
+  android: { includeFontPadding: false, textAlignVertical: 'center' as const },
+  default: {},
+});
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors['bg-2'],
-    borderRadius: radii['r-std'],
-    paddingHorizontal: spacing['s-6'],
-    paddingVertical: spacing['s-5'],
-    minHeight: spacing['s-12'],
+    height: spacing['s-12'],
+    backgroundColor: colors['bg-1'],
+    gap: spacing['s-5'],
+  },
+  rowBordered: {
+    borderBottomWidth: spacing['s-1'],
+    borderBottomColor: colors['border-2'],
   },
   pressed: {
+    // Interaction feedback — no Figma opacity variable
     opacity: 0.9,
   },
-  textBlock: {
+  space: {
+    height: spacing['s-8'],
+    backgroundColor: colors['bg-1'],
+  },
+  setContent: {
     flex: 1,
-    gap: spacing['s-1'],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing['s-5'],
   },
-  warmUpBadge: {
-    backgroundColor: colors['bg-trans-2'],
-    borderRadius: radii['r-pill'],
-    paddingHorizontal: spacing['s-5'],
-    paddingVertical: spacing['s-3'],
-  },
-  warmUpLabel: {
-    ...typography.captionXS,
+  setPrefix: {
+    ...typography.para2,
     color: colors['content-2'],
+    width: spacing['s-8'],
+    textAlign: 'center',
+    ...textVerticalCenter,
+  },
+  weight: {
+    ...typography.para1,
+    color: colors['content-1'],
+    ...textVerticalCenter,
+  },
+  reps: {
+    ...typography.para2,
+    color: colors['content-2'],
+    textTransform: 'lowercase',
+    ...textVerticalCenter,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing['s-5'],
+  },
+  primaryLabel: {
+    ...typography.para1,
+    flex: 1,
+    color: colors['content-1'],
+  },
+  sessionDate: {
+    flex: 1,
+  },
+  sessionTotal: {
+    ...typography.para2,
+    flex: 1,
+    color: colors['content-3'],
+    textAlign: 'right',
+  },
+  sessionStat: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  statGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing['s-4'],
+  },
+  statValue: {
+    ...typography.para1,
+    color: colors['content-1'],
+  },
+  statDown: {
+    color: colors['content-3'],
   },
 });

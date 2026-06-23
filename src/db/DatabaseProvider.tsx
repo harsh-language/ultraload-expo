@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { SQLiteProvider, openDatabaseSync } from 'expo-sqlite';
+import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { createDatabase, DATABASE_NAME } from './client';
 import { ensurePersistedRows } from './repositories';
@@ -14,11 +14,8 @@ interface DatabaseProviderProps {
 }
 
 function MigrationGate({ children }: { children: React.ReactNode }) {
-  const db = createDatabase(
-    openDatabaseSync(DATABASE_NAME, {
-      enableChangeListener: true,
-    }),
-  );
+  const expoDb = useSQLiteContext();
+  const db = useMemo(() => createDatabase(expoDb), [expoDb]);
   const { success, error } = useMigrations(db, migrations);
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState<string | null>(null);
@@ -52,7 +49,7 @@ function MigrationGate({ children }: { children: React.ReactNode }) {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={typography.bodyM}>Migration failed: {error.message}</Text>
+        <Text style={typography.para2}>Migration failed: {error.message}</Text>
       </View>
     );
   }
@@ -60,7 +57,7 @@ function MigrationGate({ children }: { children: React.ReactNode }) {
   if (bootError) {
     return (
       <View style={styles.center}>
-        <Text style={typography.bodyM}>{bootError}</Text>
+        <Text style={typography.para2}>{bootError}</Text>
       </View>
     );
   }
