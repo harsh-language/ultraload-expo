@@ -8,6 +8,7 @@
     "@react-navigation/native": "^7.3.3",
     "babel-preset-expo": "~56.0.0",
     "central-icons": "npm:@central-icons-react-native/square-outlined-radius-0-stroke-2@^1.1.281",
+    "central-icons-filled": "npm:@central-icons-react-native/square-filled-radius-0-stroke-2@^1.1.282",
     "drizzle-orm": "^0.45.2",
     "expo": "~56.0.12",
     "expo-font": "~56.0.7",

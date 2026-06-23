@@ -6,9 +6,11 @@ if (process.env.CENTRAL_LICENSE_KEY) {
   process.exit(0);
 }
 
-const centralIconsInstalled = existsSync(
-  resolve(process.cwd(), 'node_modules/central-icons/package.json'),
-);
+const centralIconsInstalled =
+  existsSync(resolve(process.cwd(), 'node_modules/central-icons/package.json')) ||
+  existsSync(
+    resolve(process.cwd(), 'node_modules/central-icons-filled/package.json'),
+  );
 
 if (centralIconsInstalled) {
   process.exit(0);

@@ -10,5 +10,8 @@ UI spacing, radius, borders, and colors come from Figma variables in [`src/theme
 
 Central Icons requires `CENTRAL_LICENSE_KEY` in `.env` (copy from `.env.example`).
 
+- Outlined: `central-icons` → `@central-icons-react-native/square-outlined-radius-0-stroke-2`
+- Filled: `central-icons-filled` → `@central-icons-react-native/square-filled-radius-0-stroke-2`
+
 - First-time install: `npm run install:deps`
 - With [direnv](https://direnv.net/): run `direnv allow` once, then `npm install` works normally
