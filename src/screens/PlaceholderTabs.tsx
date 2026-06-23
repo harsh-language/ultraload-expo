@@ -12,17 +12,13 @@ import { getDatabase } from '../db/client';
 import { useProfileStore } from '../stores/profileSlice';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
-import type { MainTabKey } from '../components/MainNavigation';
+import { TAB_LABELS, type MainTabKey } from '../navigation/mainTabs';
 
 interface PlaceholderTabsProps {
   tab: MainTabKey;
 }
 
-const TAB_TITLES: Record<MainTabKey, string> = {
-  workout: 'Work Out',
-  history: 'History',
-  settings: 'Settings',
-};
+const selectableExercises = getSelectableExercises();
 
 export function PlaceholderTabs({ tab }: PlaceholderTabsProps) {
   const insets = useSafeAreaInsets();
@@ -30,7 +26,6 @@ export function PlaceholderTabs({ tab }: PlaceholderTabsProps) {
   const updateProfile = useProfileStore((state) => state.updateProfile);
   const sheetRef = useRef<BottomSheetModal>(null);
 
-  const selectableExercises = getSelectableExercises();
   const demoExercise = selectableExercises[0];
   const demoRange = demoExercise?.sliderRange ?? { min: 0, max: 100 };
 
@@ -53,85 +48,102 @@ export function PlaceholderTabs({ tab }: PlaceholderTabsProps) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={typography.brandXL}>{TAB_TITLES[tab]}</Text>
-        <Text style={typography.bodyS}>
-          Stage 0 shell — shared components smoke test
+        <Text style={typography.brand1}>{TAB_LABELS[tab]}</Text>
+        <Text style={typography.para4}>
+          stage 0 shell — shared components smoke test
         </Text>
 
         <View style={styles.section}>
-          <Text style={typography.titleL}>Profile (SQLite)</Text>
-          <Text style={typography.bodyM}>
-            Bodyweight: {bodyweight != null ? `${bodyweight} kg` : 'Not set'}
+          <Text style={typography.label}>profile</Text>
+          <Text style={typography.para2}>
+            bodyweight: {bodyweight != null ? `${bodyweight} kg` : 'not set'}
           </Text>
-          <Button label="Save 82.5 kg bodyweight" onPress={handleSaveBodyweight} />
+          <Button label="save 82.5 kg bodyweight" onPress={handleSaveBodyweight} />
         </View>
 
         <View style={styles.section}>
-          <Text style={typography.titleL}>Catalogue</Text>
-          <Text style={typography.bodyS}>
+          <Text style={typography.label}>catalogue</Text>
+          <Text style={typography.para4}>
             {selectableExercises.length} selectable exercises
           </Text>
-          <Text style={typography.bodyM}>
-            First picker label: {demoExercise?.name ?? '—'}
+          <Text style={typography.para2}>
+            first picker label: {demoExercise?.name ?? '—'}
           </Text>
           {demoExercise ? (
-            <LogRow
-              exerciseId={demoExercise.id}
-              weight={demoRange.min + 20}
-              reps={8}
-              warmUp={false}
-            />
+            <>
+              <View style={styles.logStack}>
+                <LogRow
+                  type="set"
+                  setIndex={1}
+                  weight={demoRange.min + 20}
+                  reps={8}
+                />
+                <LogRow
+                  type="set"
+                  weight={demoRange.min + 10}
+                  reps={5}
+                  warmUp
+                  showActions
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                />
+              </View>
+              <LogRow type="space" />
+              <LogRow type="exercise" title={demoExercise.name} />
+            </>
           ) : null}
         </View>
 
         <View style={styles.section}>
-          <Text style={typography.titleL}>Controls</Text>
+          <Text style={typography.label}>controls</Text>
           <InputSlider
-            label="Reps"
             value={reps}
             minimumValue={1}
             maximumValue={20}
             step={1}
+            prefix=""
+            suffix="reps"
             onValueChange={setReps}
           />
           <InputSlider
-            label="Weight"
             value={weight}
             minimumValue={demoRange.min}
             maximumValue={demoRange.max}
             step={demoExercise?.increment ?? 1}
-            unit="kg"
+            prefix=""
+            suffix="kg"
             onValueChange={setWeight}
           />
-          <InputToggle label="Warm-up set" value={warmUp} onValueChange={setWarmUp} />
-          <Button label="Open bottom sheet" onPress={openSheet} variant="secondary" />
+          <InputToggle label="warm-up set" value={warmUp} onValueChange={setWarmUp} />
+          <Button label="open bottom sheet" onPress={openSheet} variant="secondary" />
         </View>
       </ScrollView>
 
-      <AppBottomSheet ref={sheetRef} title="Add Set">
+      <AppBottomSheet ref={sheetRef} title="add set">
         {demoExercise ? (
           <>
-            <Text style={typography.bodyM}>
+            <Text style={typography.para2}>
               {getExerciseById(demoExercise.id)?.name}
             </Text>
             <InputSlider
-              label="Reps"
               value={reps}
               minimumValue={1}
               maximumValue={20}
+              prefix=""
+              suffix="reps"
               onValueChange={setReps}
             />
             <InputSlider
-              label="Weight"
               value={weight}
               minimumValue={demoRange.min}
               maximumValue={demoRange.max}
               step={demoExercise.increment}
-              unit="kg"
+              prefix=""
+              suffix="kg"
               onValueChange={setWeight}
             />
-            <InputToggle label="Warm-up set" value={warmUp} onValueChange={setWarmUp} />
-            <Button label="Record Set" onPress={() => sheetRef.current?.dismiss()} />
+            <InputToggle label="warm-up set" value={warmUp} onValueChange={setWarmUp} />
+            <Button label="record set" onPress={() => sheetRef.current?.dismiss()} />
           </>
         ) : null}
       </AppBottomSheet>
@@ -151,5 +163,9 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: spacing['s-5'],
+  },
+  /** Set rows stack flush (border-only separators) per Figma log component */
+  logStack: {
+    gap: 0,
   },
 });

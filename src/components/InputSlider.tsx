@@ -1,61 +1,261 @@
-import Slider from '@react-native-community/slider';
-import { StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../theme/tokens';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
+import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 
+const KNOB_WIDTH = spacing['s-5'];
+const TRACK_INSET = spacing['s-7'];
+
 interface InputSliderProps {
-  label: string;
   value: number;
   minimumValue: number;
   maximumValue: number;
   step?: number;
-  unit?: string;
   onValueChange: (value: number) => void;
+  prefix: string;
+  suffix: string;
+  formatValue?: (value: number) => string;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getPositionCount(
+  minimumValue: number,
+  maximumValue: number,
+  step: number,
+): number {
+  return Math.round((maximumValue - minimumValue) / step) + 1;
+}
+
+function positionCenterX(
+  index: number,
+  trackWidth: number,
+  positionCount: number,
+): number {
+  if (trackWidth <= 0) {
+    return 0;
+  }
+  if (positionCount <= 1) {
+    return trackWidth / 2;
+  }
+  const minCenter = TRACK_INSET + KNOB_WIDTH / 2;
+  const maxCenter = trackWidth - KNOB_WIDTH / 2;
+  return (
+    minCenter + index * ((maxCenter - minCenter) / (positionCount - 1))
+  );
+}
+
+function valueToIndex(
+  value: number,
+  minimumValue: number,
+  step: number,
+  positionCount: number,
+): number {
+  const index = Math.round((value - minimumValue) / step);
+  return clamp(index, 0, positionCount - 1);
+}
+
+function indexToValue(
+  index: number,
+  minimumValue: number,
+  step: number,
+): number {
+  return minimumValue + index * step;
+}
+
+function xToNearestIndex(
+  x: number,
+  trackWidth: number,
+  positionCount: number,
+): number {
+  if (positionCount <= 1) {
+    return 0;
+  }
+
+  const minCenter = TRACK_INSET + KNOB_WIDTH / 2;
+  const maxCenter = trackWidth - KNOB_WIDTH / 2;
+  const stepPx = (maxCenter - minCenter) / (positionCount - 1);
+  const index = Math.round((x - minCenter) / stepPx);
+  return clamp(index, 0, positionCount - 1);
 }
 
 export function InputSlider({
-  label,
   value,
   minimumValue,
   maximumValue,
   step = 1,
-  unit,
   onValueChange,
+  prefix,
+  suffix,
+  formatValue = (v) => String(v),
 }: InputSliderProps) {
-  const displayValue = unit ? `${value} ${unit}` : String(value);
+  const [pressed, setPressed] = useState(false);
+  const [trackWidth, setTrackWidth] = useState(0);
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  const positionCount = useMemo(
+    () => getPositionCount(minimumValue, maximumValue, step),
+    [minimumValue, maximumValue, step],
+  );
+
+  const activeIndex = useMemo(
+    () => valueToIndex(value, minimumValue, step, positionCount),
+    [value, minimumValue, step, positionCount],
+  );
+
+  const knobCenterX = useMemo(
+    () => positionCenterX(activeIndex, trackWidth, positionCount),
+    [activeIndex, trackWidth, positionCount],
+  );
+
+  const knobLeft = knobCenterX - KNOB_WIDTH / 2;
+  const fillWidth = knobCenterX + KNOB_WIDTH / 2;
+
+  const handleTrackLayout = useCallback((event: LayoutChangeEvent) => {
+    setTrackWidth(event.nativeEvent.layout.width);
+  }, []);
+
+  const updateFromX = useCallback(
+    (x: number) => {
+      if (trackWidth <= 0) {
+        return;
+      }
+      const index = xToNearestIndex(x, trackWidth, positionCount);
+      const next = indexToValue(index, minimumValue, step);
+      if (next !== valueRef.current) {
+        onValueChange(next);
+      }
+    },
+    [trackWidth, positionCount, minimumValue, step, onValueChange],
+  );
+
+  const setPressedTrue = useCallback(() => setPressed(true), []);
+  const setPressedFalse = useCallback(() => setPressed(false), []);
+
+  const gesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .minDistance(0)
+        .onBegin((event) => {
+          runOnJS(setPressedTrue)();
+          runOnJS(updateFromX)(event.x);
+        })
+        .onUpdate((event) => {
+          runOnJS(updateFromX)(event.x);
+        })
+        .onFinalize(() => {
+          runOnJS(setPressedFalse)();
+        }),
+    [setPressedTrue, setPressedFalse, updateFromX],
+  );
+
+  const displayValue = formatValue(value);
+  const borderColor = pressed ? colors['border-1'] : colors['border-2'];
+  const knobFill = pressed ? colors['content-1'] : colors['bg-trans-1'];
+
+  const accessibilityText = [prefix, displayValue, suffix]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={typography.bodyS}>{label}</Text>
-        <Text style={typography.labelS}>{displayValue}</Text>
+    <View
+      accessibilityRole="adjustable"
+      accessibilityValue={{
+        min: minimumValue,
+        max: maximumValue,
+        now: value,
+        text: accessibilityText,
+      }}
+      style={[styles.pill, { borderColor }]}
+    >
+      <GestureDetector gesture={gesture}>
+        <View style={styles.trackZone}>
+          <View style={styles.trackInner} onLayout={handleTrackLayout}>
+            <View
+              pointerEvents="none"
+              style={[styles.fill, { width: fillWidth }]}
+            />
+            <View
+              pointerEvents="none"
+              style={[
+                styles.knob,
+                {
+                  left: knobLeft,
+                  backgroundColor: knobFill,
+                  borderColor: colors['border-1'],
+                },
+              ]}
+            />
+          </View>
+        </View>
+      </GestureDetector>
+
+      <View style={[styles.valuePanel, { borderLeftColor: borderColor }]}>
+        {prefix.length > 0 ? (
+          <Text style={[typography.para2, styles.affix]}>{prefix}</Text>
+        ) : null}
+        <Text style={typography.para1}>{displayValue}</Text>
+        {suffix.length > 0 ? (
+          <Text style={[typography.para2, styles.affix]}>{suffix}</Text>
+        ) : null}
       </View>
-      <Slider
-        minimumValue={minimumValue}
-        maximumValue={maximumValue}
-        step={step}
-        value={value}
-        onValueChange={onValueChange}
-        minimumTrackTintColor={colors['content-1']}
-        maximumTrackTintColor={colors['content-4']}
-        thumbTintColor={colors['content-1']}
-        style={styles.slider}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing['s-4'],
-  },
-  header: {
+  pill: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    height: spacing['s-12'],
+    backgroundColor: colors['bg-2'],
+    borderWidth: spacing['s-1'],
+    borderRadius: radii['r-pill'],
+    overflow: 'hidden',
   },
-  slider: {
-    width: '100%',
-    height: spacing['s-10'],
+  trackZone: {
+    flex: 1,
+    height: '100%',
+    padding: spacing['s-4'],
+    justifyContent: 'center',
+  },
+  trackInner: {
+    height: spacing['s-11'],
+    justifyContent: 'center',
+  },
+  fill: {
+    position: 'absolute',
+    left: 0,
+    height: spacing['s-11'],
+    backgroundColor: colors['bg-trans-1'],
+    borderTopLeftRadius: radii['r-h-48'],
+    borderBottomLeftRadius: radii['r-h-48'],
+    borderTopRightRadius: radii['r-std'],
+    borderBottomRightRadius: radii['r-std'],
+  },
+  knob: {
+    position: 'absolute',
+    top: 0,
+    width: KNOB_WIDTH,
+    height: spacing['s-11'],
+    borderRadius: radii['r-pill'],
+    borderWidth: spacing['s-1'],
+  },
+  valuePanel: {
+    width: spacing['s-14'],
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing['s-4'],
+    borderLeftWidth: spacing['s-1'],
+  },
+  affix: {
+    color: colors['content-2'],
   },
 });

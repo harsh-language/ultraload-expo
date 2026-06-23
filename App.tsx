@@ -9,11 +9,15 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme/tokens';
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     'Geist-Medium': require('./assets/fonts/Geist-Medium.ttf'),
     'Geist-SemiBold': require('./assets/fonts/Geist-SemiBold.ttf'),
     'Geist-ExtraBold': require('./assets/fonts/Geist-ExtraBold.ttf'),
   });
+
+  if (fontError) {
+    console.error('Font load error:', fontError);
+  }
 
   if (!fontsLoaded) {
     return (

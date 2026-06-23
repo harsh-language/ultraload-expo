@@ -27,45 +27,53 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         variant === 'primary' ? styles.primary : styles.secondary,
-        pressed && !disabled && styles.pressed,
+        pressed && !disabled && (variant === 'primary' ? styles.primaryPressed : styles.secondaryPressed),
         disabled && styles.disabled,
         style,
       ]}
     >
-      <Text
-        style={[
-          typography.labelS,
-          variant === 'primary' ? styles.primaryLabel : styles.secondaryLabel,
-          disabled && styles.disabledLabel,
-        ]}
-      >
-        {label}
-      </Text>
+      {({ pressed }) => (
+        <Text
+          style={[
+            typography.para1,
+            variant === 'primary' ? styles.primaryLabel : styles.secondaryLabel,
+            pressed && !disabled && variant === 'secondary' && styles.secondaryPressedLabel,
+            disabled && styles.disabledLabel,
+          ]}
+        >
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: spacing['s-11'],
-    borderRadius: radii['r-h-48'],
+    height: spacing['s-12'],
+    borderRadius: radii['r-pill'],
     paddingHorizontal: spacing['s-8'],
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'stretch',
   },
   primary: {
     backgroundColor: colors['bg-5'],
   },
-  secondary: {
-    backgroundColor: colors['bg-trans-1'],
-    borderWidth: 1,
-    borderColor: colors['border-2'],
+  primaryPressed: {
+    backgroundColor: colors['bg-4'],
   },
-  pressed: {
-    opacity: 0.85,
+  secondary: {
+    backgroundColor: colors['bg-2'],
+    borderWidth: spacing['s-1'],
+    borderColor: colors['border-1'],
+  },
+  secondaryPressed: {
+    borderColor: colors['content-2'],
   },
   disabled: {
     backgroundColor: colors['bg-3'],
+    borderColor: colors['bg-3'],
   },
   primaryLabel: {
     color: colors['content-5'],
@@ -73,7 +81,10 @@ const styles = StyleSheet.create({
   secondaryLabel: {
     color: colors['content-1'],
   },
+  secondaryPressedLabel: {
+    color: colors['content-2'],
+  },
   disabledLabel: {
-    color: colors['content-3'],
+    color: colors['content-5'],
   },
 });
