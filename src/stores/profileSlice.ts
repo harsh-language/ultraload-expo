@@ -7,10 +7,24 @@ import {
   type ProfileState,
 } from '../db/repositories';
 
+export interface CompleteOnboardingInput {
+  bodyweight: number;
+  name?: string | null;
+  height?: number | null;
+  age?: number | null;
+  restTimerSeconds: number;
+  warmUpPercent: number;
+  warmUpAutoTagEnabled: boolean;
+}
+
 interface ProfileSlice extends ProfileState {
   hydrated: boolean;
   hydrate: (db: AppDatabase) => Promise<void>;
   updateProfile: (db: AppDatabase, patch: Partial<ProfileState>) => Promise<void>;
+  completeOnboarding: (
+    db: AppDatabase,
+    input: CompleteOnboardingInput,
+  ) => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileSlice>((set, get) => ({
@@ -22,6 +36,14 @@ export const useProfileStore = create<ProfileSlice>((set, get) => ({
   },
   updateProfile: async (db, patch) => {
     const current = get();
+    const patchKeys = Object.keys(patch) as (keyof ProfileState)[];
+    if (
+      patchKeys.length > 0 &&
+      patchKeys.every((key) => patch[key] === current[key])
+    ) {
+      return;
+    }
+
     const profileState: ProfileState = {
       bodyweight: patch.bodyweight ?? current.bodyweight,
       name: patch.name ?? current.name,
@@ -33,6 +55,22 @@ export const useProfileStore = create<ProfileSlice>((set, get) => ({
         patch.warmUpAutoTagEnabled ?? current.warmUpAutoTagEnabled,
       restTimerSeconds: patch.restTimerSeconds ?? current.restTimerSeconds,
       onboardingComplete: patch.onboardingComplete ?? current.onboardingComplete,
+    };
+    await saveProfile(db, profileState);
+    set({ ...profileState, hydrated: true });
+  },
+  completeOnboarding: async (db, input) => {
+    const current = get();
+    const profileState: ProfileState = {
+      bodyweight: input.bodyweight,
+      name: input.name ?? current.name,
+      height: input.height ?? current.height,
+      age: input.age ?? current.age,
+      units: current.units,
+      warmUpPercent: input.warmUpPercent,
+      warmUpAutoTagEnabled: input.warmUpAutoTagEnabled,
+      restTimerSeconds: input.restTimerSeconds,
+      onboardingComplete: true,
     };
     await saveProfile(db, profileState);
     set({ ...profileState, hydrated: true });

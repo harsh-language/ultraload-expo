@@ -17,6 +17,6 @@ export async function hydrateStores(db: Parameters<
     useProfileStore.getState().hydrate(db),
     usePlanStore.getState().hydrate(db),
     useSettingsStore.getState().hydrate(db),
+    useTodayStore.getState().hydrate(db),
   ]);
-  useTodayStore.setState({ hydrated: true });
 }

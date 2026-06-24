@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { textCase } from '../theme/textCase';
 
 type ButtonVariant = 'primary' | 'secondary';
 
@@ -77,9 +78,11 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: colors['content-5'],
+    ...textCase.lower,
   },
   secondaryLabel: {
     color: colors['content-1'],
+    ...textCase.lower,
   },
   secondaryPressedLabel: {
     color: colors['content-2'],

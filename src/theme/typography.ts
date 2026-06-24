@@ -13,21 +13,21 @@ const content1 = tokens.color.tokens['content-1'];
 const content2 = tokens.color.tokens['content-2'];
 
 /**
- * Figma text styles (v1-components).
- * Content is authored lowercase; styles apply UPPER/LOWER transforms per Figma.
+ * Figma text styles (v1-components) — font metrics only.
+ * Case is applied per component via `textCase` from `src/theme/textCase.ts`.
+ * Author UI copy in lowercase; components enforce upper/lower/none at render time.
  */
 export const typography = {
-  /** Brand-1 — 36px ExtraBold, uppercase session titles */
+  /** Brand-1 — 36px ExtraBold */
   brand1: {
     fontFamily: fontFamilies.extraBold,
     fontSize: tokens.font.size.XL,
     lineHeight: tokens.font.height['XL-H'],
     letterSpacing: tokens.font.props.std,
-    textTransform: 'uppercase',
     color: content1,
   } satisfies TextStyle,
 
-  /** Brand-2 — 36px Medium, original case */
+  /** Brand-2 — 36px Medium */
   brand2: {
     fontFamily: fontFamilies.medium,
     fontSize: tokens.font.size.XL,
@@ -63,33 +63,30 @@ export const typography = {
     color: content1,
   } satisfies TextStyle,
 
-  /** Para-3 — 15px Medium, lowercase (tab labels) */
+  /** Para-3 — 15px Medium, tab labels */
   para3: {
     fontFamily: fontFamilies.medium,
     fontSize: tokens.font.size.S,
     lineHeight: tokens.font.height['S-H'],
     letterSpacing: tokens.font.props.std,
-    textTransform: 'lowercase',
     color: content1,
   } satisfies TextStyle,
 
-  /** Para-4 — 15px Medium, lowercase secondary */
+  /** Para-4 — 15px Medium, secondary body */
   para4: {
     fontFamily: fontFamilies.medium,
     fontSize: tokens.font.size.S,
     lineHeight: tokens.font.height['S-P'],
     letterSpacing: tokens.font.props.std,
-    textTransform: 'lowercase',
     color: content2,
   } satisfies TextStyle,
 
-  /** Label — 12px SemiBold, uppercase, +3 letter-spacing */
+  /** Label — 12px SemiBold, +3 letter-spacing */
   label: {
     fontFamily: fontFamilies.semiBold,
     fontSize: tokens.font.size.XS,
     lineHeight: tokens.font.height['XS-H'],
     letterSpacing: tokens.font.props.extra,
-    textTransform: 'uppercase',
     color: content1,
   } satisfies TextStyle,
 } as const satisfies Record<string, TextStyle>;

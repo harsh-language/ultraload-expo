@@ -1,12 +1,21 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { textCase } from '../theme/textCase';
 import { CheckmarkIcon } from './icons';
 
+type TogglePosition = 'left' | 'right';
+
 interface InputToggleProps {
-  label: string;
+  label: string | readonly string[];
   value: boolean;
   onValueChange: (value: boolean) => void;
+  /** Figma `leftToggle` / `rightToggle` — checkbox on leading or trailing edge. */
+  togglePosition?: TogglePosition;
+}
+
+function normalizeLabel(label: string | readonly string[]): readonly string[] {
+  return typeof label === 'string' ? [label] : label;
 }
 
 function toggleColors(selected: boolean, pressed: boolean) {
@@ -38,7 +47,49 @@ function toggleColors(selected: boolean, pressed: boolean) {
   };
 }
 
-export function InputToggle({ label, value, onValueChange }: InputToggleProps) {
+function ToggleControl({
+  pressed,
+  value,
+}: {
+  pressed: boolean;
+  value: boolean;
+}) {
+  const { backgroundColor, borderColor, checkColor } = toggleColors(
+    value,
+    pressed,
+  );
+
+  return (
+    <View style={[styles.toggle, { backgroundColor, borderColor }]}>
+      <CheckmarkIcon color={checkColor} />
+    </View>
+  );
+}
+
+function LabelText({ lines }: { lines: readonly string[] }) {
+  if (lines.length === 1) {
+    return <Text style={[typography.para2, styles.label]}>{lines[0]}</Text>;
+  }
+
+  return (
+    <View style={styles.labelBlock}>
+      {lines.map((line, index) => (
+        <Text key={index} style={[typography.para2, styles.labelLine]}>
+          {line}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+export function InputToggle({
+  label,
+  value,
+  onValueChange,
+  togglePosition = 'right',
+}: InputToggleProps) {
+  const lines = normalizeLabel(label);
+
   return (
     <Pressable
       accessibilityRole="switch"
@@ -47,22 +98,18 @@ export function InputToggle({ label, value, onValueChange }: InputToggleProps) {
       style={styles.row}
     >
       {({ pressed }) => {
-        const { backgroundColor, borderColor, checkColor } = toggleColors(
-          value,
-          pressed,
-        );
+        const toggle = <ToggleControl pressed={pressed} value={value} />;
+        const text = <LabelText lines={lines} />;
 
-        return (
+        return togglePosition === 'left' ? (
           <>
-            <Text style={[typography.para2, styles.label]}>{label}</Text>
-            <View
-              style={[
-                styles.toggle,
-                { backgroundColor, borderColor },
-              ]}
-            >
-              <CheckmarkIcon color={checkColor} />
-            </View>
+            {toggle}
+            {text}
+          </>
+        ) : (
+          <>
+            {text}
+            {toggle}
           </>
         );
       }}
@@ -82,6 +129,15 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
+    minWidth: 0,
+    ...textCase.lower,
+  },
+  labelBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  labelLine: {
+    ...textCase.lower,
   },
   toggle: {
     width: TOGGLE_SIZE,
@@ -90,5 +146,6 @@ const styles = StyleSheet.create({
     borderWidth: spacing['s-1'],
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
 });

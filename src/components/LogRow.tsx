@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { textCase } from '../theme/textCase';
 import { CloseIcon, IconLink, PencilIcon } from './icons';
 
 export type LogStatDirection = 'up' | 'down' | 'flat';
@@ -232,12 +233,13 @@ const styles = StyleSheet.create({
   weight: {
     ...typography.para1,
     color: colors['content-1'],
+    ...textCase.none,
     ...textVerticalCenter,
   },
   reps: {
     ...typography.para2,
     color: colors['content-2'],
-    textTransform: 'lowercase',
+    ...textCase.lower,
     ...textVerticalCenter,
   },
   actions: {
@@ -249,6 +251,7 @@ const styles = StyleSheet.create({
     ...typography.para1,
     flex: 1,
     color: colors['content-1'],
+    ...textCase.none,
   },
   sessionDate: {
     flex: 1,

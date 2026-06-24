@@ -1,0 +1,20 @@
+{"sessionId":"4dc1a3","location":"App.tsx:fonts","message":"fonts state","data":{"fontsLoaded":false,"fontError":null},"timestamp":1782168758955,"hypothesisId":"H1","runId":"post-fix"}
+{"sessionId":"4dc1a3","location":"App.tsx:fonts","message":"fonts state","data":{"fontsLoaded":true,"fontError":null},"timestamp":1782168758999,"hypothesisId":"H1","runId":"post-fix"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":1,"success":false,"hasError":false,"errorMsg":null,"ready":false,"bootError":null},"timestamp":1782168759028,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":2,"success":true,"hasError":false,"errorMsg":null,"ready":false,"bootError":null},"timestamp":1782168759044,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:hydrate-start","message":"starting hydrate","data":{},"timestamp":1782168759045,"hypothesisId":"H3"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:hydrate-done","message":"hydrate complete ready=true","data":{},"timestamp":1782168759060,"hypothesisId":"H3"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":3,"success":true,"hasError":false,"errorMsg":null,"ready":true,"bootError":null},"timestamp":1782168759060,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"App.tsx:fonts","message":"fonts state","data":{"fontsLoaded":false,"fontError":null},"timestamp":1782169131372,"hypothesisId":"H1","runId":"post-fix"}
+{"sessionId":"4dc1a3","location":"App.tsx:fonts","message":"fonts state","data":{"fontsLoaded":true,"fontError":null},"timestamp":1782169131427,"hypothesisId":"H1","runId":"post-fix"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":1,"success":false,"hasError":false,"errorMsg":null,"ready":false,"bootError":null},"timestamp":1782169131461,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":2,"success":true,"hasError":false,"errorMsg":null,"ready":false,"bootError":null},"timestamp":1782169131475,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:hydrate-start","message":"starting hydrate","data":{},"timestamp":1782169131476,"hypothesisId":"H3"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:hydrate-done","message":"hydrate complete ready=true","data":{},"timestamp":1782169131487,"hypothesisId":"H3"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":3,"success":true,"hasError":false,"errorMsg":null,"ready":true,"bootError":null},"timestamp":1782169131487,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":4,"success":true,"hasError":false,"errorMsg":null,"ready":true,"bootError":null},"timestamp":1782169801566,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:effect-cleanup","message":"hydrate effect cancelled","data":{},"timestamp":1782169801573,"hypothesisId":"H5"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:hydrate-start","message":"starting hydrate","data":{},"timestamp":1782169801575,"hypothesisId":"H3"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:hydrate-done","message":"hydrate complete ready=true","data":{},"timestamp":1782169801578,"hypothesisId":"H3"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:render","message":"migration gate render","data":{"renderCount":5,"success":true,"hasError":false,"errorMsg":null,"ready":true,"bootError":null},"timestamp":1782169801578,"hypothesisId":"H2-H4"}
+{"sessionId":"4dc1a3","location":"DatabaseProvider.tsx:effect-cleanup","message":"hydrate effect cancelled","data":{},"timestamp":1782169834003,"hypothesisId":"H5"}

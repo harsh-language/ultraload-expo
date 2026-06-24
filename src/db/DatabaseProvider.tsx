@@ -7,6 +7,7 @@ import { ensurePersistedRows } from './repositories';
 import migrations from './migrations/migrations';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { textCase } from '../theme/textCase';
 import { hydrateStores } from '../stores';
 
 interface DatabaseProviderProps {
@@ -49,7 +50,7 @@ function MigrationGate({ children }: { children: React.ReactNode }) {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={typography.para2}>Migration failed: {error.message}</Text>
+        <Text style={styles.errorText}>Migration failed: {error.message}</Text>
       </View>
     );
   }
@@ -57,7 +58,7 @@ function MigrationGate({ children }: { children: React.ReactNode }) {
   if (bootError) {
     return (
       <View style={styles.center}>
-        <Text style={typography.para2}>{bootError}</Text>
+        <Text style={styles.errorText}>{bootError}</Text>
       </View>
     );
   }
@@ -88,5 +89,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors['bg-1'],
     padding: spacing['s-8'],
+  },
+  errorText: {
+    ...typography.para2,
+    ...textCase.none,
   },
 });
