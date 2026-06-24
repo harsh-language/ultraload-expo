@@ -4,9 +4,17 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { textCase } from '../theme/textCase';
 
 const KNOB_WIDTH = spacing['s-5'];
 const TRACK_INSET = spacing['s-7'];
+/** Figma disabled input-slider — `opacity-40` on the whole control. */
+const DISABLED_OPACITY = 0.4;
+
+export interface InputSliderLabeledText {
+  support?: string;
+  emphasis: string;
+}
 
 interface InputSliderProps {
   value: number;
@@ -14,9 +22,27 @@ interface InputSliderProps {
   maximumValue: number;
   step?: number;
   onValueChange: (value: number) => void;
-  prefix: string;
+  prefix?: string;
   suffix: string;
   formatValue?: (value: number) => string;
+  caption?: InputSliderLabeledText;
+  captionPosition?: 'above' | 'below';
+  captionHidden?: boolean;
+  disabled?: boolean;
+}
+
+function InputSliderLabeledTextView({
+  support,
+  emphasis,
+}: InputSliderLabeledText) {
+  return (
+    <Text style={styles.labeledTextRow}>
+      {support ? (
+        <Text style={styles.labeledSupport}>{support} </Text>
+      ) : null}
+      <Text style={styles.labeledEmphasis}>{emphasis}</Text>
+    </Text>
+  );
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -89,9 +115,13 @@ export function InputSlider({
   maximumValue,
   step = 1,
   onValueChange,
-  prefix,
+  prefix = '',
   suffix,
   formatValue = (v) => String(v),
+  caption,
+  captionPosition = 'below',
+  captionHidden = false,
+  disabled = false,
 }: InputSliderProps) {
   const [pressed, setPressed] = useState(false);
   const [trackWidth, setTrackWidth] = useState(0);
@@ -140,6 +170,7 @@ export function InputSlider({
   const gesture = useMemo(
     () =>
       Gesture.Pan()
+        .enabled(!disabled)
         .minDistance(0)
         .onBegin((event) => {
           runOnJS(setPressedTrue)();
@@ -151,7 +182,7 @@ export function InputSlider({
         .onFinalize(() => {
           runOnJS(setPressedFalse)();
         }),
-    [setPressedTrue, setPressedFalse, updateFromX],
+    [disabled, setPressedTrue, setPressedFalse, updateFromX],
   );
 
   const displayValue = formatValue(value);
@@ -162,9 +193,10 @@ export function InputSlider({
     .filter(Boolean)
     .join(' ');
 
-  return (
+  const pill = (
     <View
       accessibilityRole="adjustable"
+      accessibilityState={{ disabled }}
       accessibilityValue={{
         min: minimumValue,
         max: maximumValue,
@@ -199,16 +231,68 @@ export function InputSlider({
         {prefix.length > 0 ? (
           <Text style={[typography.para2, styles.affix]}>{prefix}</Text>
         ) : null}
-        <Text style={typography.para1}>{displayValue}</Text>
+        <Text style={styles.value}>{displayValue}</Text>
         {suffix.length > 0 ? (
           <Text style={[typography.para2, styles.affix]}>{suffix}</Text>
         ) : null}
       </View>
     </View>
   );
+
+  const captionRow = caption ? (
+    <View
+      style={[styles.captionRow, captionHidden && styles.captionHidden]}
+    >
+      <InputSliderLabeledTextView {...caption} />
+    </View>
+  ) : null;
+
+  if (!caption) {
+    return (
+      <View style={disabled && styles.disabled}>{pill}</View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, disabled && styles.disabled]}>
+      {captionPosition === 'above' ? captionRow : null}
+      {pill}
+      {captionPosition === 'below' ? captionRow : null}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    gap: spacing['s-5'],
+  },
+  captionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing['s-4'],
+    width: '100%',
+  },
+  captionHidden: {
+    opacity: 0,
+  },
+  labeledTextRow: {
+    textAlign: 'center',
+  },
+  labeledSupport: {
+    ...typography.para2,
+    color: colors['content-2'],
+    ...textCase.lower,
+  },
+  labeledEmphasis: {
+    ...typography.para1,
+    color: colors['content-1'],
+    ...textCase.lower,
+  },
+  disabled: {
+    opacity: DISABLED_OPACITY,
+  },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -257,5 +341,10 @@ const styles = StyleSheet.create({
   },
   affix: {
     color: colors['content-2'],
+    ...textCase.lower,
+  },
+  value: {
+    ...typography.para1,
+    ...textCase.none,
   },
 });

@@ -12,12 +12,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../theme/tokens';
 import { resolveColorToken } from '../theme/resolveColorToken';
 import { typography } from '../theme/typography';
+import { textCase } from '../theme/textCase';
 import { BackIcon, IconLink } from './icons';
 
 interface AppBottomSheetProps {
   title: string;
   children: ReactNode;
+  footer?: ReactNode;
   onDismiss?: () => void;
+  showHeaderBack?: boolean;
 }
 
 /** Figma color style `bg-gradient-bottom` — solid bg-1 + vertical bg-trans-1 → content-trans-light */
@@ -26,21 +29,32 @@ const SHEET_GRADIENT_COLORS = [
   colors['content-trans-light'],
 ] as const;
 
-function SheetHeader({ title }: { title: string }) {
+function SheetHeader({
+  title,
+  showBack,
+}: {
+  title: string;
+  showBack: boolean;
+}) {
   const { dismiss } = useBottomSheetModal();
 
   return (
     <View style={styles.header}>
-      <IconLink accessibilityLabel="back" onPress={() => dismiss()}>
-        <BackIcon />
-      </IconLink>
+      {showBack ? (
+        <IconLink accessibilityLabel="back" onPress={() => dismiss()}>
+          <BackIcon />
+        </IconLink>
+      ) : null}
       <Text style={styles.title}>{title}</Text>
     </View>
   );
 }
 
 export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
-  function AppBottomSheet({ title, children, onDismiss }, ref) {
+  function AppBottomSheet(
+    { title, children, footer, onDismiss, showHeaderBack = true },
+    ref,
+  ) {
     const insets = useSafeAreaInsets();
     const bottomInset = Math.max(insets.bottom, spacing['s-8']);
 
@@ -80,8 +94,9 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
             />
           </View>
           <View style={styles.inner}>
-            <SheetHeader title={title} />
+            <SheetHeader showBack={showHeaderBack} title={title} />
             <View style={styles.body}>{children}</View>
+            {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>
         </BottomSheetView>
       </BottomSheetModal>
@@ -122,8 +137,14 @@ const styles = StyleSheet.create({
   title: {
     ...typography.brand3,
     flex: 1,
+    ...textCase.lower,
   },
   body: {
+    gap: spacing['s-8'],
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing['s-8'],
   },
 });

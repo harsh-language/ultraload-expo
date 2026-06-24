@@ -6,6 +6,7 @@ import { ACTIVE_TAB_WIDTH } from '../navigation/mainTabs';
 import { colors, spacing } from '../theme/tokens';
 import { resolveColorToken } from '../theme/resolveColorToken';
 import { typography } from '../theme/typography';
+import { textCase } from '../theme/textCase';
 import { ICON_SIZE, type AppIconProps } from './icons';
 
 const TAB_HEIGHT = spacing['s-12'];
@@ -137,5 +138,6 @@ const styles = StyleSheet.create({
   label: {
     ...typography.para3,
     color: colors['content-1'],
+    ...textCase.lower,
   },
 });
