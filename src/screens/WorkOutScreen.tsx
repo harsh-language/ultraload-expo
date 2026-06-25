@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { StyleSheet, View, type ScrollView } from 'react-native';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import { AddSetSheet, type AddSetSheetHandle } from '../components/AddSetSheet';
 import { LogRow } from '../components/LogRow';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
+import { getMainNavigationHomeInset } from '../components/MainNavigation';
 import { TodaySessionTitleBar } from '../components/TodaySessionTitleBar';
 import { getDatabase } from '../db/client';
 import { getExerciseLabel } from '../domain/catalogue';
@@ -61,6 +62,7 @@ export function WorkOutScreen() {
   );
 
   const handleScrollContentSizeChange = useCallback(() => {
+    // Only scroll after a new set is recorded — ref resets so layout reflows do not jump the list.
     if (!scrollToEndOnContentChangeRef.current) {
       return;
     }
@@ -71,30 +73,35 @@ export function WorkOutScreen() {
 
   const hasSets = (workout?.loggedExercises.length ?? 0) > 0;
 
-  const footerButtons = (
-    <>
-      <SecondaryButton
-        label={hasSets ? 'start timer' : 'start rest timer'}
-        leadingIcon="clock"
-        onPress={() => {
-          // U2: rest timer countdown + notifications
-        }}
-        style={
-          !hasSets
-            ? styles.footerButtonStacked
-            : styles.footerSecondaryAction
-        }
-      />
-      <PrimaryButton
-        label={hasSets ? 'add set' : 'add new set'}
-        leadingIcon="plus"
-        onPress={openSheet}
-        style={
-          !hasSets ? styles.footerButtonStacked : styles.footerPrimaryAction
-        }
-        trailingIcon="none"
-      />
-    </>
+  const handleStartTimer = useCallback(() => {
+    // U2: rest timer countdown + notifications
+  }, []);
+
+  const footerButtons = useMemo(
+    () => (
+      <>
+        <SecondaryButton
+          label={hasSets ? 'start timer' : 'start rest timer'}
+          leadingIcon="clock"
+          onPress={handleStartTimer}
+          style={
+            !hasSets
+              ? styles.footerButtonStacked
+              : styles.footerSecondaryAction
+          }
+        />
+        <PrimaryButton
+          label={hasSets ? 'add set' : 'add new set'}
+          leadingIcon="plus"
+          onPress={openSheet}
+          style={
+            !hasSets ? styles.footerButtonStacked : styles.footerPrimaryAction
+          }
+          trailingIcon="none"
+        />
+      </>
+    ),
+    [handleStartTimer, hasSets, openSheet],
   );
 
   return (
@@ -106,10 +113,7 @@ export function WorkOutScreen() {
           topFadeHeight={spacing['s-14']}
           bottomFadeHeight={SCROLL_FADE_HEIGHT}
           bottomOffset={0}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: SCROLL_BOTTOM_INSET },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           onContentSizeChange={handleScrollContentSizeChange}
           showsVerticalScrollIndicator={false}
           style={styles.scroll}
@@ -173,7 +177,7 @@ export function WorkOutScreen() {
           <View
             style={[
               styles.footerEmptyButtons,
-              { paddingBottom: Math.max(insets.bottom, spacing['s-5']) },
+              { paddingBottom: getMainNavigationHomeInset(insets) },
             ]}
           >
             {footerButtons}
@@ -208,6 +212,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: spacing['s-8'],
+    paddingBottom: SCROLL_BOTTOM_INSET,
   },
   session: {
     paddingVertical: spacing['s-8'],

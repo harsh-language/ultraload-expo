@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radii, spacing } from '../theme/tokens';
-import { shadowAbove } from '../theme/shadow';
+import { StyleSheet, Text, View } from 'react-native';
+import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { ButtonShell, type ButtonShellVariantStyles } from './ButtonShell';
 import {
   buttonContentStyles,
   contentLayoutStyle,
@@ -67,16 +67,11 @@ export function PrimaryButton({
   );
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <ButtonShell
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
-        style,
-      ]}
+      style={style}
+      variantStyles={shellVariant}
     >
       <View
         style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
@@ -103,18 +98,13 @@ export function PrimaryButton({
           </>
         ) : null}
       </View>
-    </Pressable>
+    </ButtonShell>
   );
 }
 
-const styles = StyleSheet.create({
+const shellVariant: ButtonShellVariantStyles = {
   base: {
-    alignSelf: 'stretch',
-    minHeight: spacing['s-12'],
-    borderRadius: radii['r-pill'],
     backgroundColor: colors['bg-5'],
-    paddingHorizontal: spacing['s-8'],
-    ...shadowAbove,
   },
   pressed: {
     backgroundColor: colors['bg-4'],
@@ -122,6 +112,9 @@ const styles = StyleSheet.create({
   disabled: {
     backgroundColor: colors['bg-3'],
   },
+};
+
+const styles = StyleSheet.create({
   label: {
     color: colors['content-5'],
     ...textCase.lower,

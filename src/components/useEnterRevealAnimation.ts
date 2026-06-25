@@ -38,7 +38,7 @@ export function useEnterRevealAnimation(visible: boolean) {
         duration: ENTER_REVEAL_TRANSITION_MS,
       });
     }
-  }, [visible, opacity, translateY]);
+  }, [visible]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

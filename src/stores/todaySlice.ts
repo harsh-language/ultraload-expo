@@ -63,7 +63,7 @@ export const useTodayStore = create<TodaySlice>((set) => ({
   clearTodayWorkout: async (db) => {
     const calendarDate = getLocalCalendarDate();
     await clearWorkoutForDate(db, calendarDate);
-    set({ workout: null, hydrated: true });
+    set({ workout: null });
   },
   clear: () => set({ workout: null, hydrated: true }),
 }));

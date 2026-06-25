@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radii, spacing } from '../theme/tokens';
-import { shadowAbove } from '../theme/shadow';
+import { StyleSheet, Text, View } from 'react-native';
+import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { ButtonShell, type ButtonShellVariantStyles } from './ButtonShell';
 import {
   buttonContentStyles,
   contentLayoutStyle,
@@ -13,6 +13,8 @@ import { ClockIcon } from './icons/ClockIcon';
 import { PlusIcon } from './icons/PlusIcon';
 
 type LeadingIcon = 'clock' | 'plus' | 'none';
+
+const DISABLED_OPACITY = 0.5;
 
 interface SecondaryButtonProps {
   label: string;
@@ -44,18 +46,13 @@ export function SecondaryButton({
   const layout = getButtonContentLayout(hasLeading, false);
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <ButtonShell
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
-        style,
-      ]}
+      style={style}
+      variantStyles={shellVariant}
     >
-      {({ pressed }) => (
+      {(pressed) => (
         <View
           style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
         >
@@ -72,27 +69,25 @@ export function SecondaryButton({
           </Text>
         </View>
       )}
-    </Pressable>
+    </ButtonShell>
   );
 }
 
-const styles = StyleSheet.create({
+const shellVariant: ButtonShellVariantStyles = {
   base: {
-    minHeight: spacing['s-12'],
-    borderRadius: radii['r-pill'],
     borderWidth: spacing['s-1'],
     borderColor: colors['border-1'],
     backgroundColor: colors['bg-2'],
-    paddingHorizontal: spacing['s-8'],
-    alignSelf: 'stretch',
-    ...shadowAbove,
   },
   pressed: {
     borderColor: colors['content-2'],
   },
   disabled: {
-    opacity: 0.5,
+    opacity: DISABLED_OPACITY,
   },
+};
+
+const styles = StyleSheet.create({
   label: {
     color: colors['content-1'],
     ...textCase.lower,
