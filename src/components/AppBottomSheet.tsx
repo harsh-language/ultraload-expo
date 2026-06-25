@@ -10,6 +10,7 @@ import { forwardRef, useCallback, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../theme/tokens';
+import { shadowAbove } from '../theme/shadow';
 import { resolveColorToken } from '../theme/resolveColorToken';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -19,6 +20,7 @@ interface AppBottomSheetProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  headerAccessory?: ReactNode;
   onDismiss?: () => void;
   showHeaderBack?: boolean;
 }
@@ -32,9 +34,11 @@ const SHEET_GRADIENT_COLORS = [
 function SheetHeader({
   title,
   showBack,
+  headerAccessory,
 }: {
   title: string;
   showBack: boolean;
+  headerAccessory?: ReactNode;
 }) {
   const { dismiss } = useBottomSheetModal();
 
@@ -46,13 +50,14 @@ function SheetHeader({
         </IconLink>
       ) : null}
       <Text style={styles.title}>{title}</Text>
+      {headerAccessory}
     </View>
   );
 }
 
 export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
   function AppBottomSheet(
-    { title, children, footer, onDismiss, showHeaderBack = true },
+    { title, children, footer, headerAccessory, onDismiss, showHeaderBack = true },
     ref,
   ) {
     const insets = useSafeAreaInsets();
@@ -94,7 +99,11 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
             />
           </View>
           <View style={styles.inner}>
-            <SheetHeader showBack={showHeaderBack} title={title} />
+            <SheetHeader
+              headerAccessory={headerAccessory}
+              showBack={showHeaderBack}
+              title={title}
+            />
             <View style={styles.body}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>
@@ -125,7 +134,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing['s-8'],
     paddingTop: spacing['s-8'],
     paddingBottom: spacing['s-11'],
-    gap: spacing['s-8'],
+    gap: spacing['s-11'],
     zIndex: 1,
   },
   header: {
@@ -140,11 +149,13 @@ const styles = StyleSheet.create({
     ...textCase.lower,
   },
   body: {
-    gap: spacing['s-8'],
+    gap: spacing['s-5'],
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing['s-8'],
+    backgroundColor: colors['bg-1'],
+    ...shadowAbove,
   },
 });

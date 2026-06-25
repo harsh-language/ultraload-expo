@@ -185,3 +185,10 @@ export async function recordSet(
 
   return tree;
 }
+
+export async function clearWorkoutForDate(
+  db: AppDatabase,
+  calendarDate: string,
+): Promise<void> {
+  await db.delete(workouts).where(eq(workouts.date, calendarDate));
+}

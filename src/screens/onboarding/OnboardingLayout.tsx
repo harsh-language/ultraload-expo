@@ -7,6 +7,7 @@ import { OnboardingProgress } from '../../components/OnboardingProgress';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { BackIcon } from '../../components/icons/BackIcon';
 import { colors, spacing } from '../../theme/tokens';
+import { shadowAbove } from '../../theme/shadow';
 import { typography } from '../../theme/typography';
 import { textCase } from '../../theme/textCase';
 
@@ -140,6 +141,8 @@ const styles = StyleSheet.create({
     gap: spacing['s-8'],
     paddingHorizontal: spacing['s-8'],
     overflow: 'visible',
+    backgroundColor: colors['bg-1'],
+    ...shadowAbove,
   },
   footerStacked: {
     paddingTop: spacing['s-8'],
@@ -154,6 +157,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fullWidthPrimary: {
+    flex: 1,
     alignSelf: 'stretch',
   },
 });

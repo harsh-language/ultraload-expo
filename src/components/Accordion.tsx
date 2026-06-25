@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
@@ -45,26 +45,35 @@ function isMultiLineRow(height: number | undefined): boolean {
 export function Accordion({ title, items }: AccordionProps) {
   const [expanded, setExpanded] = useState(false);
   const [rowHeights, setRowHeights] = useState<Record<number, number>>({});
+  const [measuredBodyHeight, setMeasuredBodyHeight] = useState(0);
   const expandedProgress = useSharedValue(0);
   const bodyHeight = useSharedValue(0);
 
-  const handleToggle = useCallback(() => {
-    setExpanded((current) => {
-      const next = !current;
-      expandedProgress.value = withTiming(next ? 1 : 0, tabTransitionTiming);
-      return next;
-    });
-  }, [expandedProgress]);
+  useEffect(() => {
+    if (measuredBodyHeight > 0) {
+      bodyHeight.value = measuredBodyHeight;
+    }
+  }, [bodyHeight, measuredBodyHeight]);
 
-  const handleBodyLayout = useCallback(
-    (event: LayoutChangeEvent) => {
-      const nextHeight = event.nativeEvent.layout.height;
-      if (nextHeight > 0) {
-        bodyHeight.value = nextHeight;
-      }
-    },
-    [bodyHeight],
-  );
+  const handleToggle = useCallback(() => {
+    setExpanded((current) => !current);
+  }, []);
+
+  useEffect(() => {
+    expandedProgress.value = withTiming(
+      expanded ? 1 : 0,
+      tabTransitionTiming,
+    );
+  }, [expanded, expandedProgress]);
+
+  const handleBodyLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height;
+    if (nextHeight > 0) {
+      setMeasuredBodyHeight((current) =>
+        current === nextHeight ? current : nextHeight,
+      );
+    }
+  }, []);
 
   const handleRowLayout = useCallback((index: number, height: number) => {
     setRowHeights((current) => {

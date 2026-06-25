@@ -50,7 +50,7 @@ export function WarmUpStep({
 
           <Accordion
             items={[
-              'starts working after 2nd session',
+              'auto-tag applies after you log a standard set for that exercise today',
               'logging a weight in warmup range, automatically tags the set as “warmup”',
               'manually tag set as “warmup” anytime',
             ]}

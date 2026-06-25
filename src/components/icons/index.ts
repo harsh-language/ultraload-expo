@@ -2,6 +2,8 @@ export { ICON_DEFAULT_COLOR, ICON_SIZE } from './config';
 export { createIcon, type AppIconProps } from './createIcon';
 export { BackIcon } from './BackIcon';
 export { CheckmarkIcon } from './CheckmarkIcon';
+export { CircleCheckIcon } from './CircleCheckIcon';
+export { CirclePlaceholderOnIcon } from './CirclePlaceholderOnIcon';
 export { ChevronBottomIcon } from './ChevronBottomIcon';
 export { ChevronTopIcon } from './ChevronTopIcon';
 export { ClockIcon } from './ClockIcon';

@@ -1,0 +1,34 @@
+---
+description: Button label and icon alignment rules for PrimaryButton and SecondaryButton
+globs: src/components/PrimaryButton.tsx, src/components/SecondaryButton.tsx, src/components/buttonContentLayout.ts
+alwaysApply: false
+---
+
+# Button content alignment
+
+Layout is derived automatically from which icon slots are filled — do not add a `centered` prop or manual flex overrides at call sites.
+
+Shared logic lives in `src/components/buttonContentLayout.ts`.
+
+## Rules
+
+| Icons | Alignment |
+|-------|-----------|
+| Leading only | Centre icon + label as a group |
+| Trailing only | Label left, icon right (`space-between`) |
+| Leading + trailing | Leading icon + label left as a cluster; trailing icon right |
+| No icons | Centre label |
+
+## Usage
+
+```tsx
+// Centre group — leading icon only
+<PrimaryButton label="add set" leadingIcon="plus" trailingIcon="none" />
+
+// Label left, arrow right — onboarding CTA
+<PrimaryButton label="next" trailingIcon="arrow" />
+
+// Do not pass centered or flex:1 on the label
+```
+
+When adding a new button variant, extend `getButtonContentLayout` rather than inlining alignment styles.

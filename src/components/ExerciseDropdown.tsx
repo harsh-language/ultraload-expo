@@ -12,6 +12,16 @@ interface ExerciseDropdownProps {
   canNext: boolean;
 }
 
+function getIconColor(enabled: boolean, pressed: boolean): string {
+  if (!enabled) {
+    return colors['content-3'];
+  }
+  if (pressed) {
+    return colors['content-2'];
+  }
+  return colors['content-1'];
+}
+
 export function ExerciseDropdown({
   label,
   onPrevious,
@@ -20,24 +30,31 @@ export function ExerciseDropdown({
   canNext,
 }: ExerciseDropdownProps) {
   return (
-    <View style={styles.row}>
+    <View style={styles.container}>
       <Pressable
         accessibilityLabel="previous exercise"
         accessibilityRole="button"
         disabled={!canPrevious}
         onPress={onPrevious}
         style={({ pressed }) => [
-          styles.chevron,
-          pressed && canPrevious && styles.chevronPressed,
-          !canPrevious && styles.chevronDisabled,
+          styles.endCap,
+          styles.leftCap,
+          {
+            borderColor:
+              pressed && canPrevious ? colors['border-1'] : colors['border-2'],
+          },
         ]}
       >
-        <BackIcon color={canPrevious ? colors['content-1'] : colors['content-3']} />
+        {({ pressed }) => (
+          <BackIcon color={getIconColor(canPrevious, pressed)} />
+        )}
       </Pressable>
 
-      <Text numberOfLines={1} style={[typography.para2, styles.label]}>
-        {label}
-      </Text>
+      <View style={styles.center}>
+        <Text numberOfLines={1} style={[typography.para2, styles.label]}>
+          {label}
+        </Text>
+      </View>
 
       <Pressable
         accessibilityLabel="next exercise"
@@ -45,44 +62,58 @@ export function ExerciseDropdown({
         disabled={!canNext}
         onPress={onNext}
         style={({ pressed }) => [
-          styles.chevron,
-          pressed && canNext && styles.chevronPressed,
-          !canNext && styles.chevronDisabled,
+          styles.endCap,
+          styles.rightCap,
+          {
+            borderColor:
+              pressed && canNext ? colors['border-1'] : colors['border-2'],
+          },
         ]}
       >
-        <ForwardIcon color={canNext ? colors['content-1'] : colors['content-3']} />
+        {({ pressed }) => (
+          <ForwardIcon color={getIconColor(canNext, pressed)} />
+        )}
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: spacing['s-12'],
-    borderWidth: spacing['s-1'],
-    borderColor: colors['border-2'],
-    borderRadius: radii['r-pill'],
+    height: spacing['s-12'],
+    borderRadius: radii['r-h-60'],
     backgroundColor: colors['bg-2'],
     overflow: 'hidden',
   },
-  chevron: {
+  endCap: {
     width: spacing['s-12'],
+    height: spacing['s-12'],
+    borderWidth: spacing['s-1'],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leftCap: {
+    borderTopLeftRadius: radii['r-h-60'],
+    borderBottomLeftRadius: radii['r-h-60'],
+  },
+  rightCap: {
+    borderTopRightRadius: radii['r-h-60'],
+    borderBottomRightRadius: radii['r-h-60'],
+  },
+  center: {
+    flex: 1,
+    minWidth: 0,
     height: spacing['s-12'],
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: colors['border-2'],
-  },
-  chevronPressed: {
-    backgroundColor: colors['bg-1'],
-  },
-  chevronDisabled: {
-    opacity: 0.5,
+    borderTopWidth: spacing['s-1'],
+    borderBottomWidth: spacing['s-1'],
+    borderTopColor: colors['border-2'],
+    borderBottomColor: colors['border-2'],
   },
   label: {
-    flex: 1,
-    textAlign: 'center',
     color: colors['content-1'],
     ...textCase.lower,
   },

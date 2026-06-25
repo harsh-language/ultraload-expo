@@ -1,3 +1,9 @@
+import {
+  formatSessionTotalWeightLabel,
+  getSessionTotalWeightMoved,
+  hasStandardSets,
+  type WorkoutForSessionTotal,
+} from '../domain/session-totals';
 import { SessionTitleBar } from './SessionTitleBar';
 
 function formatSessionDateLabel(date: Date = new Date()): string {
@@ -9,6 +15,19 @@ function formatSessionDateLabel(date: Date = new Date()): string {
   return `${month} ${day}`;
 }
 
-export function TodaySessionTitleBar() {
-  return <SessionTitleBar dateLabel={formatSessionDateLabel(new Date())} />;
+interface TodaySessionTitleBarProps {
+  workout: WorkoutForSessionTotal | null;
+}
+
+export function TodaySessionTitleBar({ workout }: TodaySessionTitleBarProps) {
+  const totalLabel = hasStandardSets(workout)
+    ? formatSessionTotalWeightLabel(getSessionTotalWeightMoved(workout))
+    : undefined;
+
+  return (
+    <SessionTitleBar
+      dateLabel={formatSessionDateLabel(new Date())}
+      totalLabel={totalLabel}
+    />
+  );
 }

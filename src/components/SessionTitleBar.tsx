@@ -1,7 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { useEnterRevealAnimation } from './useEnterRevealAnimation';
 
 interface SessionTitleBarProps {
   dateLabel: string;
@@ -9,11 +11,18 @@ interface SessionTitleBarProps {
 }
 
 export function SessionTitleBar({ dateLabel, totalLabel }: SessionTitleBarProps) {
+  const showTotal = totalLabel != null;
+  const { mounted, animatedStyle } = useEnterRevealAnimation(showTotal);
+
   return (
     <View style={styles.row}>
       <Text style={styles.date}>{dateLabel}</Text>
-      {totalLabel ? (
-        <Text style={styles.total}>{totalLabel}</Text>
+      {mounted ? (
+        <Animated.View style={animatedStyle}>
+          <Text numberOfLines={1} style={styles.total}>
+            {totalLabel}
+          </Text>
+        </Animated.View>
       ) : null}
     </View>
   );

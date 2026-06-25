@@ -1,12 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  ScrollView,
   ScrollViewProps,
 } from 'react-native';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView as RNScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -27,22 +28,29 @@ export interface ScrollFadeViewProps extends ScrollViewProps {
   bottomFadeHeight?: number;
   topOffset?: number;
   bottomOffset?: number;
+  /** Show bottom fade even when content does not overflow (e.g. workout footer overlay). */
+  alwaysShowBottomFade?: boolean;
 }
 
-export function ScrollFadeView({
-  fadeHeight = SCROLL_FADE_HEIGHT,
-  topFadeHeight,
-  bottomFadeHeight,
-  topOffset = 0,
-  bottomOffset = 0,
-  onScroll,
-  onLayout,
-  onContentSizeChange,
-  style,
-  scrollEventThrottle = 16,
-  children,
-  ...scrollViewProps
-}: ScrollFadeViewProps) {
+export const ScrollFadeView = forwardRef<ScrollView, ScrollFadeViewProps>(
+  function ScrollFadeView(
+    {
+      fadeHeight = SCROLL_FADE_HEIGHT,
+      topFadeHeight,
+      bottomFadeHeight,
+      topOffset = 0,
+      bottomOffset = 0,
+      alwaysShowBottomFade = false,
+      onScroll,
+      onLayout,
+      onContentSizeChange,
+      style,
+      scrollEventThrottle = 16,
+      children,
+      ...scrollViewProps
+    },
+    ref,
+  ) {
   const resolvedTopFadeHeight = topFadeHeight ?? fadeHeight;
   const resolvedBottomFadeHeight = bottomFadeHeight ?? fadeHeight;
 
@@ -63,17 +71,22 @@ export function ScrollFadeView({
   const topOpacity = useSharedValue(0);
   const bottomOpacity = useSharedValue(0);
 
-  useEffect(() => {
-    topOpacity.value = withTiming(showTop ? 1 : 0, {
-      duration: FADE_TRANSITION_MS,
-    });
-  }, [showTop, topOpacity]);
+  const hasOverflow =
+    viewportHeight > 0 && contentHeight > viewportHeight + 1;
+  const showBottomFade = alwaysShowBottomFade || (hasOverflow && showBottom);
+  const showTopFade = hasOverflow && showTop;
 
   useEffect(() => {
-    bottomOpacity.value = withTiming(showBottom ? 1 : 0, {
+    topOpacity.value = withTiming(showTopFade ? 1 : 0, {
       duration: FADE_TRANSITION_MS,
     });
-  }, [showBottom, bottomOpacity]);
+  }, [showTopFade, topOpacity]);
+
+  useEffect(() => {
+    bottomOpacity.value = withTiming(showBottomFade ? 1 : 0, {
+      duration: FADE_TRANSITION_MS,
+    });
+  }, [showBottomFade, bottomOpacity]);
 
   const topFadeStyle = useAnimatedStyle(() => ({
     opacity: topOpacity.value,
@@ -82,9 +95,6 @@ export function ScrollFadeView({
   const bottomFadeStyle = useAnimatedStyle(() => ({
     opacity: bottomOpacity.value,
   }));
-
-  const hasOverflow =
-    viewportHeight > 0 && contentHeight > viewportHeight + 1;
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -112,8 +122,9 @@ export function ScrollFadeView({
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <RNScrollView
         {...scrollViewProps}
+        ref={ref}
         onContentSizeChange={handleContentSizeChange}
         onLayout={handleLayout}
         onScroll={handleScroll}
@@ -121,9 +132,10 @@ export function ScrollFadeView({
         style={[styles.scroll, style]}
       >
         {children}
-      </ScrollView>
-      {hasOverflow ? (
+      </RNScrollView>
+      {showTopFade || showBottomFade ? (
         <>
+          {showTopFade ? (
           <Animated.View
             pointerEvents="none"
             style={[
@@ -140,6 +152,8 @@ export function ScrollFadeView({
               style={StyleSheet.absoluteFill}
             />
           </Animated.View>
+          ) : null}
+          {showBottomFade ? (
           <Animated.View
             pointerEvents="none"
             style={[
@@ -156,11 +170,13 @@ export function ScrollFadeView({
               style={StyleSheet.absoluteFill}
             />
           </Animated.View>
+          ) : null}
         </>
       ) : null}
     </View>
   );
-}
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

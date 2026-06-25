@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
@@ -16,7 +16,8 @@ import {
   tabTransitionTiming,
   type MainTabKey,
 } from '../navigation/mainTabs';
-import { colors, spacing, tokens } from '../theme/tokens';
+import { colors, spacing } from '../theme/tokens';
+import { shadowAbove } from '../theme/shadow';
 import { NavigationTab } from './NavigationTab';
 import {
   TabHistoryIcon,
@@ -41,7 +42,13 @@ const TAB_ICONS: Record<MainTabKey, FC<AppIconProps>> = {
 };
 
 const BAR_HEIGHT = spacing['s-12'];
-const shadow = tokens.layout.shadow;
+
+/** Tab bar height excluding the home-indicator inset (lives in `wrapper` padding). */
+export const MAIN_NAVIGATION_BAR_HEIGHT = BAR_HEIGHT;
+
+export function getMainNavigationHomeInset(insets: { bottom: number }): number {
+  return Math.max(insets.bottom, spacing['s-5']);
+}
 
 export function MainNavigation({
   selected,
@@ -118,7 +125,7 @@ export function MainNavigation({
     <View
       style={[
         styles.wrapper,
-        { paddingBottom: Math.max(insets.bottom, spacing['s-5']) },
+        { paddingBottom: getMainNavigationHomeInset(insets) },
       ]}
     >
       <View style={styles.bar}>
@@ -162,19 +169,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors['border-2'],
     paddingHorizontal: spacing['s-8'],
     overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: shadow.color,
-        shadowOffset: { width: 0, height: shadow.above },
-        shadowOpacity: 1,
-        shadowRadius: shadow.blur,
-      },
-      android: {
-        // Android shadow approximation — iOS uses tokens.layout.shadow above
-        elevation: 12,
-      },
-      default: {},
-    }),
+    ...shadowAbove,
   },
   barBase: {
     ...StyleSheet.absoluteFill,

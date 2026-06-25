@@ -1,0 +1,60 @@
+---
+description: Component layering tiers, fix-at-lowest-layer rule, and contract-test policy for shared primitives
+alwaysApply: true
+---
+
+# Component layering
+
+Prevent cross-flow breakage by fixing at the lowest layer that is true for every consumer.
+
+## Layer tiers
+
+| Tier | Location | Blast radius |
+|------|----------|--------------|
+| Shared primitives | `src/components/*`, `src/theme/*` helpers | All flows |
+| Flow shells | `OnboardingLayout`, `AddSetSheet` | One flow |
+| Screen composition | `WorkOutScreen`, onboarding steps | One screen |
+
+## Fix at the lowest layer
+
+A change true for only one screen belongs in that screen, not in a shared primitive.
+
+Prefer derived variants over per-screen props:
+
+- `getButtonContentLayout` — alignment derived from which icon slots are filled
+- `ScrollFadeView` — screen passes `bottomOffset` / `topOffset`; component does not know about workout vs onboarding
+
+Do not add one-off props or flex overrides at call sites when a variant or extracted helper would cover all documented use cases.
+
+## Contract test checklist
+
+**Yes — add a test when:**
+
+- Pure logic is extracted from a component (layout helpers, visibility math, spacing calculators)
+- A shared primitive is used by 2+ flows
+- Behavior is defined as a matrix of inputs → outputs (icon slots → alignment, scroll position → fade visibility)
+
+**No — skip when:**
+
+- Logic is screen-specific constants or one-off layout (e.g. `WorkOutScreen` footer insets)
+- Component is purely presentational with no testable pure functions
+- Used in a single screen only and unlikely to be shared
+
+**Where tests live:**
+
+- Component logic → `__tests__/components/<name>.test.ts`
+- Theme helpers → `__tests__/theme/<name>.test.ts`
+- Domain logic → `__tests__/domain/<name>.test.ts`
+
+**What to test:** inputs → outputs on the pure function. Do not render components in contract tests — follow the `scroll-fade.test.ts` pattern, not snapshot tests.
+
+## Mandates
+
+1. **On create:** when adding a new shared primitive that meets the checklist, add its contract test in the same change.
+2. **On edit:** when changing a shared primitive's behavior, add or update its contract test in the same change.
+
+## Reference examples
+
+- `__tests__/components/scroll-fade.test.ts` — visibility math
+- `__tests__/components/button-content-layout.test.ts` — layout matrix
+- `__tests__/screens/onboarding-layout.test.ts` — spacing helpers

@@ -1,12 +1,20 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, radii, spacing } from '../theme/tokens';
+import { StyleSheet, Text, View } from 'react-native';
+import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { ButtonShell, type ButtonShellVariantStyles } from './ButtonShell';
+import {
+  buttonContentStyles,
+  contentLayoutStyle,
+  getButtonContentLayout,
+} from './buttonContentLayout';
 import type { AppIconProps } from './icons';
 import { ClockIcon } from './icons/ClockIcon';
 import { PlusIcon } from './icons/PlusIcon';
 
 type LeadingIcon = 'clock' | 'plus' | 'none';
+
+const DISABLED_OPACITY = 0.5;
 
 interface SecondaryButtonProps {
   label: string;
@@ -34,58 +42,53 @@ export function SecondaryButton({
   leadingIcon = 'none',
   style,
 }: SecondaryButtonProps) {
+  const hasLeading = leadingIcon !== 'none';
+  const layout = getButtonContentLayout(hasLeading, false);
+
   return (
-    <Pressable
-      accessibilityRole="button"
+    <ButtonShell
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
-        style,
-      ]}
+      style={style}
+      variantStyles={shellVariant}
     >
-      {({ pressed }) => (
-        <>
+      {(pressed) => (
+        <View
+          style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
+        >
           <LeadingIcon type={leadingIcon} />
           <Text
             style={[
               typography.para1,
               styles.label,
+              buttonContentStyles.labelCentered,
               pressed && !disabled && styles.pressedLabel,
             ]}
           >
             {label}
           </Text>
-        </>
+        </View>
       )}
-    </Pressable>
+    </ButtonShell>
   );
 }
 
-const styles = StyleSheet.create({
+const shellVariant: ButtonShellVariantStyles = {
   base: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: spacing['s-12'],
-    borderRadius: radii['r-pill'],
     borderWidth: spacing['s-1'],
     borderColor: colors['border-1'],
     backgroundColor: colors['bg-2'],
-    paddingHorizontal: spacing['s-8'],
-    gap: spacing['s-5'],
-    alignSelf: 'stretch',
   },
   pressed: {
     borderColor: colors['content-2'],
   },
   disabled: {
-    opacity: 0.5,
+    opacity: DISABLED_OPACITY,
   },
+};
+
+const styles = StyleSheet.create({
   label: {
-    flex: 1,
     color: colors['content-1'],
     ...textCase.lower,
   },

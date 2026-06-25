@@ -54,7 +54,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 
 ## Key concepts
 
-- **Standard vs warm-up sets:** only standard (non-warm-up) sets count toward progress. Sets at/under a threshold weight auto-tag as warm-up when global auto-tag is on (`domain/warmup.ts`); the toggle can override one set. Tap-to-edit on logged rows is not wired yet.
+- **Standard vs warm-up sets:** only standard (non-warm-up) sets count toward progress. Auto-tag when weight ≤ `warmUpPercent` × reference weight from logged history (BR15; U1 interim: today's last standard set for that exercise). ◊ exercises: total weight ≤ bodyweight (BR26). Warm-up sets are never used when finding the reference. Manual toggle can override one set. Tap-to-edit on logged rows is not wired yet.
 - **Total weight moved:** Σ(weight × reps) per exercise per day; day total sums across exercises — **math not implemented in UI yet**.
 - **% change:** compares an exercise to its previous session — **not implemented yet**.
 - **Muscle-group weighting:** each exercise contributes to one or more muscle groups by a multiplier — used for the future chart filter (`getFilterableMuscleGroups` in `domain/catalogue.ts`).

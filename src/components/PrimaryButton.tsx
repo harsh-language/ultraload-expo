@@ -1,8 +1,13 @@
-import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radii, spacing } from '../theme/tokens';
+import { StyleSheet, Text, View } from 'react-native';
+import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { ButtonShell, type ButtonShellVariantStyles } from './ButtonShell';
+import {
+  buttonContentStyles,
+  contentLayoutStyle,
+  getButtonContentLayout,
+} from './buttonContentLayout';
 import { ForwardIcon } from './icons/ForwardIcon';
 import { CheckmarkIcon } from './icons/CheckmarkIcon';
 import { PlusIcon } from './icons/PlusIcon';
@@ -37,46 +42,69 @@ export function PrimaryButton({
   leadingIcon = 'none',
   style,
 }: PrimaryButtonProps) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
-        style,
+  const hasLeading = leadingIcon !== 'none';
+  const hasTrailing = trailingIcon !== 'none';
+  const layout = getButtonContentLayout(hasLeading, hasTrailing);
+
+  const leading =
+    leadingIcon === 'plus' ? (
+      <PlusIcon color={colors['content-5']} />
+    ) : null;
+
+  const labelText = (
+    <Text
+      style={[
+        typography.para1,
+        styles.label,
+        layout === 'trailingEdge'
+          ? buttonContentStyles.labelGrow
+          : buttonContentStyles.labelCentered,
+        disabled && styles.disabledLabel,
       ]}
     >
-      {leadingIcon === 'plus' ? (
-        <PlusIcon color={colors['content-5']} />
-      ) : null}
-      <Text
-        style={[
-          typography.para1,
-          styles.label,
-          disabled && styles.disabledLabel,
-        ]}
+      {label}
+    </Text>
+  );
+
+  return (
+    <ButtonShell
+      disabled={disabled}
+      onPress={onPress}
+      style={style}
+      variantStyles={shellVariant}
+    >
+      <View
+        style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
       >
-        {label}
-      </Text>
-      <Trailing type={trailingIcon} />
-    </Pressable>
+        {layout === 'centered' ? (
+          <>
+            {leading}
+            {labelText}
+          </>
+        ) : null}
+        {layout === 'trailingEdge' ? (
+          <>
+            {labelText}
+            <Trailing type={trailingIcon} />
+          </>
+        ) : null}
+        {layout === 'splitEdges' ? (
+          <>
+            <View style={buttonContentStyles.leftCluster}>
+              {leading}
+              {labelText}
+            </View>
+            <Trailing type={trailingIcon} />
+          </>
+        ) : null}
+      </View>
+    </ButtonShell>
   );
 }
 
-const styles = StyleSheet.create({
+const shellVariant: ButtonShellVariantStyles = {
   base: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: spacing['s-12'],
-    borderRadius: radii['r-pill'],
     backgroundColor: colors['bg-5'],
-    paddingHorizontal: spacing['s-8'],
-    gap: spacing['s-5'],
   },
   pressed: {
     backgroundColor: colors['bg-4'],
@@ -84,8 +112,10 @@ const styles = StyleSheet.create({
   disabled: {
     backgroundColor: colors['bg-3'],
   },
+};
+
+const styles = StyleSheet.create({
   label: {
-    flex: 1,
     color: colors['content-5'],
     ...textCase.lower,
   },

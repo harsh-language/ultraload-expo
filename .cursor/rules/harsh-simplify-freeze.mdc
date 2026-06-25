@@ -1,0 +1,25 @@
+---
+description: Intentional code patterns frozen by harsh-simplify-code — do not re-flag or change without user request
+globs: src/**/*
+alwaysApply: false
+---
+
+# harsh-simplify freeze
+
+Durable decisions from `/harsh-simplify-code` **keep as-is** answers. Survives branch deletion and merge.
+
+When the skill loads, matching findings are **frozen** — no re-ask, no auto-fix.
+
+## When to add a row
+
+After a **keep as-is** (or equivalent) decision during `/harsh-simplify-code`, append a row below in the same change.
+
+## When to remove a row
+
+Delete when the pattern no longer exists, you explicitly chose to refactor it, or the file was removed.
+
+## Frozen patterns
+
+| ID | File | Pattern | Reason |
+|----|------|---------|--------|
+| T1 | `src/components/Warmup.tsx` | `Text` uses `[typography.para2, styles.label, { color }]` where `color` comes from `warmupColor(value, pressed)` | Token colors for four pressed/checked states; inline dynamic color is intentional — do not hoist to static StyleSheet or merge without design review |

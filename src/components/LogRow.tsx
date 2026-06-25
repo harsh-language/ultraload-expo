@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     ...typography.para1,
     flex: 1,
     color: colors['content-1'],
-    ...textCase.none,
+    ...textCase.lower,
   },
   sessionDate: {
     flex: 1,

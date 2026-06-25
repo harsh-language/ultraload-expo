@@ -55,7 +55,7 @@ export function SlidePager<T extends string>({
         ]}
       >
         {items.map((item) => (
-          <View key={item} style={{ width }}>
+          <View key={item} style={{ width, flex: 1 }}>
             {renderItem(item)}
           </View>
         ))}

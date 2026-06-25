@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { AppDatabase } from '../db/client';
 import { getLocalCalendarDate } from '../domain/day-record';
-import { loadWorkoutTree, recordSet as persistSet } from '../db/workoutRepository';
+import { loadWorkoutTree, recordSet as persistSet, clearWorkoutForDate } from '../db/workoutRepository';
 
 export interface TodaySet {
   id: number;
@@ -37,6 +37,7 @@ interface TodaySlice {
   hydrated: boolean;
   hydrate: (db: AppDatabase) => Promise<void>;
   recordSet: (db: AppDatabase, payload: RecordSetPayload) => Promise<void>;
+  clearTodayWorkout: (db: AppDatabase) => Promise<void>;
   clear: () => void;
 }
 
@@ -58,6 +59,11 @@ export const useTodayStore = create<TodaySlice>((set) => ({
       warmUp: payload.warmUp,
     });
     set({ workout, hydrated: true });
+  },
+  clearTodayWorkout: async (db) => {
+    const calendarDate = getLocalCalendarDate();
+    await clearWorkoutForDate(db, calendarDate);
+    set({ workout: null });
   },
   clear: () => set({ workout: null, hydrated: true }),
 }));

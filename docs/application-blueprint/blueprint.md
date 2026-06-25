@@ -57,7 +57,7 @@ UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sess
 | F1 | Notepad set logging | Add/edit/delete sets via a bottom sheet; sets group under their exercise automatically. No "start workout" — first set of the day creates the record (BR1). |
 | F2 | First-launch onboarding | Splash → bodyweight (required) → exercise picker (≥1) → rest timer preset → warm-up preset → Work Out. Replayed on reset. |
 | F3 | Catalogue + workout plan | 25 built-in exercises (E3); flat ordered plan chosen at onboarding, editable in Settings. Only plan exercises are visible (BR2); removal hides history until re-enabled (BR3), with confirmation bottom sheet (FL8). |
-| F4 | Warm-up auto-tag + override | Sets at weight ≤ threshold auto-tag as warm-up (BR4); toggle always visible; manual override applies to one set only (BR5). |
+| F4 | Warm-up auto-tag + override | Sets at weight ≤ history-derived threshold auto-tag as warm-up (BR4, BR15); toggle always visible; manual override applies to one set only (BR5). |
 | F5 | Rest timer | Optional, user-triggered, global range 3 s – 5 min (BR20); background notification when app is backgrounded. |
 | F6 | History list | Per-day rows: day total weight + day % change, or "—" when no comparison (BR7, BR9, BR10). |
 | F7 | Session detail | Read-only by default; top-right edit enters editable mode reusing the logging bottom sheet; edits recalc downstream (BR12). |
@@ -104,7 +104,7 @@ flowchart TD
   sheet -. "Cancel" .-> main
 ```
 
-- Defaults: last set's values for the same exercise today, else slider minimum (BR21). Warm-up auto-tags per BR4 (◊ exercises: total weight vs BR26; others: weight vs threshold); manual override lasts one set (BR5).
+- Defaults: last set's values for the same exercise today, else slider minimum (BR21). Warm-up auto-tags per BR4 (◊ exercises: total weight vs BR26; others: weight vs history-derived threshold per BR15); manual override lasts one set (BR5).
 
 ### FL3 — Edit / delete a set (F1)
 **Work Out (SCR6):** tap a logged set row → SCR7 opens in **edit mode** with that set's values (per Figma "edit a set"). **History (SCR12/SCR13):** same bottom sheet in edit mode. Change values → Record, or Delete (confirmation overlay per Figma). Editing recalculates affected totals/% (BR12).
@@ -199,7 +199,7 @@ flowchart LR
 |----|--------|----------------|-------|
 | E1 | Profile | bodyweight (kg, required), name/height/age (optional), units (kg/lbs/stone), warmUpPercent, warmUpAutoTagEnabled (bool, default true), restTimerSeconds | Single user. Display unit is a profile setting; storage always kg. |
 | E2 | WorkoutPlan | ordered list of exerciseIds | Flat, catalogue order (grouped by muscle group); no split entities. |
-| E3 | Exercise | id (immutable slug), name, primaryMuscle, type (Compound/Isolation, reference only), sliderRange, increment, warmUpThreshold, muscleMultipliers, isBodyweight, deprecated (optional, default false) | Built-in catalogue only (BR28–BR31); seeded from editable data module, not user-created. Display name editable in seed file; id never changes (BR29). Cannot rename or free-text in-app. |
+| E3 | Exercise | id (immutable slug), name, primaryMuscle, type (Compound/Isolation, reference only), sliderRange, increment, muscleMultipliers, isBodyweight, deprecated (optional, default false) | Built-in catalogue only (BR28–BR31); seeded from editable data module, not user-created. Display name editable in seed file; id never changes (BR29). Cannot rename or free-text in-app. Warm-up thresholds are runtime-derived from logged history (BR15), not catalogue fields. |
 | E4 | MuscleGroup | name, multiplier (per exercise) | Chest/Shoulders/Back/Glutes/Quads filterable; Biceps/Triceps only in multipliers. |
 | E5 | Workout | date (one per calendar day), loggedExercises | Created by first set of the day (BR1). |
 | E6 | LoggedExercise | exerciseId, sets, order (first logged) | Group order = first exercise logged that day. |
@@ -216,7 +216,7 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | BR1 | One workout record per calendar day; first set of the day creates it. |
 | BR2 | Only exercises in the active workout plan appear in lists, filters, pickers (Work Out + History). |
 | BR3 | Removing an exercise hides it and its history; re-enabling restores exercise and full history. |
-| BR4 | A set auto-tags as warm-up when weight ≤ warm-up threshold; warm-up sets are excluded from progress math. For the 3 bodyweight exercises (◊), **weight** means **total weight** per BR18 and threshold per BR26; for all other exercises, **weight** is external load compared to `warmUpThreshold` (BR15). |
+| BR4 | A set auto-tags as warm-up when weight ≤ warm-up threshold; warm-up sets are excluded from progress math. For the 3 bodyweight exercises (◊), **weight** means **total weight** per BR18 and threshold per BR26; for all other exercises, **weight** is external load compared to the runtime threshold derived from BR15. |
 | BR5 | Manual warm-up toggle override applies to one set only; the next set reverts to auto-tagging. |
 | BR6 | Per exercise per day, **total weight moved** = Σ(weight × reps) over standard (non-warm-up) sets only. |
 | BR7 | Day total weight = sum of total weight moved across all exercises that day, standard sets only. |
@@ -227,7 +227,7 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | BR12 | Editing a past day recalculates all downstream % changes. |
 | BR13 | Muscle-group chart value = Σ over exercises of (total weight moved × that muscle's multiplier); exercises with no multiplier for the group are skipped. |
 | BR14 | Slider range = Beginner rounded down to nearest 10 → Elite rounded up to nearest 10 (from 75 kg reference standards). Applies to the 22 non-bodyweight exercises only (see BR18). |
-| BR15 | Warm-up threshold default = 50% of Intermediate 1RM; adjustable 10–70% in Settings. |
+| BR15 | Warm-up threshold = `warmUpPercent / 100 × referenceWeight`, where `referenceWeight` is the heaviest **standard** (non-warm-up) set weight logged for that exercise at the best available rep count: prefer **6 reps**, else **7**, **8**, **9**, … Warm-up sets are never used when finding the reference. Default `warmUpPercent` = 50; adjustable 10–70% in onboarding/Settings. **No strength standards or catalogue thresholds.** If no qualifying history exists, no auto-tag (manual toggle still available). **U1 interim (Stage 1):** until full history rep-max lookup ships in Stage 2, non-◊ auto-tag uses **today's most recent standard set** for the same exercise as `referenceWeight`. No auto-tag until that exists. |
 | BR16 | Increments by equipment: barbell 5 kg, dumbbell 2.5 kg, cable/machine/bodyweight 1 kg; overridable per exercise to 1 / 2.5 / 5 kg. |
 | BR17 | All weights stored in kg; display in kg/lbs/stone uniformly; unit conversion rounded to nearest 0.5. |
 | BR18 | The 3 bodyweight exercises (Dip (weighted), Weighted pull-ups, Gluteus bridge curl) show **total weight** (current bodyweight + added; added may be negative = assisted). Slider range = **[0.5× current bodyweight, 2× current bodyweight]**, recomputed **live** whenever bodyweight changes in Settings (no restart). Increment = 1 kg. This supersedes the old fixed strength-standard ranges and the 75 kg reference for these three; the 75 kg standard (BR14, BR25) drives only the other 22 exercises. |
@@ -240,44 +240,44 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | BR24 | Reset = full wipe + onboarding replay. |
 | BR25 | 75 kg reference bodyweight is used only to derive ranges for the 22 non-bodyweight exercises; it does not scale with the user's actual bodyweight over time and does not affect the 3 bodyweight exercises (BR18). |
 | BR27 | **Global warm-up auto-tag** (`warmUpAutoTagEnabled`, default on): when **on**, BR4/BR26 auto-tagging applies. When **off**, no set is auto-tagged; the warm-up toggle remains visible on every set and the user may still mark a set warm-up manually (manual warm-up sets remain excluded from progress per BR6). Per-set override (BR5) applies only when auto-tag is on. |
-| BR28 | **Catalogue is editable seed data**, not scattered constants. The built-in exercise list and muscle-group multipliers live in **one dedicated data module** (e.g. `src/data/exercise-catalogue.ts`). The app reads catalogue fields to decide which exercises appear in pickers, which sliders/toggles to show, default ranges, increments, warm-up rules, and chart muscle-group math. **No exercise names, ranges, or multipliers hardcoded in UI components.** The table in this blueprint is the v1 starting point; Pablo may refine it after further research. |
-| BR29 | **Catalogue edit rules (id vs metadata).** Each exercise has an immutable `id` slug (e.g. `bench-press`). Workouts, the plan, settings overrides, and export JSON all reference exercises **by id only** — never by display name. **Safe to edit in the seed file (no UI code changes):** display `name`, `primaryMuscle`, ranges, increments, warm-up rules, `muscleMultipliers`, `isBodyweight`, and other metadata fields. **Safe to add:** new exercises with new unique ids. **Never rename or delete an `id`** that existing workout history may reference — v1 has no id-migration tooling. To retire an exercise from future use, set `deprecated: true` in the catalogue (BR30). **Plan removal (BR3)** is separate: toggling off in Settings hides an exercise from the app; the catalogue row remains. |
+| BR28 | **Catalogue is editable seed data**, not scattered constants. The built-in exercise list and muscle-group multipliers live in **one dedicated data module** (e.g. `src/data/exercise-catalogue.ts`). The app reads catalogue fields to decide which exercises appear in pickers, which sliders/toggles to show, default ranges, increments, and chart muscle-group math. Warm-up thresholds are derived at runtime from history (BR15), not catalogue fields. **No exercise names, ranges, or multipliers hardcoded in UI components.** The table in this blueprint is the v1 starting point; Pablo may refine it after further research. |
+| BR29 | **Catalogue edit rules (id vs metadata).** Each exercise has an immutable `id` slug (e.g. `bench-press`). Workouts, the plan, settings overrides, and export JSON all reference exercises **by id only** — never by display name. **Safe to edit in the seed file (no UI code changes):** display `name`, `primaryMuscle`, ranges, increments, `muscleMultipliers`, `isBodyweight`, and other metadata fields. **Safe to add:** new exercises with new unique ids. **Never rename or delete an `id`** that existing workout history may reference — v1 has no id-migration tooling. To retire an exercise from future use, set `deprecated: true` in the catalogue (BR30). **Plan removal (BR3)** is separate: toggling off in Settings hides an exercise from the app; the catalogue row remains. |
 | BR30 | **Deprecated catalogue entries.** An exercise with `deprecated: true` is excluded from onboarding and the add-exercises picker; it cannot be newly added to the plan. If already in the plan or in workout history, it continues to resolve name, ranges, and multipliers from the catalogue. Deprecated entries are never hard-deleted from the seed file while history may reference them. |
 | BR31 | **Orphaned exercise ids.** If workout history references an `exerciseId` missing from the catalogue (e.g. seed row was incorrectly deleted), the app must not crash. History and session detail show those sets grouped under a fallback label (the raw id, or "Unknown exercise"); sets remain read-only. The id cannot be selected for new logging; it is excluded from chart filters and progress comparisons involving catalogue metadata. |
 
 > **v1 snapshot — not frozen.** This table documents the initial seed data. The live source of truth at build time is the catalogue data module (BR28). Pablo will refine exercises, ranges, and multipliers as research continues; the app must surface whatever the catalogue defines without code changes outside that file.
 >
-> **What you can change safely** (BR29): display names, ranges, increments, warm-up rules, muscle multipliers, muscle group, bodyweight flag. **What you cannot change without breaking history:** the `id` slug. **To stop offering an exercise:** set `deprecated: true` — do not delete the row. **To hide from your app without retiring globally:** remove from your workout plan (BR3).
+> **What you can change safely** (BR29): display names, ranges, increments, muscle multipliers, muscle group, bodyweight flag. **What you cannot change without breaking history:** the `id` slug. **To stop offering an exercise:** set `deprecated: true` — do not delete the row. **To hide from your app without retiring globally:** remove from your workout plan (BR3).
 
-| Exercise | Muscle | Slider range (kg) | Warm-up ≤ (kg) | Incr. | BW◊ |
-|----------|--------|-------------------|----------------|-------|-----|
-| Bench press | Chest | 30–150 | 47 | 5 | |
-| Dip (weighted) | Chest | total wt; 0.5×–2× bodyweight (live) | ≤ bodyweight (live) | 1 | ◊ |
-| Crossover | Chest | 10–110 (min 10) | 19 | 1 | |
-| 30° incline bench press | Chest | 30–140 | 38 | 5 | |
-| Overhead press | Shoulders | 20–110 | 30 | 5 | |
-| Z press | Shoulders | 20–90 | 25 | 5 | |
-| Modified Bradford press | Shoulders | 10–80 | 21 | 5 | |
-| Weighted pull-ups | Back | total wt; 0.5×–2× bodyweight (live) | ≤ bodyweight (live) | 1 | ◊ |
-| Rows | Back | 30–140 | 38 | 5 | |
-| Meadows row | Back | 10–70 | 17 | 5 | |
-| High-cable row | Back | 30–120 | 34 | 1 | |
-| Lat pulldown | Back | 30–140 | 38 | 1 | |
-| Dead row | Back | 40–150 | 42 | 5 | |
-| Barbell hip thrust | Glutes | 30–270 | 66 | 5 | |
-| Cable pull through | Glutes | 10–140 | 28 | 1 | |
-| Dumbbell leaning step up | Glutes | 10–110 | 23 | 2.5 | |
-| Gluteus bridge curl | Glutes | total wt; 0.5×–2× bodyweight (live) | ≤ bodyweight (live) | 1 | ◊ |
-| Romanian deadlifts | Glutes | 50–210 | 57 | 5 | |
-| Low bar squats | Glutes | 60–230 | 66 | 5 | |
-| Front squat | Quads | 50–170 | 47 | 5 | |
-| Belt squat | Quads | 50–190 | 53 | 2.5 | |
-| Hack squat | Quads | 50–300 | 75 | 2.5 | |
-| Bulgarian split squat | Quads | 10–140 | 28 | 5 | |
-| High bar back squat | Quads | 50–210 | 57 | 5 | |
-| Reverse lunge | Quads | 30–150 | 38 | 5 | |
+| Exercise | Muscle | Slider range (kg) | Incr. | BW◊ |
+|----------|--------|-------------------|-------|-----|
+| Bench press | Chest | 30–150 | 5 | |
+| Dip (weighted) | Chest | total wt; 0.5×–2× bodyweight (live) | 1 | ◊ |
+| Crossover | Chest | 10–110 (min 10) | 1 | |
+| 30° incline bench press | Chest | 30–140 | 5 | |
+| Overhead press | Shoulders | 20–110 | 5 | |
+| Z press | Shoulders | 20–90 | 5 | |
+| Modified Bradford press | Shoulders | 10–80 | 5 | |
+| Weighted pull-ups | Back | total wt; 0.5×–2× bodyweight (live) | 1 | ◊ |
+| Rows | Back | 30–140 | 5 | |
+| Meadows row | Back | 10–70 | 5 | |
+| High-cable row | Back | 30–120 | 1 | |
+| Lat pulldown | Back | 30–140 | 1 | |
+| Dead row | Back | 40–150 | 5 | |
+| Barbell hip thrust | Glutes | 30–270 | 5 | |
+| Cable pull through | Glutes | 10–140 | 1 | |
+| Dumbbell leaning step up | Glutes | 10–110 | 2.5 | |
+| Gluteus bridge curl | Glutes | total wt; 0.5×–2× bodyweight (live) | 1 | ◊ |
+| Romanian deadlifts | Glutes | 50–210 | 5 | |
+| Low bar squats | Glutes | 60–230 | 5 | |
+| Front squat | Quads | 50–170 | 5 | |
+| Belt squat | Quads | 50–190 | 2.5 | |
+| Hack squat | Quads | 50–300 | 2.5 | |
+| Bulgarian split squat | Quads | 10–140 | 5 | |
+| High bar back squat | Quads | 50–210 | 5 | |
+| Reverse lunge | Quads | 30–150 | 5 | |
 
-◊ = bodyweight-based (slider shows total weight; ranges update when bodyweight changes). "Squats" in older docs = High bar back squat. Meadows row has no "per arm" label. Primary muscle column is catalogue organisation only — progress calc uses multipliers below.
+◊ = bodyweight-based (slider shows total weight; ranges update when bodyweight changes). Non-◊ warm-up thresholds are computed at runtime from logged history + `warmUpPercent` (BR15), not seeded in the catalogue. "Squats" in older docs = High bar back squat. Meadows row has no "per arm" label. Primary muscle column is catalogue organisation only — progress calc uses multipliers below.
 
 ### Muscle-group multipliers (calculation only; not shown in UI)
 
@@ -417,7 +417,7 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 
 - **Add/record set:** Add Set → bottom sheet → reps slider, weight slider, warm-up toggle → Record (commits) / Cancel (discards).
 - **Edit/delete set:** tap a logged set row on Work Out (or from History session detail) → SCR7 in edit mode → change values → Record / Delete (confirmation overlay).
-- **Warm-up tagging:** auto per BR4 (◊: total weight ≤ bodyweight per BR26; others: weight ≤ threshold); manual override one set only.
+- **Warm-up tagging:** auto per BR4 (◊: total weight ≤ bodyweight per BR26; others: weight ≤ history-derived threshold per BR15); manual override one set only.
 - **Rest timer:** user-triggered only; range 3 s–5 min; background → notification (iOS Live Activity-style; Android equivalent if available).
 - **Chart:** filter by exercise / muscle group; switch time range; horizontal scroll along timeline.
 - **Remove exercise from plan:** toggle off on add-exercises screen → confirmation bottom sheet → Confirm hides (sets kept) / Cancel unchanged.
@@ -486,7 +486,7 @@ Automated **unit tests** for progress math (the core domain logic):
 | T12 | Warm-up override scope | Manual warm-up toggle affects only that set; the next set reverts to auto-tagging (when auto-tag on) | BR5, BR27; FL2 |
 | T13 | Day-total aggregation | Day total = sum of per-exercise total weight moved (standard sets only) | BR7; FL5 |
 | T14 | Range derivation (non-bodyweight) | 22 non-bodyweight ranges derive from 75 kg standards (Beginner↓10 → Elite↑10), crossover min = 10, and do not shift with user bodyweight | BR14, BR19, BR25; FL2 |
-| T15 | Warm-up % default + bounds | Default warm-up threshold = 50% of Intermediate 1RM; adjustable only within 10–70% | BR15; FL1 |
+| T15 | Warm-up % default + bounds | Default `warmUpPercent` = 50; adjustable only within 10–70%; threshold = percent × history-derived reference weight (6-rep max cascade, standard sets only) | BR15; FL1 |
 | T16 | Increment defaults + override | Equipment-based increments (5 / 2.5 / 1 kg) apply; per-exercise override limited to 1 / 2.5 / 5 kg | BR16; FL8 |
 | T17 | Rest timer bounds | Rest timer is global, clamped to 3 s–5 min, and never auto-starts | BR20; FL4 |
 | T18 | Default reps/weight | Defaults to last set's values for the same exercise today, else slider minimum | BR21; FL2 |
