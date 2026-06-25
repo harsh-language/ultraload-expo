@@ -11,8 +11,8 @@ import { EXERCISE_CATALOGUE } from '../../src/data/exercise-catalogue';
 describe('catalogue domain', () => {
   it('looks up exercises by id', () => {
     const bench = getExerciseById('bench-press');
-    expect(bench?.name).toBe('Bench press');
-    expect(getExerciseLabel('bench-press')).toBe('Bench press');
+    expect(bench?.name).toBe('bench press');
+    expect(getExerciseLabel('bench-press')).toBe('bench press');
   });
 
   it('excludes deprecated exercises from selectable list (T25 partial)', () => {
@@ -38,7 +38,7 @@ describe('catalogue domain', () => {
 
   it('returns fallback label for orphaned exercise ids (T26 partial)', () => {
     expect(isKnownExercise('missing-exercise-id')).toBe(false);
-    expect(getExerciseLabel('missing-exercise-id')).toBe('Unknown exercise');
+    expect(getExerciseLabel('missing-exercise-id')).toBe('unknown exercise');
     expect(getOrphanFallbackLabel('missing-exercise-id')).toBe(
       'missing-exercise-id',
     );

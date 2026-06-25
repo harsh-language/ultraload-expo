@@ -13,7 +13,7 @@ import { AppBottomSheet } from './AppBottomSheet';
 import { ExerciseDropdown } from './ExerciseDropdown';
 import { IconButton } from './IconButton';
 import { InputSlider } from './InputSlider';
-import { InputToggle } from './InputToggle';
+import { Warmup } from './Warmup';
 import { PrimaryButton } from './PrimaryButton';
 import { BackIcon } from './icons/BackIcon';
 import { getExerciseById, getExerciseLabel } from '../domain/catalogue';
@@ -21,7 +21,11 @@ import {
   getExerciseIncrement,
   getExerciseSliderRange,
 } from '../domain/ranges';
-import { shouldAutoTagWarmUp } from '../domain/warmup';
+import {
+  getLastStandardSetWeightToday,
+  shouldAutoTagWarmUp,
+  type TodayWorkoutForWarmUp,
+} from '../domain/warmup';
 
 const REPS_MIN = 1;
 const REPS_MAX = 20;
@@ -35,6 +39,8 @@ interface AddSetSheetProps {
   exerciseIds: string[];
   bodyweight: number | null;
   warmUpAutoTagEnabled: boolean;
+  warmUpPercent: number;
+  todayWorkout: TodayWorkoutForWarmUp | null;
   onRecord: (payload: {
     exerciseId: string;
     weight: number;
@@ -43,10 +49,37 @@ interface AddSetSheetProps {
   }) => void;
 }
 
+function getWarmUpForDraft(
+  exerciseId: string,
+  weight: number,
+  bodyweight: number | null,
+  warmUpAutoTagEnabled: boolean,
+  warmUpPercent: number,
+  todayWorkout: TodayWorkoutForWarmUp | null,
+): boolean {
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise) {
+    return false;
+  }
+
+  const referenceWeight = getLastStandardSetWeightToday(todayWorkout, exerciseId);
+
+  return shouldAutoTagWarmUp({
+    exercise,
+    weight,
+    bodyweight,
+    warmUpAutoTagEnabled,
+    warmUpPercent,
+    referenceWeight,
+  });
+}
+
 function selectExercise(
   id: string,
   bodyweight: number | null,
   warmUpAutoTagEnabled: boolean,
+  warmUpPercent: number,
+  todayWorkout: TodayWorkoutForWarmUp | null,
 ) {
   const nextExercise = getExerciseById(id);
   if (!nextExercise) {
@@ -54,24 +87,35 @@ function selectExercise(
   }
 
   const nextRange = getExerciseSliderRange(nextExercise, bodyweight);
+
   return {
     exerciseId: id,
     weight: nextRange.min,
-    warmUp: shouldAutoTagWarmUp({
-      exercise: nextExercise,
-      weight: nextRange.min,
+    warmUp: getWarmUpForDraft(
+      id,
+      nextRange.min,
       bodyweight,
       warmUpAutoTagEnabled,
-    }),
+      warmUpPercent,
+      todayWorkout,
+    ),
   };
 }
 
 export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
   function AddSetSheet(
-    { exerciseIds, bodyweight, warmUpAutoTagEnabled, onRecord },
+    {
+      exerciseIds,
+      bodyweight,
+      warmUpAutoTagEnabled,
+      warmUpPercent,
+      todayWorkout,
+      onRecord,
+    },
     ref,
   ) {
     const sheetRef = useRef<BottomSheetModal>(null);
+    const draftInitializedRef = useRef(false);
     const [exerciseId, setExerciseId] = useState(exerciseIds[0] ?? '');
     const [reps, setReps] = useState(REPS_MIN);
     const [weight, setWeight] = useState(0);
@@ -94,10 +138,16 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
 
     const increment = exercise ? getExerciseIncrement(exercise) : 1;
 
-    const resetDraft = useCallback(() => {
+    const initializeDraft = useCallback(() => {
       const nextExerciseId = exerciseIds[0] ?? '';
       const selection = nextExerciseId
-        ? selectExercise(nextExerciseId, bodyweight, warmUpAutoTagEnabled)
+        ? selectExercise(
+            nextExerciseId,
+            bodyweight,
+            warmUpAutoTagEnabled,
+            warmUpPercent,
+            todayWorkout,
+          )
         : null;
 
       setExerciseId(nextExerciseId);
@@ -105,44 +155,78 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       setWeight(selection?.weight ?? 0);
       setWarmUpTouched(false);
       setWarmUp(selection?.warmUp ?? false);
-    }, [bodyweight, exerciseIds, warmUpAutoTagEnabled]);
+    }, [
+      bodyweight,
+      exerciseIds,
+      todayWorkout,
+      warmUpAutoTagEnabled,
+      warmUpPercent,
+    ]);
+
+    const refreshWarmUpDraft = useCallback(() => {
+      setWarmUpTouched(false);
+      setWarmUp(
+        getWarmUpForDraft(
+          exerciseId,
+          weight,
+          bodyweight,
+          warmUpAutoTagEnabled,
+          warmUpPercent,
+          todayWorkout,
+        ),
+      );
+    }, [
+      bodyweight,
+      exerciseId,
+      todayWorkout,
+      warmUpAutoTagEnabled,
+      warmUpPercent,
+      weight,
+    ]);
 
     useImperativeHandle(ref, () => ({
       present: () => {
-        resetDraft();
+        if (!draftInitializedRef.current) {
+          initializeDraft();
+          draftInitializedRef.current = true;
+        } else {
+          refreshWarmUpDraft();
+        }
         sheetRef.current?.present();
       },
     }));
 
     useEffect(() => {
-      if (!exercise || warmUpTouched) {
+      if (!exerciseId || warmUpTouched) {
         return;
       }
 
       setWarmUp(
-        shouldAutoTagWarmUp({
-          exercise,
+        getWarmUpForDraft(
+          exerciseId,
           weight,
           bodyweight,
           warmUpAutoTagEnabled,
-        }),
+          warmUpPercent,
+          todayWorkout,
+        ),
       );
-    }, [exercise, weight, bodyweight, warmUpAutoTagEnabled, warmUpTouched]);
+    }, [
+      exerciseId,
+      weight,
+      bodyweight,
+      warmUpAutoTagEnabled,
+      warmUpPercent,
+      todayWorkout,
+      warmUpTouched,
+    ]);
 
     useEffect(() => {
       if (exerciseIds.length > 0 && !exerciseIds.includes(exerciseId)) {
-        const selection = selectExercise(
-          exerciseIds[0],
-          bodyweight,
-          warmUpAutoTagEnabled,
-        );
         setExerciseId(exerciseIds[0]);
-        if (selection) {
-          setWeight(selection.weight);
-          setWarmUp(selection.warmUp);
-        }
+        setWarmUpTouched(false);
       }
-    }, [exerciseId, exerciseIds, bodyweight, warmUpAutoTagEnabled]);
+    }, [exerciseId, exerciseIds]);
 
     const handleRecord = useCallback(() => {
       if (!exerciseId) {
@@ -165,22 +249,10 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
           return;
         }
 
-        const nextId = exerciseIds[targetIndex];
-        const selection = selectExercise(
-          nextId,
-          bodyweight,
-          warmUpAutoTagEnabled,
-        );
-        if (!selection) {
-          return;
-        }
-
-        setExerciseId(selection.exerciseId);
-        setWeight(selection.weight);
+        setExerciseId(exerciseIds[targetIndex]);
         setWarmUpTouched(false);
-        setWarmUp(selection.warmUp);
       },
-      [bodyweight, exerciseIds, exerciseIndex, warmUpAutoTagEnabled],
+      [exerciseIds, exerciseIndex],
     );
 
     const handlePreviousExercise = useCallback(
@@ -217,8 +289,11 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
             />
           </>
         }
+        headerAccessory={
+          <Warmup onValueChange={handleWarmUpChange} value={warmUp} />
+        }
         showHeaderBack={false}
-        title="add set"
+        title="add new set"
       >
         <ExerciseDropdown
           canNext={exerciseIndex >= 0 && exerciseIndex < exerciseIds.length - 1}
@@ -247,11 +322,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
           value={weight}
         />
 
-        <InputToggle
-          label="warm-up set"
-          onValueChange={handleWarmUpChange}
-          value={warmUp}
-        />
       </AppBottomSheet>
     );
   },

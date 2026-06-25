@@ -5,13 +5,13 @@ import { typography } from '../../theme/typography';
 import { textCase } from '../../theme/textCase';
 import { OnboardingLayout } from './OnboardingLayout';
 
-const REST_MIN_SECONDS = 3;
+const REST_MIN_SECONDS = 30;
 const REST_MAX_SECONDS = 300;
-const REST_STEP_SECONDS = 3;
+const REST_STEP_SECONDS = 30;
 
 function formatRestTimerMinutes(seconds: number): string {
-  const minutes = Math.max(1, Math.round(seconds / 60));
-  return String(minutes);
+  const minutes = seconds / 60;
+  return Number.isInteger(minutes) ? String(minutes) : minutes.toFixed(1);
 }
 
 interface RestTimerStepProps {

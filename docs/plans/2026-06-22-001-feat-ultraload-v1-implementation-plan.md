@@ -218,14 +218,17 @@ ultraload/
 2. Work Out empty state per Figma.
 3. Add Set sheet: exercise picker (plan only), reps slider, weight slider, warm-up toggle visible.
 4. Record Set → creates workout if first of day (BR1) → groups under exercise.
+5. **Interim warm-up auto-tag (U1):** when `warmUpAutoTagEnabled` is on — ◊ exercises: total weight ≤ bodyweight (BR26); other exercises: auto-tag when `weight ≤ (warmUpPercent / 100) × lastStandardWeightToday` if today's workout already has a standard set for that exercise; otherwise no auto-tag. Wire `warmUpPercent` from profile; do not use catalogue `warmUpThreshold`.
 
 **Test scenarios:**
-- `src/domain/warmup.test.ts`: ◊ total ≤ bodyweight tags warm-up (T9 partial)
+- `src/domain/warmup.test.ts`: ◊ total ≤ bodyweight tags warm-up (T9 partial); non-◊ auto-tags at/below percent of today's last standard set; no auto-tag before first standard set today
 - `__tests__/domain/day-record.test.ts`: first set creates one workout per calendar day (T10)
 
 **Verification (design gate — do not proceed to U2 until passed):**
 - Fresh install → complete onboarding → log one set → appears under correct exercise
 - Compare splash, one onboarding step, Work Out main, Add Set sheet to Figma on device
+- Log standard bench set (e.g. 100 kg) → open Add Set again → 45 kg auto-tags warm-up at 50%
+- First set of the day for an exercise does not auto-tag as warm-up (unless ◊ rule applies)
 
 ---
 
@@ -246,12 +249,13 @@ ultraload/
 
 **Approach:**
 1. Tap logged set row → sheet in edit mode; delete → confirmation overlay.
-2. Implement BR4, BR5, BR26, BR27 auto-tag + one-set override.
+2. Replace U1 today-only reference with **full BR15** history lookup: scan all workout history (standard sets only), prefer heaviest weight at 6 reps, else 7, 8, 9, …; threshold = `warmUpPercent / 100 × referenceWeight`. Remove `warmUpThreshold` from `exercise-catalogue.ts`. BR5, BR26, BR27 one-set override and global toggle remain.
 3. Default reps/weight from last set today (BR21).
 4. Rest timer user-triggered; wire expo-notifications on dev build.
+5. Revisit WarmUpStep accordion copy to match full history-based rule.
 
 **Test scenarios:**
-- `warmup.test.ts`: override one set only (T12); global off (T23); warm-up excluded from totals (T1 partial)
+- `warmup.test.ts`: full BR15 6→7→8 rep cascade (T15); override one set only (T12); global off (T23); warm-up excluded from totals (T1 partial)
 - `ranges.test.ts`: ◊ live recompute on bodyweight change (T8)
 
 **Verification:**

@@ -1,8 +1,13 @@
-import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
+import { shadowAbove } from '../theme/shadow';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import {
+  buttonContentStyles,
+  contentLayoutStyle,
+  getButtonContentLayout,
+} from './buttonContentLayout';
 import { ForwardIcon } from './icons/ForwardIcon';
 import { CheckmarkIcon } from './icons/CheckmarkIcon';
 import { PlusIcon } from './icons/PlusIcon';
@@ -37,6 +42,30 @@ export function PrimaryButton({
   leadingIcon = 'none',
   style,
 }: PrimaryButtonProps) {
+  const hasLeading = leadingIcon !== 'none';
+  const hasTrailing = trailingIcon !== 'none';
+  const layout = getButtonContentLayout(hasLeading, hasTrailing);
+
+  const leading =
+    leadingIcon === 'plus' ? (
+      <PlusIcon color={colors['content-5']} />
+    ) : null;
+
+  const labelText = (
+    <Text
+      style={[
+        typography.para1,
+        styles.label,
+        layout === 'trailingEdge'
+          ? buttonContentStyles.labelGrow
+          : buttonContentStyles.labelCentered,
+        disabled && styles.disabledLabel,
+      ]}
+    >
+      {label}
+    </Text>
+  );
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -49,34 +78,43 @@ export function PrimaryButton({
         style,
       ]}
     >
-      {leadingIcon === 'plus' ? (
-        <PlusIcon color={colors['content-5']} />
-      ) : null}
-      <Text
-        style={[
-          typography.para1,
-          styles.label,
-          disabled && styles.disabledLabel,
-        ]}
+      <View
+        style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
       >
-        {label}
-      </Text>
-      <Trailing type={trailingIcon} />
+        {layout === 'centered' ? (
+          <>
+            {leading}
+            {labelText}
+          </>
+        ) : null}
+        {layout === 'trailingEdge' ? (
+          <>
+            {labelText}
+            <Trailing type={trailingIcon} />
+          </>
+        ) : null}
+        {layout === 'splitEdges' ? (
+          <>
+            <View style={buttonContentStyles.leftCluster}>
+              {leading}
+              {labelText}
+            </View>
+            <Trailing type={trailingIcon} />
+          </>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignSelf: 'stretch',
     minHeight: spacing['s-12'],
     borderRadius: radii['r-pill'],
     backgroundColor: colors['bg-5'],
     paddingHorizontal: spacing['s-8'],
-    gap: spacing['s-5'],
+    ...shadowAbove,
   },
   pressed: {
     backgroundColor: colors['bg-4'],
@@ -85,7 +123,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors['bg-3'],
   },
   label: {
-    flex: 1,
     color: colors['content-5'],
     ...textCase.lower,
   },

@@ -39,7 +39,7 @@ export interface ExerciseCatalogueEntry {
 export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   {
     id: 'bench-press',
-    name: 'Bench press',
+    name: 'bench press',
     primaryMuscle: 'Chest',
     type: 'Compound',
     sliderRange: { min: 30, max: 150 },
@@ -54,7 +54,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'dip-weighted',
-    name: 'Dip (weighted)',
+    name: 'dip (weighted)',
     primaryMuscle: 'Chest',
     type: 'Compound',
     increment: 1,
@@ -67,7 +67,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'crossover',
-    name: 'Crossover',
+    name: 'crossover',
     primaryMuscle: 'Chest',
     type: 'Isolation',
     sliderRange: { min: 10, max: 110 },
@@ -93,7 +93,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'overhead-press',
-    name: 'Overhead press',
+    name: 'overhead press',
     primaryMuscle: 'Shoulders',
     type: 'Compound',
     sliderRange: { min: 20, max: 110 },
@@ -108,7 +108,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'z-press',
-    name: 'Z press',
+    name: 'z press',
     primaryMuscle: 'Shoulders',
     type: 'Compound',
     sliderRange: { min: 20, max: 90 },
@@ -122,7 +122,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'modified-bradford-press',
-    name: 'Modified Bradford press',
+    name: 'modified bradford press',
     primaryMuscle: 'Shoulders',
     type: 'Compound',
     sliderRange: { min: 10, max: 80 },
@@ -136,7 +136,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'weighted-pull-ups',
-    name: 'Weighted pull-ups',
+    name: 'weighted pull-ups',
     primaryMuscle: 'Back',
     type: 'Compound',
     increment: 1,
@@ -148,7 +148,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'rows',
-    name: 'Rows',
+    name: 'rows',
     primaryMuscle: 'Back',
     type: 'Compound',
     sliderRange: { min: 30, max: 140 },
@@ -162,7 +162,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'meadows-row',
-    name: 'Meadows row',
+    name: 'meadows row',
     primaryMuscle: 'Back',
     type: 'Compound',
     sliderRange: { min: 10, max: 70 },
@@ -176,7 +176,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'high-cable-row',
-    name: 'High-cable row',
+    name: 'high-cable row',
     primaryMuscle: 'Back',
     type: 'Compound',
     sliderRange: { min: 30, max: 120 },
@@ -190,7 +190,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'lat-pulldown',
-    name: 'Lat pulldown',
+    name: 'lat pulldown',
     primaryMuscle: 'Back',
     type: 'Compound',
     sliderRange: { min: 30, max: 140 },
@@ -204,7 +204,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'dead-row',
-    name: 'Dead row',
+    name: 'dead row',
     primaryMuscle: 'Back',
     type: 'Compound',
     sliderRange: { min: 40, max: 150 },
@@ -219,7 +219,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'barbell-hip-thrust',
-    name: 'Barbell hip thrust',
+    name: 'barbell hip thrust',
     primaryMuscle: 'Glutes',
     type: 'Compound',
     sliderRange: { min: 30, max: 270 },
@@ -233,7 +233,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'cable-pull-through',
-    name: 'Cable pull through',
+    name: 'cable pull through',
     primaryMuscle: 'Glutes',
     type: 'Compound',
     sliderRange: { min: 10, max: 140 },
@@ -244,7 +244,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'dumbbell-leaning-step-up',
-    name: 'Dumbbell leaning step up',
+    name: 'dumbbell leaning step up',
     primaryMuscle: 'Glutes',
     type: 'Compound',
     sliderRange: { min: 10, max: 110 },
@@ -258,7 +258,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'gluteus-bridge-curl',
-    name: 'Gluteus bridge curl',
+    name: 'gluteus bridge curl',
     primaryMuscle: 'Glutes',
     type: 'Isolation',
     increment: 1,
@@ -267,7 +267,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'romanian-deadlifts',
-    name: 'Romanian deadlifts',
+    name: 'romanian deadlifts',
     primaryMuscle: 'Glutes',
     type: 'Compound',
     sliderRange: { min: 50, max: 210 },
@@ -281,7 +281,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'low-bar-squats',
-    name: 'Low bar squats',
+    name: 'low bar squats',
     primaryMuscle: 'Glutes',
     type: 'Compound',
     sliderRange: { min: 60, max: 230 },
@@ -296,7 +296,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'front-squat',
-    name: 'Front squat',
+    name: 'front squat',
     primaryMuscle: 'Quads',
     type: 'Compound',
     sliderRange: { min: 50, max: 170 },
@@ -310,7 +310,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'belt-squat',
-    name: 'Belt squat',
+    name: 'belt squat',
     primaryMuscle: 'Quads',
     type: 'Compound',
     sliderRange: { min: 50, max: 190 },
@@ -324,7 +324,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'hack-squat',
-    name: 'Hack squat',
+    name: 'hack squat',
     primaryMuscle: 'Quads',
     type: 'Compound',
     sliderRange: { min: 50, max: 300 },
@@ -338,7 +338,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'bulgarian-split-squat',
-    name: 'Bulgarian split squat',
+    name: 'bulgarian split squat',
     primaryMuscle: 'Quads',
     type: 'Compound',
     sliderRange: { min: 10, max: 140 },
@@ -352,7 +352,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'high-bar-back-squat',
-    name: 'High bar back squat',
+    name: 'high bar back squat',
     primaryMuscle: 'Quads',
     type: 'Compound',
     sliderRange: { min: 50, max: 210 },
@@ -367,7 +367,7 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
   {
     id: 'reverse-lunge',
-    name: 'Reverse lunge',
+    name: 'reverse lunge',
     primaryMuscle: 'Quads',
     type: 'Compound',
     sliderRange: { min: 30, max: 150 },
@@ -381,4 +381,4 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
   },
 ];
 
-export const ORPHAN_EXERCISE_FALLBACK_LABEL = 'Unknown exercise';
+export const ORPHAN_EXERCISE_FALLBACK_LABEL = 'unknown exercise';

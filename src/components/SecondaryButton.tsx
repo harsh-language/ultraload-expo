@@ -1,7 +1,13 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
+import { shadowAbove } from '../theme/shadow';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import {
+  buttonContentStyles,
+  contentLayoutStyle,
+  getButtonContentLayout,
+} from './buttonContentLayout';
 import type { AppIconProps } from './icons';
 import { ClockIcon } from './icons/ClockIcon';
 import { PlusIcon } from './icons/PlusIcon';
@@ -34,6 +40,9 @@ export function SecondaryButton({
   leadingIcon = 'none',
   style,
 }: SecondaryButtonProps) {
+  const hasLeading = leadingIcon !== 'none';
+  const layout = getButtonContentLayout(hasLeading, false);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -47,18 +56,21 @@ export function SecondaryButton({
       ]}
     >
       {({ pressed }) => (
-        <>
+        <View
+          style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
+        >
           <LeadingIcon type={leadingIcon} />
           <Text
             style={[
               typography.para1,
               styles.label,
+              buttonContentStyles.labelCentered,
               pressed && !disabled && styles.pressedLabel,
             ]}
           >
             {label}
           </Text>
-        </>
+        </View>
       )}
     </Pressable>
   );
@@ -66,17 +78,14 @@ export function SecondaryButton({
 
 const styles = StyleSheet.create({
   base: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     minHeight: spacing['s-12'],
     borderRadius: radii['r-pill'],
     borderWidth: spacing['s-1'],
     borderColor: colors['border-1'],
     backgroundColor: colors['bg-2'],
     paddingHorizontal: spacing['s-8'],
-    gap: spacing['s-5'],
     alignSelf: 'stretch',
+    ...shadowAbove,
   },
   pressed: {
     borderColor: colors['content-2'],
@@ -85,7 +94,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   label: {
-    flex: 1,
     color: colors['content-1'],
     ...textCase.lower,
   },

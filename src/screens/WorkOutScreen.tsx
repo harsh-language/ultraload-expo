@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ScrollView } from 'react-native';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AddSetSheet, type AddSetSheetHandle } from '../components/AddSetSheet';
@@ -15,15 +15,29 @@ import {
   useTodayStore,
 } from '../stores';
 import { colors, spacing } from '../theme/tokens';
+import { SCROLL_FADE_HEIGHT } from '../theme/scrollFade';
+
+/** Figma — gap between footer buttons and main navigation. */
+const FOOTER_BOTTOM_GAP = spacing['s-8'];
+/** Figma — horizontal inset for empty-state centred button stack. */
+const EMPTY_STATE_BUTTON_INSET = spacing['s-11'];
+/** Figma — horizontal inset for logged-in footer button row. */
+const FOOTER_HORIZONTAL_INSET = spacing['s-8'];
+/** Figma `bottom-space` — scroll content clears the overlay button row. */
+const SCROLL_BOTTOM_INSET =
+  FOOTER_BOTTOM_GAP + spacing['s-12'] + spacing['s-8'];
 
 export function WorkOutScreen() {
   const insets = useSafeAreaInsets();
   const sheetRef = useRef<AddSetSheetHandle>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollToEndOnContentChangeRef = useRef(false);
 
   const bodyweight = useProfileStore((state) => state.bodyweight);
   const warmUpAutoTagEnabled = useProfileStore(
     (state) => state.warmUpAutoTagEnabled,
   );
+  const warmUpPercent = useProfileStore((state) => state.warmUpPercent);
   const exerciseIds = usePlanStore((state) => state.exerciseIds);
   const workout = useTodayStore((state) => state.workout);
   const recordSet = useTodayStore((state) => state.recordSet);
@@ -41,95 +55,140 @@ export function WorkOutScreen() {
     }) => {
       const db = getDatabase();
       await recordSet(db, payload);
+      scrollToEndOnContentChangeRef.current = true;
     },
     [recordSet],
   );
 
+  const handleScrollContentSizeChange = useCallback(() => {
+    if (!scrollToEndOnContentChangeRef.current) {
+      return;
+    }
+
+    scrollToEndOnContentChangeRef.current = false;
+    scrollRef.current?.scrollToEnd({ animated: false });
+  }, []);
+
   const hasSets = (workout?.loggedExercises.length ?? 0) > 0;
+
+  const footerButtons = (
+    <>
+      <SecondaryButton
+        label={hasSets ? 'start timer' : 'start rest timer'}
+        leadingIcon="clock"
+        onPress={() => {
+          // U2: rest timer countdown + notifications
+        }}
+        style={
+          !hasSets
+            ? styles.footerButtonStacked
+            : styles.footerSecondaryAction
+        }
+      />
+      <PrimaryButton
+        label={hasSets ? 'add set' : 'add new set'}
+        leadingIcon="plus"
+        onPress={openSheet}
+        style={
+          !hasSets ? styles.footerButtonStacked : styles.footerPrimaryAction
+        }
+        trailingIcon="none"
+      />
+    </>
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing['s-7'] }]}>
-      <TodaySessionTitleBar />
-
       {hasSets ? (
         <ScrollFadeView
-          contentContainerStyle={styles.logContent}
+          ref={scrollRef}
+          alwaysShowBottomFade
+          topFadeHeight={spacing['s-14']}
+          bottomFadeHeight={SCROLL_FADE_HEIGHT}
+          bottomOffset={0}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: SCROLL_BOTTOM_INSET },
+          ]}
+          onContentSizeChange={handleScrollContentSizeChange}
           showsVerticalScrollIndicator={false}
-          style={styles.logScroll}
+          style={styles.scroll}
         >
-          {workout?.loggedExercises.map((loggedExercise) => {
-            let standardSetIndex = 0;
+          <TodaySessionTitleBar workout={workout} />
 
-            return (
-              <View key={loggedExercise.id}>
-                <LogRow
-                  title={getExerciseLabel(loggedExercise.exerciseId)}
-                  type="exercise"
-                />
-                <View style={styles.logStack}>
-                  {loggedExercise.sets.map((set) => {
-                    if (set.warmUp) {
+          <View style={styles.session}>
+            {workout?.loggedExercises.map((loggedExercise) => {
+              let standardSetIndex = 0;
+
+              return (
+                <View key={loggedExercise.id}>
+                  <LogRow
+                    title={getExerciseLabel(loggedExercise.exerciseId)}
+                    type="exercise"
+                  />
+                  <View style={styles.logStack}>
+                    {loggedExercise.sets.map((set) => {
+                      if (set.warmUp) {
+                        return (
+                          <LogRow
+                            key={set.id}
+                            reps={set.reps}
+                            type="set"
+                            warmUp
+                            weight={set.weight}
+                          />
+                        );
+                      }
+
+                      standardSetIndex += 1;
                       return (
                         <LogRow
                           key={set.id}
                           reps={set.reps}
+                          setIndex={standardSetIndex}
                           type="set"
-                          warmUp
                           weight={set.weight}
                         />
                       );
-                    }
-
-                    standardSetIndex += 1;
-                    return (
-                      <LogRow
-                        key={set.id}
-                        reps={set.reps}
-                        setIndex={standardSetIndex}
-                        type="set"
-                        weight={set.weight}
-                      />
-                    );
-                  })}
+                    })}
+                  </View>
+                  <LogRow type="space" />
                 </View>
-                <LogRow type="space" />
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
         </ScrollFadeView>
       ) : (
-        <View style={styles.emptyState} />
+        <View style={styles.emptyHeader}>
+          <TodaySessionTitleBar workout={workout} />
+        </View>
       )}
 
-      <View
-        style={[
-          styles.footer,
-          { paddingBottom: Math.max(insets.bottom, spacing['s-5']) },
-        ]}
-      >
-        <SecondaryButton
-          label="start rest timer"
-          leadingIcon="clock"
-          onPress={() => {
-            // U2: rest timer countdown + notifications
-          }}
-          style={styles.footerSecondary}
-        />
-        <PrimaryButton
-          label="add new set"
-          leadingIcon="plus"
-          onPress={openSheet}
-          style={styles.footerPrimary}
-          trailingIcon="none"
-        />
-      </View>
+      {hasSets ? (
+        <View pointerEvents="box-none" style={[styles.footerOverlay, styles.footerRow]}>
+          {footerButtons}
+        </View>
+      ) : (
+        <View style={styles.footerEmpty}>
+          <View
+            style={[
+              styles.footerEmptyButtons,
+              { paddingBottom: Math.max(insets.bottom, spacing['s-5']) },
+            ]}
+          >
+            {footerButtons}
+          </View>
+        </View>
+      )}
 
       <AddSetSheet
         ref={sheetRef}
         bodyweight={bodyweight}
         exerciseIds={exerciseIds}
         onRecord={handleRecord}
+        todayWorkout={workout}
         warmUpAutoTagEnabled={warmUpAutoTagEnabled}
+        warmUpPercent={warmUpPercent}
       />
     </View>
   );
@@ -139,31 +198,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors['bg-1'],
-    paddingHorizontal: spacing['s-7'],
+  },
+  scroll: {
+    flex: 1,
+    paddingHorizontal: FOOTER_HORIZONTAL_INSET,
+  },
+  emptyHeader: {
+    paddingHorizontal: FOOTER_HORIZONTAL_INSET,
+  },
+  scrollContent: {
     gap: spacing['s-8'],
   },
-  logScroll: {
-    flex: 1,
-  },
-  logContent: {
-    paddingBottom: spacing['s-10'],
+  session: {
+    paddingVertical: spacing['s-8'],
   },
   logStack: {
     gap: 0,
   },
-  emptyState: {
-    flex: 1,
+  footerOverlay: {
+    position: 'absolute',
+    left: FOOTER_HORIZONTAL_INSET,
+    right: FOOTER_HORIZONTAL_INSET,
+    bottom: FOOTER_BOTTOM_GAP,
+    zIndex: 2,
   },
-  footer: {
+  footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing['s-5'],
+  },
+  footerEmpty: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  footerEmptyButtons: {
+    marginHorizontal: EMPTY_STATE_BUTTON_INSET,
+    flexDirection: 'column',
     gap: spacing['s-8'],
-    paddingTop: spacing['s-8'],
   },
-  footerSecondary: {
-    flex: 1,
+  footerSecondaryAction: {
+    flexShrink: 0,
   },
-  footerPrimary: {
+  footerPrimaryAction: {
     flex: 1,
+    minWidth: 0,
+  },
+  footerButtonStacked: {
+    alignSelf: 'stretch',
+    flex: 0,
+    width: '100%',
   },
 });
