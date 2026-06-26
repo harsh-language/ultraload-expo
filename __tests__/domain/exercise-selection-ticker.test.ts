@@ -27,10 +27,10 @@ describe('exercise selection ticker', () => {
   it('anchors pill above footer button row including safe area', () => {
     const zeroInsets = { top: 0, right: 0, bottom: 0, left: 0 };
     expect(getExerciseSelectionTickerBottom(zeroInsets)).toBe(
-      spacing['s-12'] + spacing['s-8'],
+      spacing['s-12'] + spacing['s-8'] + spacing['s-5'],
     );
     expect(getExerciseSelectionTickerBottom({ ...zeroInsets, bottom: 34 })).toBe(
-      spacing['s-12'] + 34,
+      spacing['s-12'] + 34 + spacing['s-5'],
     );
   });
 });

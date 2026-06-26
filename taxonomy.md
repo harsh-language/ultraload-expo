@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-06-25
+last_updated: 2026-06-27
 product: UltraLoad
 status: current
 ---
@@ -16,9 +16,10 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 |------|--------|
 | App shell, splash, onboarding | **Built** |
 | Work Out — log today's sets | **Built** (add set only; no edit/delete yet) |
+| Options menu (history, settings, reset) | **Built** (reset wired for dev; history/settings navigate stubs; **remove reset before U7 / App Store compile**) |
 | Rest timer | **Stub** (store + button; countdown UI not wired) |
-| History (list, chart, session detail) | **Not built** (tab placeholder) |
-| Settings, export/import, reset | **Not built** (tab placeholder) |
+| History (list, chart, session detail) | **Not built** (options menu entry only) |
+| Settings, export/import | **Not built** (options menu entry only) |
 | Progress math (% change, chart weighting) | **Not built** (schema + domain helpers only) |
 | Unit tests (domain, screens, components) | **Built** — Jest via `npm test` |
 
@@ -31,7 +32,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Onboarding step 2 — exercises | Pick plan exercises from catalogue | Built — `ExercisePickerStep` + `ExercisePicker` (scrollable list, edge fades, selection ticker) |
 | Onboarding step 3 — rest | Default rest-timer duration | Built — `RestTimerStep` |
 | Onboarding step 4 — warm-up | Warm-up % preset + auto-tag toggle | Built — `WarmUpStep` (accordion “how it works”) |
-| Work Out (main) | Log and review today's sets, grouped by exercise | Built — `WorkOutScreen` |
+| Work Out (home) | Log and review today's sets, grouped by exercise | Built — `WorkOutScreen` |
 | Add Set sheet | Pick exercise, set reps + weight via sliders, warm-up toggle | Built — `AddSetSheet` |
 | Rest timer | Optional countdown between sets | Not built (button present, no UI) |
 | History — list | Per-day total weight + % change over time | Not built |
@@ -42,15 +43,15 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 
 ## Flows and actions
 
-- **Cold start:** `DatabaseProvider` migrates SQLite → hydrates Zustand stores → splash (~1.4 s) → onboarding (if incomplete) or main tabs.
-- **Onboarding:** horizontal pager (`OnboardingPager`) — profile → exercise picker → rest preset → warm-up preset → saves profile + plan → Work Out tab. Steps 1, 3, 4 use `OnboardingLayout` (stacked footer); step 2 uses overlay footer + scroll.
+- **Cold start:** `DatabaseProvider` migrates SQLite → hydrates Zustand stores → splash (~1.4 s) → onboarding (if incomplete) or **Work Out home**.
+- **Onboarding:** horizontal pager (`OnboardingPager`) — profile → exercise picker → rest preset → warm-up preset → saves profile + plan → Work Out home. Steps 1, 3, 4 use `OnboardingLayout` (stacked footer); step 2 uses overlay footer + scroll.
 - **Exercise picker:** muscle-group sections, multi-select options, floating “N selected” ticker (`ExerciseSelectionTicker`), scroll edge fades (`ScrollFadeView` with per-edge height overrides).
 - **Log a set:** Work Out → Add new set → `AddSetSheet` → exercise dropdown + reps/weight sliders + warm-up toggle → Record → persists to today's workout row (creates workout on first set of the day).
 - **Review today:** Work Out scroll list — exercise headers + set rows (`LogRow`); warm-up sets show `W`, standard sets numbered. Edge fades on the log list.
-- **Main tabs:** horizontal pager (`MainTabPager`) — history | workout | settings; only Work Out is functional.
+- **Navigate elsewhere:** session title bar chevron → options menu (`OptionsMenuDropdown`) — history, settings, or reset (dev-only reset wipes data and replays onboarding; remove reset before App Store compile — shipping reset is on Settings).
 - **Edit/delete sets:** planned — `LogRow` supports action icons but Work Out does not wire them yet.
 - **Rest timer:** planned — `useTimerStore` exists; Work Out footer button is a stub.
-- **Review progress / manage plan / export / reset:** planned — History and Settings tabs show `TabPlaceholderScreen`.
+- **Review progress / manage plan / export:** planned — History and Settings screens not built yet; menu entries are stubs.
 
 ## Key concepts
 
@@ -65,10 +66,10 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 
 | Area | Where to look |
 |------|---------------|
-| App entry | `App.tsx` — fonts, providers |
-| Navigation & phases | `src/navigation/RootNavigator.tsx` (splash / onboarding / main) |
-| Tab pager | `src/navigation/MainTabPager.tsx`, `src/navigation/mainTabs.ts` |
-| Bottom nav | `src/components/MainNavigation.tsx`, `NavigationTab.tsx` |
+| App entry | `App.tsx` — fonts, providers, status bar + navigation bar |
+| Navigation & phases | `src/navigation/RootNavigator.tsx` (splash / onboarding / Work Out home) |
+| Options menu | `src/components/OptionsMenuDropdown.tsx`, `useHomepageOptionsMenu.tsx` |
+| Session title bar | `SessionTitleBar.tsx`, `TodaySessionTitleBar.tsx` |
 | Splash | `src/screens/SplashScreen.tsx` |
 | Onboarding flow | `src/screens/onboarding/OnboardingFlow.tsx`, `onboardingSteps.ts` |
 | Onboarding pager | `src/screens/onboarding/OnboardingPager.tsx` |
@@ -77,7 +78,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Exercise picker list | `src/screens/onboarding/ExercisePicker.tsx` |
 | Work Out | `src/screens/WorkOutScreen.tsx` |
 | Add Set sheet | `src/components/AddSetSheet.tsx` |
-| Log list UI | `LogRow.tsx`, `ScrollFadeView.tsx`, `TodaySessionTitleBar.tsx` |
+| Log list UI | `LogRow.tsx`, `ScrollFadeView.tsx` |
 | Onboarding inputs | `InputComboUnit`, `InputHeightField`, `InputOption`, `InputSlider`, `InputSliderCaption`, `InputToggle`, `Accordion`, `SectionDivider` |
 | Buttons & sheets | `PrimaryButton`, `SecondaryButton`, `IconButton`, `AppBottomSheet` |
 | Exercise picker chrome | `ExerciseSelectionTicker`, `OnboardingProgress`, `ExerciseDropdown` |
@@ -89,6 +90,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Calendar day key | `src/domain/day-record.ts` |
 | Today's workout state | `src/stores/todaySlice.ts`, `src/db/workoutRepository.ts` |
 | Profile / settings / plan persistence | `src/stores/profileSlice.ts`, `settingsSlice.ts`, `src/db/repositories.ts` |
+| Dev app reset | `src/stores/devAppResetSlice.ts` |
 | Rest timer state (stub) | `src/stores/timerSlice.ts` |
 | SQLite schema | `src/db/schema.ts` — `profile`, `workout_plan`, `settings`, `workouts`, `logged_exercises`, `sets` |
 | DB boot + migrations | `src/db/DatabaseProvider.tsx`, `src/db/migrations/` |
@@ -96,11 +98,9 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Transparent colors in SVG | `src/theme/resolveColorToken.ts` |
 | Typography & text casing | `src/theme/typography.ts`, `src/theme/textCase.ts` |
 | Scroll edge fades | `src/theme/scrollFade.ts`, `ScrollFadeView.tsx` — `fadeHeight` (default), `topFadeHeight`, `bottomFadeHeight`, `topOffset`, `bottomOffset` |
-| History / Settings (placeholders) | `src/screens/TabPlaceholderScreen.tsx` |
-| Dev smoke test (not wired) | `src/screens/PlaceholderTabs.tsx` |
 | Unit tests | `__tests__/` — domain, scroll-fade, exercise-picker layout, onboarding insets |
 | Progress math (totals, % change, weighting) | _not built_ — see `docs/application-blueprint/blueprint.md` |
-| Export / import / reset | _not built_ |
+| Export / import | _not built_ |
 
 ## Keeping this current
 

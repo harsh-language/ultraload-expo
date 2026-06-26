@@ -2,4 +2,4 @@
 import { IconCalendarDays } from 'central-icons-filled/IconCalendarDays';
 import { createIcon } from './createIcon';
 
-export const TabHistoryIcon = createIcon(IconCalendarDays);
+export const CalendarDaysIcon = createIcon(IconCalendarDays);

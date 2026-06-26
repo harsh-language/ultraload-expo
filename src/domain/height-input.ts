@@ -68,6 +68,21 @@ export function extractHeightDigits(value: string): string {
   return sanitizeHeightDigits(value);
 }
 
+/** Stored profile height — total inches (feet/inches UI). */
+export function heightPartsToInches(parts: HeightParts): number {
+  return parts.feet * 12 + parts.inches;
+}
+
+/** Parse optional height input; null when empty or incomplete (feet only). */
+export function parseOptionalHeight(value: string): number | null {
+  const parts = parseHeightDigits(extractHeightDigits(value));
+  if (!parts) {
+    return null;
+  }
+
+  return heightPartsToInches(parts);
+}
+
 /** Apply edit relative to previous digits (credit-card style over formatted display). */
 export function applyHeightDigitChange(
   previousDigits: string,

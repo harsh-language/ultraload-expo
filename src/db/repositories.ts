@@ -1,9 +1,10 @@
 import { eq } from 'drizzle-orm';
-import type { AppDatabase } from './client';
+import type { AppDatabase, DbOrTransaction } from './client';
 import {
   profile,
   settings,
   workoutPlan,
+  workouts,
   type PerExerciseOverride,
   type Profile,
 } from './schema';
@@ -59,7 +60,7 @@ export async function loadProfile(db: AppDatabase): Promise<ProfileState> {
 }
 
 export async function saveProfile(
-  db: AppDatabase,
+  db: DbOrTransaction,
   next: ProfileState,
 ): Promise<void> {
   await db
@@ -101,7 +102,7 @@ export async function loadPlan(db: AppDatabase): Promise<PlanState> {
   return { exerciseIds: row.exerciseIds ?? [] };
 }
 
-export async function savePlan(db: AppDatabase, next: PlanState): Promise<void> {
+export async function savePlan(db: DbOrTransaction, next: PlanState): Promise<void> {
   await db
     .insert(workoutPlan)
     .values({ id: 1, exerciseIds: next.exerciseIds })
@@ -121,7 +122,7 @@ export async function loadSettings(db: AppDatabase): Promise<SettingsState> {
 }
 
 export async function saveSettings(
-  db: AppDatabase,
+  db: DbOrTransaction,
   next: SettingsState,
 ): Promise<void> {
   await db
@@ -177,4 +178,14 @@ export async function ensurePersistedRows(db: AppDatabase): Promise<void> {
   if (existingSettings.length === 0) {
     await saveSettings(db, DEFAULT_SETTINGS);
   }
+}
+
+/** Dev-only — wipe all user data and return app to fresh onboarding state. */
+export async function resetAllUserData(db: AppDatabase): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.delete(workouts);
+    await saveProfile(tx, DEFAULT_PROFILE);
+    await savePlan(tx, DEFAULT_PLAN);
+    await saveSettings(tx, DEFAULT_SETTINGS);
+  });
 }

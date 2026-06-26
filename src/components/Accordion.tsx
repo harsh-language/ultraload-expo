@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { tabTransitionTiming } from '../navigation/mainTabs';
+import { slideTransitionTiming } from '../theme/motion';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -62,7 +62,7 @@ export function Accordion({ title, items }: AccordionProps) {
   useEffect(() => {
     expandedProgress.value = withTiming(
       expanded ? 1 : 0,
-      tabTransitionTiming,
+      slideTransitionTiming,
     );
   }, [expanded, expandedProgress]);
 

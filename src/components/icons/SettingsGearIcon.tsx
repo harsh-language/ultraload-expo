@@ -2,4 +2,4 @@
 import { IconSettingsGear2 } from 'central-icons-filled/IconSettingsGear2';
 import { createIcon } from './createIcon';
 
-export const TabSettingsIcon = createIcon(IconSettingsGear2);
+export const SettingsGearIcon = createIcon(IconSettingsGear2);

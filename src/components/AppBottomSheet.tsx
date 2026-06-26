@@ -22,6 +22,7 @@ interface AppBottomSheetProps {
   footer?: ReactNode;
   headerAccessory?: ReactNode;
   onDismiss?: () => void;
+  onVisibilityChange?: (visible: boolean) => void;
   showHeaderBack?: boolean;
 }
 
@@ -57,11 +58,30 @@ function SheetHeader({
 
 export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
   function AppBottomSheet(
-    { title, children, footer, headerAccessory, onDismiss, showHeaderBack = true },
+    {
+      title,
+      children,
+      footer,
+      headerAccessory,
+      onDismiss,
+      onVisibilityChange,
+      showHeaderBack = true,
+    },
     ref,
   ) {
     const insets = useSafeAreaInsets();
     const bottomInset = Math.max(insets.bottom, spacing['s-8']);
+
+    const handleChange = useCallback(
+      (index: number) => {
+        onVisibilityChange?.(index >= 0);
+      },
+      [onVisibilityChange],
+    );
+
+    const handleDismiss = useCallback(() => {
+      onDismiss?.();
+    }, [onDismiss]);
 
     const renderBackdrop = useCallback(
       (props: BottomSheetBackdropProps) => (
@@ -86,7 +106,8 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
         handleComponent={null}
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.sheetBackground}
-        onDismiss={onDismiss}
+        onChange={handleChange}
+        onDismiss={handleDismiss}
       >
         <BottomSheetView style={styles.content}>
           <View style={styles.sheetFill} pointerEvents="none">
@@ -133,7 +154,7 @@ const styles = StyleSheet.create({
   inner: {
     paddingHorizontal: spacing['s-8'],
     paddingTop: spacing['s-8'],
-    paddingBottom: spacing['s-11'],
+    paddingBottom: spacing['s-8'],
     gap: spacing['s-11'],
     zIndex: 1,
   },

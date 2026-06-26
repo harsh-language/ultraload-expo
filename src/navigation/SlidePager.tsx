@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { tabTransitionTiming } from './mainTabs';
+import { slideTransitionTiming } from '../theme/motion';
 
 interface SlidePagerProps<T extends string> {
   items: readonly T[];
@@ -38,7 +38,7 @@ export function SlidePager<T extends string>({
       return;
     }
 
-    translateX.value = withTiming(target, tabTransitionTiming);
+    translateX.value = withTiming(target, slideTransitionTiming);
   }, [selectedIndex, translateX, width]);
 
   const pagerStyle = useAnimatedStyle(() => ({

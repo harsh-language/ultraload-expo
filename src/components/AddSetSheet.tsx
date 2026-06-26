@@ -47,6 +47,7 @@ interface AddSetSheetProps {
     reps: number;
     warmUp: boolean;
   }) => void;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 function getWarmUpForDraft(
@@ -111,6 +112,7 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       warmUpPercent,
       todayWorkout,
       onRecord,
+      onVisibilityChange,
     },
     ref,
   ) {
@@ -272,6 +274,7 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
     return (
       <AppBottomSheet
         ref={sheetRef}
+        onVisibilityChange={onVisibilityChange}
         footer={
           <>
             <IconButton

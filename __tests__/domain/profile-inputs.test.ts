@@ -2,6 +2,7 @@ import {
   AGE_MAX,
   BODYWEIGHT_MAX,
   isValidBodyweight,
+  parseOptionalInt,
   sanitizeAge,
   sanitizeBodyweight,
   sanitizeName,
@@ -9,7 +10,9 @@ import {
 import {
   applyHeightDigitChange,
   formatHeightDigits,
+  heightPartsToInches,
   parseHeightDigits,
+  parseOptionalHeight,
   sanitizeHeightDigits,
 } from '../../src/domain/height-input';
 
@@ -58,6 +61,18 @@ describe('profile-inputs', () => {
 
     it('returns empty for empty input', () => {
       expect(sanitizeAge('')).toBe('');
+    });
+  });
+
+  describe('parseOptionalInt', () => {
+    it('parses trimmed integers', () => {
+      expect(parseOptionalInt('25')).toBe(25);
+      expect(parseOptionalInt(' 30 ')).toBe(30);
+    });
+
+    it('returns null for empty input', () => {
+      expect(parseOptionalInt('')).toBeNull();
+      expect(parseOptionalInt('   ')).toBeNull();
     });
   });
 
@@ -112,6 +127,25 @@ describe('height-input', () => {
     it('strips symbols and caps length', () => {
       expect(sanitizeHeightDigits("5' 10\"")).toBe('510');
       expect(sanitizeHeightDigits('1234')).toBe('123');
+    });
+  });
+
+  describe('heightPartsToInches', () => {
+    it('converts feet and inches to total inches', () => {
+      expect(heightPartsToInches({ feet: 5, inches: 10 })).toBe(70);
+      expect(heightPartsToInches({ feet: 6, inches: 0 })).toBe(72);
+    });
+  });
+
+  describe('parseOptionalHeight', () => {
+    it('parses complete formatted height', () => {
+      expect(parseOptionalHeight("5' 10\"")).toBe(70);
+      expect(parseOptionalHeight('510')).toBe(70);
+    });
+
+    it('returns null for empty or incomplete input', () => {
+      expect(parseOptionalHeight('')).toBeNull();
+      expect(parseOptionalHeight("6'")).toBeNull();
     });
   });
 

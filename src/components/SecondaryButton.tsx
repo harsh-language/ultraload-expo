@@ -58,6 +58,7 @@ export function SecondaryButton({
         >
           <LeadingIcon type={leadingIcon} />
           <Text
+            numberOfLines={1}
             style={[
               typography.para1,
               styles.label,

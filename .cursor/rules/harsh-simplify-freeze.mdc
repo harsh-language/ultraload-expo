@@ -23,3 +23,7 @@ Delete when the pattern no longer exists, you explicitly chose to refactor it, o
 | ID | File | Pattern | Reason |
 |----|------|---------|--------|
 | T1 | `src/components/Warmup.tsx` | `Text` uses `[typography.para2, styles.label, { color }]` where `color` comes from `warmupColor(value, pressed)` | Token colors for four pressed/checked states; inline dynamic color is intentional — do not hoist to static StyleSheet or merge without design review |
+| T3 | `src/navigation/RootNavigator.tsx` | `AppPhase` rendered via `if (splash)` / `if (onboarding)` / implicit `main` return — no exhaustive switch | Launch states stable (splash → onboarding → main); unlikely to add phases |
+| Q3 | `src/components/useHomepageOptionsMenu.tsx` | Hook returns `<OptionsMenuDropdown />` as `menu` JSX for caller to render | Single consumer (Work Out); colocate until U3/U4 navigation work |
+| Q6 | `src/components/useHomepageOptionsMenu.tsx` | `handleSelect` async reset without try/catch — errors swallowed | Dev-only reset; removed before App Store (U7) |
+| Q9 | `src/components/OptionsMenuDropdown.tsx` | Reset menu item ships without `__DEV__` guard | Dev builds only until U7; explicit removal in plan |
