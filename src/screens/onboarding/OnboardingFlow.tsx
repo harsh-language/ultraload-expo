@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { isValidBodyweight } from '../../domain/profile-inputs';
+import { parseOptionalHeight } from '../../domain/height-input';
+import { isValidBodyweight, parseOptionalInt } from '../../domain/profile-inputs';
 import { DEFAULT_PROFILE } from '../../db/repositories';
 import { getDatabase } from '../../db/client';
 import {
@@ -15,15 +16,6 @@ import type { OnboardingStep } from './onboardingSteps';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
-}
-
-function parseOptionalInt(value: string): number | null {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-  const parsed = Number.parseInt(trimmed, 10);
-  return Number.isFinite(parsed) ? parsed : null;
 }
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
@@ -70,7 +62,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       await completeOnboarding(db, {
         bodyweight: parsedBodyweight,
         name: name.trim() || null,
-        height: null,
+        height: parseOptionalHeight(height),
         age: parseOptionalInt(age),
         restTimerSeconds,
         warmUpPercent,
@@ -86,6 +78,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     bodyweight,
     completeOnboarding,
     completing,
+    height,
     name,
     onComplete,
     restTimerSeconds,

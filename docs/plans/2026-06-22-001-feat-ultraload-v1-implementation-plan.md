@@ -9,7 +9,7 @@ status: ready
 
 ## Summary
 
-Build **UltraLoad**, a personal offline strength-training app (Expo + TypeScript), from an empty repo through six implementation stages aligned to the approved [application blueprint](docs/application-blueprint/blueprint.md). Each stage ends with a **device checkpoint** compared to Figma. Shared UI (bottom sheet, sliders, log rows) is built once in Stage 0–1 and reused across Work Out and History.
+Build **UltraLoad**, a personal offline strength-training app (Expo + TypeScript), from an empty repo through seven implementation stages aligned to the approved [application blueprint](docs/application-blueprint/blueprint.md). Each stage ends with a **device checkpoint** compared to Figma. Shared UI (bottom sheet, sliders, log rows) is built once in Stage 0–1 and reused across Work Out and History. **Stage 7** is App Store release (tooling only — no new product features).
 
 ---
 
@@ -26,7 +26,7 @@ The blueprint is approved and complete (18/18 sections). The repo has spec artif
 | R1 | Expo + TypeScript app runs on iOS and Android (Expo Go early; dev build for native modules) | §9, Stage 0 |
 | R2 | SQLite (Drizzle) persists profile, plan, workouts; Zustand write-through cache | §7, §9 |
 | R3 | Editable catalogue seed module drives all exercise metadata (BR28–BR31) | §5–6, §9 |
-| R4 | 3-tab shell: Work Out (default), History, Settings | §4, §12 |
+| R4 | Work Out home shell; History/Settings via options menu + stack | §4, §12 |
 | R5 | Onboarding: splash → bodyweight → exercise picker → rest → warm-up → Work Out | FL1, F2 |
 | R6 | Notepad logging: Add Set sheet, record/edit/delete, warm-up rules | FL2–3, F1, F4, BR4–5, BR18, BR26–27 |
 | R7 | Rest timer (optional, 3s–5min, background notification on dev build) | FL4, F5, BR20 |
@@ -37,6 +37,7 @@ The blueprint is approved and complete (18/18 sections). The repo has spec artif
 | R12 | UI matches Figma 1:1 (tokens via Figma MCP at Stage 0) | §10–13 |
 | R13 | Progress math unit tests (T1–T26 per blueprint §17) | §17 |
 | R14 | No analytics, no network, local-only security posture | §15–16 |
+| R15 | iOS App Store production release (EAS Build + Submit; normal installable app, not sideload) | §9, §18 Stage 7 |
 
 ---
 
@@ -45,7 +46,7 @@ The blueprint is approved and complete (18/18 sections). The repo has spec artif
 | Decision | Rationale |
 |----------|-----------|
 | **Expo managed workflow + dev client** | Blueprint §9; Expo Go for early UI; dev build when charts/notifications need native modules |
-| **React Navigation (not Expo Router)** | Blueprint specifies React Navigation; tab + stack for Settings sub-screen |
+| **React Navigation (not Expo Router)** | Blueprint specifies React Navigation; native stack only (no bottom tabs) |
 | **Drizzle + expo-sqlite** | Typed schema, migrations, single source of truth (§7) |
 | **Zustand write-through slices** | profile, plan, today, settings persisted; timer + sheet draft transient (§7) |
 | **`src/data/exercise-catalogue.ts` single seed file** | BR28–31; all pickers/sliders/charts read catalogue by id |
@@ -53,6 +54,7 @@ The blueprint is approved and complete (18/18 sections). The repo has spec artif
 | **react-native-gifted-charts** | Blueprint §9; Expo-compatible charting |
 | **Figma MCP at Stage 0** | Pull exact tokens/component states; no invented colors/spacing (§10 build-time contract) |
 | **Jest for domain unit tests** | T1–T26; no E2E framework in v1 — device checkpoints are manual per stage |
+| **EAS Build + EAS Submit (U7)** | Blueprint §9 Stage 7; production iOS binary → App Store; learn full release process while solo-user |
 
 ---
 
@@ -130,11 +132,12 @@ ultraload/
 
 ## Scope Boundaries
 
-**In scope:** Everything in blueprint MVP (F1–F16), Stages 0–6, T1–T26 domain tests, sideload distribution notes.
+**In scope:** Everything in blueprint MVP (F1–F16), Stages 0–7, T1–T26 domain tests, **iOS App Store release (U7)**.
 
 **Deferred to follow-up work:**
 - Full accessibility audit (VoiceOver, contrast) — out of v1 per §10
-- App Store / cloud sync / multi-user
+- Cloud sync / multi-user
+- Google Play (optional; Android may stay APK sideload until decided)
 - 8RM, rep-budget, stall detection
 - Id-migration tooling if catalogue ids must be renamed (BR29)
 - E2E automated UI tests
@@ -149,11 +152,13 @@ ultraload/
 |------|------------|
 | Figma token drift | Stage 0 + Stage 1 design gate; block Stage 2 until checkpoint passes |
 | iOS import/share quirks | Validate export/import on device in Stage 6 |
-| Background rest timer on sideloaded iOS | Defer notification validation to dev build (Stage 2 done-when) |
+| Background rest timer on iOS | Defer notification validation to dev build (Stage 2 done-when) |
+| App Review rejection | Offline-only, no login/analytics — low risk; address metadata or reviewer notes and resubmit |
+| Apple Developer / EAS setup friction | Stage 7 is explicitly for learning the process; follow Expo EAS Submit docs |
 | Chart library limitations | Hand-check muscle-group calcs (T4) against blueprint worked example |
 | Catalogue edits break history | BR29–31 enforced in seed schema + T25–T26 |
 
-**External dependencies:** Figma file (ultraload-v1 + v1-components), Expo SDK, dev build for notifications.
+**External dependencies:** Figma file (ultraload-v1 + v1-components), Expo SDK, dev build for notifications, **Apple Developer Program** (U7), **EAS** (U7).
 
 ---
 
@@ -174,9 +179,9 @@ ultraload/
 - `src/domain/catalogue.ts`
 - `src/navigation/RootNavigator.tsx`
 - `src/theme/tokens.ts`, `src/theme/typography.ts`
-- `src/components/` — tab bar, buttons, sliders, toggle, log row, bottom sheet shell
+- `src/components/` — options menu, session title bar, buttons, sliders, toggle, log row, bottom sheet shell
 - `src/stores/*.ts` (skeleton write-through wiring)
-- `src/screens/PlaceholderTabs.tsx` (temporary until U1)
+- `src/components/OptionsMenuDropdown.tsx`, `useHomepageOptionsMenu.tsx`, `SessionTitleBar.tsx`
 
 **Approach:**
 1. `npx create-expo-app` with TypeScript template; add Drizzle, Zustand, React Navigation, expo-sqlite.
@@ -190,7 +195,7 @@ ultraload/
 - Test expectation: none for pure theme/scaffold components
 
 **Verification:**
-- App opens to 3-tab shell on device (Expo Go)
+- App opens to Work Out home screen on device (Expo Go)
 - Restart app → profile row persists in SQLite
 - Edit catalogue display name → picker label updates without UI file changes
 - 3–5 components match Figma spacing/type/color (visual checkpoint)
@@ -234,7 +239,7 @@ ultraload/
 
 ### U2. Work Out complete (Stage 2)
 
-**Goal:** Full Work Out tab — edit, delete, warm-up auto-tag, rest timer.
+**Goal:** Full Work Out screen — edit, delete, warm-up auto-tag, rest timer.
 
 **Requirements:** R6, R7, R12
 
@@ -260,7 +265,7 @@ ultraload/
 
 **Verification:**
 - Full Work Out Figma inventory on device
-- Warm-up sets excluded from any totals on Work Out tab
+- Warm-up sets excluded from any totals on Work Out screen
 - Rest timer foreground OK; background notification on dev build
 
 ---
@@ -384,8 +389,10 @@ ultraload/
 **Approach:**
 1. Export JSON per blueprint §18 schema (profile, settings, plan, workouts).
 2. Import: validate schemaVersion + catalogue ids → confirm overwrite → hydrate.
-3. Reset: full wipe → onboarding replay.
+3. Reset: full wipe → onboarding replay (Settings overlay, SCR17 — canonical ship surface).
 4. Final iOS + Android device pass.
+
+**Note:** If **Reset** appears on the Work Out options menu during development, treat it as a dev convenience only — not shipping UI. Remove it in **U7** before the production App Store compile (reset remains on Settings).
 
 **Test scenarios:**
 - T22: export → import round-trip preserves all fields + ◊ weight semantics
@@ -399,12 +406,55 @@ ultraload/
 
 ---
 
+### U7. App Store release — iOS (Stage 7)
+
+**Goal:** Ship UltraLoad to the **public App Store** as a normal installable app. Solo-user product, but through Apple's full release flow — **no new in-app features**.
+
+**Requirements:** R15, R14
+
+**Dependencies:** U6 (feature-complete build)
+
+**Files (tooling & metadata — not app logic):**
+- `eas.json` — build profiles (`development`, `preview`, `production`)
+- `app.config.ts` — verify `bundleIdentifier`, version, icon (likely already set)
+- App Store Connect — app record, screenshots, description, privacy nutrition label
+- Optional: simple privacy/support page URL if Apple requires it
+
+**Files (ship prep — small app diff before production compile):**
+- `src/components/OptionsMenuDropdown.tsx` — remove `reset` menu item
+- `src/components/useHomepageOptionsMenu.tsx` — remove reset handler / dev wipe path
+- `src/stores/devAppResetSlice.ts` — remove if only used for homepage reset
+
+**Approach:**
+0. **Before production build:** remove **Reset** from the Work Out options menu. Navigation menu is History + Settings only. User-facing reset stays on Settings (U6 / SCR17).
+1. Enroll in Apple Developer Program ($99/yr).
+2. Link EAS project (replace placeholder `extra.eas.projectId` with real EAS project).
+3. Configure production iOS profile; run `eas build --platform ios --profile production`.
+4. Create App Store Connect listing; declare **no data collected** (matches §15–16).
+5. Complete export-compliance questionnaire (standard HTTPS only / exempt).
+6. `eas submit` → App Review → release to App Store.
+7. Install from App Store on a clean device; confirm updates work without manual re-sign.
+
+**Test scenarios:** None (release process; no domain logic).
+
+**Verification:**
+- Work Out options menu shows **History** and **Settings** only (no Reset)
+- App appears on App Store and installs like any other app (not sideload, not dev-client-only)
+- App Review approved (or rejection resolved and resubmitted)
+- Pablo can reinstall / update without the old 7-day free-Apple-ID re-sign cycle
+
+**Note:** U0–U6 continue to use Expo Go / dev client as today. U7 is the first time production store binaries matter.
+
+---
+
 ## Open Questions (deferred to implementation)
 
 - Exact reps slider min/max/step (BR22) — match Figma during U1
 - Calendar-day timezone edge (BR1) — device local, default implementation
 - Rest timer: notification vs Live Activity wording — match platform capability in U2 dev build
 - Per-exercise Settings navigation UI — follow Figma during U3
+- Privacy / support URL for App Store — resolve during U7 if Apple requires
+- Google Play vs APK-only on Android — decide at or after U7
 
 ---
 
@@ -427,6 +477,7 @@ flowchart LR
   U3 --> U4[U4 History list]
   U4 --> U5[U5 Chart]
   U5 --> U6[U6 Export polish]
+  U6 --> U7[U7 App Store]
 ```
 
-**Start with U0.** Do not skip the U1 design gate.
+**Start with U0.** Do not skip the U1 design gate. **U7** runs after U6 when the app is feature-complete.

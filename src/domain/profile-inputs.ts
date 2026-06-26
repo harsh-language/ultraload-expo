@@ -63,6 +63,17 @@ export function sanitizeAge(raw: string): string {
   return digits;
 }
 
+/** Parse optional age input; null when empty. */
+export function parseOptionalInt(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function sanitizeName(raw: string): string {
   return raw.replace(/[^a-zA-Z0-9 ]/g, '').toLowerCase();
 }

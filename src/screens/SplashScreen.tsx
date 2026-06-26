@@ -22,7 +22,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
   return (
     <View
-      style={[styles.container, { paddingBottom: insets.bottom }]}
+      style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
     >
       <View style={styles.centre}>
         <Text style={styles.wordmark}>ultraload</Text>

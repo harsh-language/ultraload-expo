@@ -21,3 +21,9 @@ export function createDatabase(expoDb: SQLiteDatabase): ExpoSQLiteDatabase<typeo
 }
 
 export type AppDatabase = ExpoSQLiteDatabase<typeof schema>;
+
+export type AppDatabaseTransaction = Parameters<
+  Parameters<AppDatabase['transaction']>[0]
+>[0];
+
+export type DbOrTransaction = AppDatabase | AppDatabaseTransaction;

@@ -7,6 +7,8 @@ interface IconButtonProps {
   children: ReactNode;
   accessibilityLabel: string;
   size?: 'large' | 'small';
+  /** Figma pressed state — e.g. while a anchored menu is open */
+  pressed?: boolean;
 }
 
 export function IconButton({
@@ -14,6 +16,7 @@ export function IconButton({
   children,
   accessibilityLabel,
   size = 'large',
+  pressed: pressedActive = false,
 }: IconButtonProps) {
   const dimension = size === 'large' ? spacing['s-12'] : spacing['s-11'];
 
@@ -21,11 +24,12 @@ export function IconButton({
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={{ expanded: pressedActive }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         { width: dimension, height: dimension },
-        pressed && styles.pressed,
+        (pressed || pressedActive) && styles.pressed,
       ]}
     >
       {children}

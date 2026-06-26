@@ -3,7 +3,7 @@ title: Application Blueprint
 product: UltraLoad
 status: approved
 created: 2026-06-22
-last_updated: 2026-06-22
+last_updated: 2026-06-27
 approved: 2026-06-22
 design_references:
   - "Figma screens (ultraload-v1): https://www.figma.com/design/O7SlK5o3Ozt8ztG4Ds8iZY/experiment----ultraload?node-id=2008-2004"
@@ -19,11 +19,11 @@ design_references:
 
 UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sessions with almost no friction **in daily use**, then shows whether you're getting stronger over time. First launch is a one-time 4-step setup (bodyweight → exercises → rest → warm-up); steps 3–4 are pre-filled so most users tap through quickly. Day-to-day logging is minimal: tap Add Set, slide, record. It's built for one experienced lifter (the creator is the sole user) who trains intuitively, picks familiar exercises, and judges progress over months rather than single sessions. The app stays out of the way during sets — a rest timer is the only in-gym assist — and measures progress by **total weight moved** (Σ weight × reps for non-warm-up "standard" sets).
 
-**Shape of the app:** three tabs — **Work Out** (default), **History**, **Settings**. The workout model is a "notepad": there is no "start workout" button; the first set logged on a calendar day creates that day's record. There are no training splits — one flat workout plan of exercises chosen at onboarding and editable in Settings.
+**Shape of the app:** a single **Work Out home** screen (default after onboarding). **History** and **Settings** are reached via an **options menu** on the session title bar — no bottom tab bar. The workout model is a "notepad": there is no "start workout" button; the first set logged on a calendar day creates that day's record. There are no training splits — one flat workout plan of exercises chosen at onboarding and editable in Settings.
 
-**Platform & distribution:** React Native (Expo) + TypeScript, iOS + Android, 100% offline and local-only (no login, no cloud sync). No App Store in v1 (APK on Android; sideloaded build on iPhone). Dark mode only, Geist font, Figma variables as the design source.
+**Platform & distribution:** React Native (Expo) + TypeScript, iOS + Android, 100% offline and local-only (no login, no cloud sync). **iOS ships to the public App Store** as a normal installable app (not a personal sideload or TestFlight-only build) — solo-user product, but through Apple's full release process so the creator learns store submission end-to-end. **Android:** APK sideload or Google Play (TBD at release; iOS App Store is the v1 store-release target). Dark mode only, Geist font, Figma variables as the design source.
 
-**MVP boundary:** logging, history (list + chart), progress math, settings, units, export/import, reset. **Out of scope / future:** 8RM estimates, rep-budget targets, stall detection, multi-user, cloud sync, App Store distribution.
+**MVP boundary:** logging, history (list + chart), progress math, settings, units, export/import, reset, **iOS App Store release**. **Out of scope / future:** 8RM estimates, rep-budget targets, stall detection, multi-user, cloud sync.
 
 ## Traceability
 
@@ -71,7 +71,7 @@ UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sess
 | F15 | Splash | Branded loading moment on launch. |
 | F16 | Bodyweight-exercise handling | Dip, weighted pull-up, glute bridge curl sliders show total weight; ranges recalc immediately on bodyweight change (BR18). |
 
-**Future / non-goals (explicit):** 8RM estimates · rep-budget targets (internal philosophy only, never shown) · stall detection · multi-user · cloud sync/login · App Store distribution · per-exercise rest timers · exercise renaming · free-text exercises · female strength standards.
+**Future / non-goals (explicit):** 8RM estimates · rep-budget targets (internal philosophy only, never shown) · stall detection · multi-user · cloud sync/login · per-exercise rest timers · exercise renaming · free-text exercises · female strength standards.
 
 ## 3. User Flows
 
@@ -86,7 +86,7 @@ flowchart TD
   bw --> pickEx["Step 2: Select exercises for plan (>=1 required)"]
   pickEx --> rest["Step 3: Rest timer preset (default 3 min)"]
   rest --> warmup["Step 4: Warm-up load preset (default 50%)"]
-  warmup --> ready["Land on Work Out tab"]
+  warmup --> ready["Land on Work Out home"]
   bw -. "bodyweight empty" .-> bw
   pickEx -. "0 selected" .-> pickEx
 ```
@@ -113,13 +113,13 @@ flowchart TD
 User taps the timer on the Work Out main page → timer runs (range 3 s–5 min). Backgrounding the app fires a notification alert. Never auto-starts after recording a set.
 
 ### FL5 — View history list (F6, F9)
-Open History → List view → rows per day with day total + day % change (or "—"). Empty state shown when no data (shared list/chart empty state per Figma).
+Work Out home → options menu → History → List view → rows per day with day total + day % change (or "—"). Empty state shown when no data (shared list/chart empty state per Figma).
 
 ### FL6 — View / edit a session (F7)
 Tap a day → session detail (read-only, grouped exercise → sets) → top-right edit → editable mode → edit/delete via bottom sheet → downstream % recalculated (BR12).
 
 ### FL7 — Chart + filter (F8, F9)
-Open History → Chart view → default Y = session total, 10 latest visible. Filter by exercise (Y switches to that exercise) or by muscle group (weighted calc, BR13). Time range month/year/all-time; horizontal scroll along timeline.
+Work Out home → options menu → History → Chart view → default Y = session total, 10 latest visible. Filter by exercise (Y switches to that exercise) or by muscle group (weighted calc, BR13). Time range month/year/all-time; horizontal scroll along timeline.
 
 ### FL8 — Edit workout plan (F3)
 Settings → Edit workout plan → add-exercises sub-screen → toggle exercise **off** → **confirmation bottom sheet** (same pattern as set delete): *"This exercise will be hidden from your workout and History until you add it back. Your past sets are kept."* → Confirm hides exercise + history (BR3); Cancel leaves plan unchanged. Toggle **on** re-enables immediately (no confirmation).
@@ -143,10 +143,10 @@ Settings (SCR14) → unit selector (kg/lbs/stone) → all displayed weights re-r
 ```mermaid
 flowchart TD
   splash["SCR1 Splash"] --> onb["Onboarding SCR2-SCR5"]
-  onb --> tabs{{"3-tab bar"}}
-  tabs --> wo["SCR6 Work Out main"]
-  tabs --> hist["History"]
-  tabs --> set["SCR14 Settings hub"]
+  onb --> wo["SCR6 Work Out home"]
+  wo --> menu["Options menu on session title bar"]
+  menu -.-> hist["History"]
+  menu -.-> set["SCR14 Settings hub"]
   wo --> sheet["SCR7 Add/Edit Set sheet"]
   wo --> del["SCR8 Delete confirm overlay"]
   wo --> timer["SCR9 Rest timer"]
@@ -159,17 +159,17 @@ flowchart TD
   set --> reset["SCR17 Reset overlay"]
 ```
 
-| ID | Screen | Tab / context | Why the user sees it |
-|----|--------|---------------|----------------------|
+| ID | Screen | Context | Why the user sees it |
+|----|--------|---------|----------------------|
 | SCR1 | Splash | Launch | Branded loading moment |
 | SCR2 | Profile setup — bodyweight | Onboarding | Set required bodyweight (+ optional name/height/age) |
 | SCR3 | Profile setup — exercise picker | Onboarding | Choose workout-plan exercises (≥1) |
 | SCR4 | Profile setup — rest timer | Onboarding | Set default rest preset (default 3 min) |
 | SCR5 | Profile setup — warm-up preset | Onboarding | Set default warm-up load % (default 50%) |
-| SCR6 | Work Out main page | Work Out | Log/view today's sets grouped by exercise |
-| SCR7 | Add/Edit Set bottom sheet | Work Out + History | Pick exercise, reps/weight sliders, warm-up toggle |
-| SCR8 | Delete confirmation overlay | Work Out + History | Confirm set deletion |
-| SCR9 | Rest timer | Work Out | Optional rest countdown |
+| SCR6 | Work Out main page | Home | Log/view today's sets grouped by exercise |
+| SCR7 | Add/Edit Set bottom sheet | Home + History | Pick exercise, reps/weight sliders, warm-up toggle |
+| SCR8 | Delete confirmation overlay | Home + History | Confirm set deletion |
+| SCR9 | Rest timer | Home | Optional rest countdown |
 | SCR10 | History — list | History | Per-day totals + % change |
 | SCR11 | History — chart | History | Progress over time with filters |
 | SCR12 | Session detail (read-only) | History | Review a past day's sets |
@@ -351,12 +351,12 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | Database | SQLite on device (Expo SQLite + Drizzle ORM) |
 | Exercise catalogue | TypeScript seed module (`src/data/exercise-catalogue.ts` or equivalent) — single file, easy to edit; includes muscle multipliers per exercise and optional `deprecated` flag (BR28–BR30) |
 | State | Zustand |
-| Navigation | React Navigation |
+| Navigation | React Navigation (native stack; no bottom tabs) |
 | Charts | react-native-gifted-charts (Expo Go compatible) |
 | Export/import | JSON snapshot; `expo-document-picker` for import; share sheet for export |
 | Design source | Figma (Geist font, dark theme, Figma variables) |
 | Dev flow | Expo Go for early screens; dev build when native modules needed (charts, notifications) |
-| Distribution | APK on Android; sideloaded build on iPhone (free Apple ID ~7-day re-sign, or $99/yr account). No App Store. |
+| Distribution | **iOS:** EAS Build + EAS Submit → **App Store** (Apple Developer Program, $99/yr). Production listing; installs and updates like any other app — no manual re-sign cycle. **Android:** APK sideload during development; Google Play optional at release. **No app-code changes required until Stage 7** — release is tooling, Apple accounts, and store metadata. |
 
 ## 10. UI Specifications
 
@@ -365,6 +365,7 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 **Accessibility (v1):** match Figma exactly and respect the system **dynamic text scaling** setting. Full accessibility (screen-reader / VoiceOver support, contrast audit, focus order) is **out of scope for v1** (noted as future).
 
 Confirmed intent:
+- **Platform chrome:** never hide the iOS status bar or Android navigation bar; respect safe areas on all screens.
 - **Theme:** dark mode only; **Font:** Geist; tokens come from Figma variables.
 - **Work Out main page:** today's sets grouped by exercise (group order = first exercise logged); sets within a group in logging order. Alternating exercises route each set under its exercise automatically.
 - **History list rows:** date + total weight + % change; "—" where no comparison.
@@ -379,7 +380,7 @@ Confirmed intent:
 
 | Component | Purpose |
 |-----------|---------|
-| main-navigation | 3-tab bar (Work Out → History → Settings) |
+| options-menu-dropdown | Session title bar menu (History, Settings, Reset) |
 | history-navigation | History sub-navigation (List / Chart) |
 | session-title-bar | Workout session header |
 | title / title-tab | Screen titles |
@@ -405,11 +406,11 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 
 ## 12. Navigation Structure
 
-- **Root:** Splash → (first launch) Onboarding → 3-tab bar; (returning) straight to tab bar, Work Out default.
-- **Tabs:** Work Out (default) · History · Settings via `main-navigation`.
-- **Work Out:** main page; Add/Edit Set as bottom sheet; rest timer; delete confirmation overlay. No pushed sub-screens.
-- **History:** `history-navigation` switches List ↔ Chart; tapping a day pushes Session detail; edit toggles Edit session (same sheet).
-- **Settings:** hub; Add exercises is the only real pushed sub-screen; Export and Reset are overlay alerts on Settings.
+- **Root:** Splash → (first launch) Onboarding → **Work Out home**; (returning) straight to Work Out home.
+- **Home (Work Out):** default screen; session title bar includes an **options menu** (chevron) for **History** and **Settings**. Add/Edit Set as bottom sheet; rest timer; delete confirmation overlay. No pushed sub-screens from home. **Dev interim (U0–U6):** options menu may include **Reset** for faster testing — **remove before Stage 7 production build** (canonical reset is the Settings overlay, SCR17).
+- **History:** reached via options menu → stack push; `history-navigation` switches List ↔ Chart within History; tapping a day pushes Session detail; edit toggles Edit session (same sheet).
+- **Settings:** reached via options menu → stack push; hub screen; Add exercises is the only real pushed sub-screen; Export and Reset are overlay alerts on Settings.
+- **No bottom tab bar,** no horizontal tab pager, no `main-navigation` component.
 
 ## 13. Key Interactions
 
@@ -454,6 +455,7 @@ Local-only, single-user; no login, no account, no sync.
 - Optional personal fields (name/height/age) and all workout data are stored **on-device only** in SQLite.
 - **No additional at-rest encryption** beyond what the device OS provides.
 - **No network transmission** of any kind. No PII leaves the device except via a **user-initiated export** through the OS share sheet.
+- **App Store privacy nutrition label:** declare **no data collected** (offline-only; no analytics). Matches §16.
 - Export JSON is **plain / unredacted** (includes personal data); the user controls where it goes.
 - **Import trust boundary:** import accepts only files the user explicitly picks. Before overwrite, show a confirmation overlay. Validate `schemaVersion`, required fields, and exercise ids against the built-in catalogue. Reject malformed or unsupported files without modifying existing data. Import is a full replace of all SQLite-persisted state (same scope as export).
 
@@ -503,7 +505,7 @@ Manual device checkpoints per stage (see §18 Done-when). Background rest-timer 
 
 ## 18. Implementation Roadmap
 
-Build in **layers + vertical slices**, not tab-by-tab. Shared UI (bottom sheet, sliders, log rows) built once early and reused; exercise picker shared by onboarding + Settings. Each stage ends with a human-testable checkpoint compared to Figma on a real device.
+Build in **layers + vertical slices**, not tab-by-tab. Shared UI (bottom sheet, sliders, log rows) built once early and reused; exercise picker shared by onboarding + Settings. Each stage ends with a human-testable checkpoint compared to Figma on a real device. Stages 0–6 deliver product features; **Stage 7** delivers iOS App Store distribution.
 
 ```mermaid
 flowchart LR
@@ -513,17 +515,21 @@ flowchart LR
   S3 --> S4[Stage 4: History list]
   S4 --> S5[Stage 5: Chart]
   S5 --> S6[Stage 6: Export and polish]
+  S6 --> S7[Stage 7: App Store release]
 ```
 
 | Stage | Build | Done-when (human-testable) | Delivers |
 |-------|-------|----------------------------|----------|
-| 0 — Foundation + design system | Expo + TS + SQLite + Drizzle; **catalogue seed module** (BR28–BR31) with v1 table + multipliers + `deprecated` support; data model + plan storage; 3-tab shell; design tokens from Figma; core reusable components (tab bar, buttons, sliders, toggles, log row, bottom sheet shell) | App opens to empty shell with working tab bar; 3–5 core components render and match Figma spacing/type/color; catalogue + profile persist across restarts; **editing catalogue metadata changes picker/slider behaviour without UI code changes; deprecated ids stay out of pickers but resolve in history** | F3 (catalogue/plan storage), F15 |
+| 0 — Foundation + design system | Expo + TS + SQLite + Drizzle; **catalogue seed module** (BR28–BR31) with v1 table + multipliers + `deprecated` support; data model + plan storage; Work Out home shell; design tokens from Figma; core reusable components (buttons, sliders, toggles, log row, bottom sheet shell, options menu) | App opens to Work Out home with core components; 3–5 core components render and match Figma spacing/type/color; catalogue + profile persist across restarts; **editing catalogue metadata changes picker/slider behaviour without UI code changes; deprecated ids stay out of pickers but resolve in history** | F3 (catalogue/plan storage), F15 |
 | 1 — Core loop slice (design checkpoint) | Full onboarding (splash→bodyweight→picker→rest→warm-up→Work Out); Work Out main page (empty state); Add Set sheet (pick exercise, reps slider, weight slider, warm-up toggle); record one set | Fresh install → onboarding → log one set → set appears under correct exercise; splash/one onboarding step/main page/sheet match Figma. Design-fidelity gate. | F2, F15, F1 (record), F4 (toggle visible) |
-| 2 — Work Out complete | Edit/delete sets (same sheet); warm-up auto-tag + per-set override; rest timer (optional, user-triggered); default reps/weight from last set today; delete confirmations | Full Work Out tab matches Figma inventory (add/edit/delete/warm-up/timer); warm-up excluded from totals shown here; rest timer works foreground; background notification validated on dev build | F1, F4, F5, BR21 |
+| 2 — Work Out complete | Edit/delete sets (same sheet); warm-up auto-tag + per-set override; rest timer (optional, user-triggered); default reps/weight from last set today; delete confirmations | Full Work Out screen matches Figma inventory (add/edit/delete/warm-up/timer); warm-up excluded from totals shown here; rest timer works foreground; background notification validated on dev build | F1, F4, F5, BR21 |
 | 3 — Settings | Settings hub; bodyweight; edit plan (add-exercises sub-screen); global warm-up on/off + %; per-exercise warm-up %/range/increment (**non-bodyweight only**); rest preset; unit toggle (kg/lbs/stone); bodyweight-exercise ranges recompute immediately | Change bodyweight → Work Out → ◊ sliders show updated ranges without restart; add/remove exercises updates picker + lists; units apply uniformly | F10, F11, F16, F3 (plan editing) |
 | 4 — History list + session detail | Progress measurement logic + unit tests (T1–T3, T5, T6); list view (day total + % change); session detail (read-only); edit session reusing sheet; downstream recalc; removed exercises hidden, re-enable restores | Log several days → list shows correct totals + % (or "—"); edit a past set → list updates; warm-up-only days + missing priors behave per rules | F6, F7, F9 (core math) |
 | 5 — History chart | Chart view; exercise + muscle-group filters; muscle-group weighting (T4); time ranges month/year/all-time; horizontal scroll; shared History empty state | Chart renders real data; exercise + muscle-group filters match hand-checked calcs; matches Figma on device | F8, F9 (weighting) |
 | 6 — Export, reset, polish | Export JSON via share sheet; import via document picker; reset with confirmation → full wipe → onboarding replay; final iOS + Android pass | Export → reset → re-import restores all workouts + settings; reset returns to onboarding; no blocking issues on target devices | F12, F13, F14 |
+| 7 — App Store release (iOS) | Remove **Reset** from Work Out options menu before production compile; Apple Developer Program; EAS project + `eas.json` production profile; App Store Connect app record; store listing (name, subtitle, description, screenshots, icon); privacy nutrition label (no data collected); export-compliance questionnaire; EAS Submit → App Review | **UltraLoad installs from the App Store** on a clean device (not sideload, not dev-client-only); Work Out options menu is History + Settings only; update installs without manual re-sign; App Review approved (or rejection addressed and resubmitted) | Distribution (§9) |
+
+**Stage 7 notes (release process, not product features):** Goal is to complete Apple's full submission flow once, even though Pablo is the only user. Expect store-metadata work (screenshots, copy, support URL) and account setup — **no new in-app features**. **Before the production compile:** strip **Reset** from the homepage options menu (dev-only shortcut during build); shipping reset stays on Settings. UltraLoad's offline posture simplifies review: no login, no tracking, no third-party SDKs that collect data.
 
 **Technical work folded into stages:** project setup/SQLite/Drizzle (0); catalogue + plan (0); design tokens + shared components (0); onboarding (1); progress-math unit tests (4 logic, 5 muscle-group chart); export/import schema (6).
 
@@ -593,7 +599,8 @@ All product judgments resolved (2026-06-22 user confirmation):
 - Rest timer: notification vs Live Activity — §13
 - §17 test-to-stage mapping; FL6/FL4/FL7 interaction gaps
 - Per-exercise Settings navigation flow
-- iOS re-sign operational note in §9
+- App Store support / privacy policy URL (if Apple requires one for a no-data-collected app) — Stage 7
+- Google Play vs APK-only on Android — decide at release
 
 ### Resolved (ce-doc-review 2026-06-22)
 

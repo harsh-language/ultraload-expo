@@ -1,10 +1,14 @@
+import type { RefObject } from 'react';
+import { View } from 'react-native';
 import {
   formatSessionTotalWeightLabel,
   getSessionTotalWeightMoved,
   hasStandardSets,
   type WorkoutForSessionTotal,
 } from '../domain/session-totals';
+import { IconButton } from './IconButton';
 import { SessionTitleBar } from './SessionTitleBar';
+import { ChevronBottomIcon } from './icons';
 
 function formatSessionDateLabel(date: Date = new Date()): string {
   const month = date
@@ -17,9 +21,17 @@ function formatSessionDateLabel(date: Date = new Date()): string {
 
 interface TodaySessionTitleBarProps {
   workout: WorkoutForSessionTotal | null;
+  menuButtonRef?: RefObject<View | null>;
+  onMenuPress?: () => void;
+  menuOpen?: boolean;
 }
 
-export function TodaySessionTitleBar({ workout }: TodaySessionTitleBarProps) {
+export function TodaySessionTitleBar({
+  workout,
+  menuButtonRef,
+  onMenuPress,
+  menuOpen = false,
+}: TodaySessionTitleBarProps) {
   const totalLabel = hasStandardSets(workout)
     ? formatSessionTotalWeightLabel(getSessionTotalWeightMoved(workout))
     : undefined;
@@ -28,6 +40,20 @@ export function TodaySessionTitleBar({ workout }: TodaySessionTitleBarProps) {
     <SessionTitleBar
       dateLabel={formatSessionDateLabel(new Date())}
       totalLabel={totalLabel}
+      trailing={
+        onMenuPress ? (
+          <View ref={menuButtonRef} collapsable={false}>
+            <IconButton
+              accessibilityLabel="More options"
+              onPress={onMenuPress}
+              pressed={menuOpen}
+              size="small"
+            >
+              <ChevronBottomIcon />
+            </IconButton>
+          </View>
+        ) : null
+      }
     />
   );
 }

@@ -49,12 +49,12 @@ Only tune via props when layout requires it:
 | `topFadeHeight` | Top band only — overrides `fadeHeight` |
 | `bottomFadeHeight` | Bottom band only — overrides `fadeHeight` |
 | `topOffset` | Push top fade below pinned header |
-| `bottomOffset` | Push bottom fade above pinned footer/tab bar |
+| `bottomOffset` | Push bottom fade above pinned footer |
 
 ## Layering
 
 - Fades live **inside** the scroll viewport (`ScrollFadeView` container), `pointerEvents: none`
-- Pinned chrome (title bars, CTAs, tab bars, bottom sheets) stays **outside** and above the fade layer
+- Pinned chrome (title bars, CTAs, pinned footers, bottom sheets) stays **outside** and above the fade layer
 
 ## FlatList / SectionList
 

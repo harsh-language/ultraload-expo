@@ -1,13 +1,12 @@
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MainNavigation } from '../components/MainNavigation';
 import { useProfileStore } from '../stores/profileSlice';
+import { useDevAppResetStore } from '../stores/devAppResetSlice';
 import { OnboardingFlow } from '../screens/onboarding/OnboardingFlow';
 import { SplashScreen } from '../screens/SplashScreen';
+import { WorkOutScreen } from '../screens/WorkOutScreen';
 import { colors } from '../theme/tokens';
-import { MainTabPager } from './MainTabPager';
-import type { MainTabKey } from './mainTabs';
 
 const navTheme = {
   ...DarkTheme,
@@ -26,8 +25,16 @@ type AppPhase = 'splash' | 'onboarding' | 'main';
 export function RootNavigator() {
   const onboardingComplete = useProfileStore((state) => state.onboardingComplete);
   const hydrated = useProfileStore((state) => state.hydrated);
+  const resetGeneration = useDevAppResetStore((state) => state.generation);
   const [phase, setPhase] = useState<AppPhase>('splash');
-  const [selectedTab, setSelectedTab] = useState<MainTabKey>('workout');
+
+  useEffect(() => {
+    if (resetGeneration === 0) {
+      return;
+    }
+
+    setPhase('splash');
+  }, [resetGeneration]);
 
   const handleSplashComplete = useCallback(() => {
     setPhase(onboardingComplete ? 'main' : 'onboarding');
@@ -35,7 +42,6 @@ export function RootNavigator() {
 
   const handleOnboardingComplete = useCallback(() => {
     setPhase('main');
-    setSelectedTab('workout');
   }, []);
 
   if (!hydrated) {
@@ -53,8 +59,7 @@ export function RootNavigator() {
   return (
     <NavigationContainer theme={navTheme}>
       <View style={styles.root}>
-        <MainTabPager selected={selectedTab} />
-        <MainNavigation selected={selectedTab} onSelect={setSelectedTab} />
+        <WorkOutScreen />
       </View>
     </NavigationContainer>
   );

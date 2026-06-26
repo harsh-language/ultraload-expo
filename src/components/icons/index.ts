@@ -1,6 +1,8 @@
 export { ICON_DEFAULT_COLOR, ICON_SIZE } from './config';
 export { createIcon, type AppIconProps } from './createIcon';
 export { BackIcon } from './BackIcon';
+export { ArrowsRepeatCircleIcon } from './ArrowsRepeatCircleIcon';
+export { CalendarDaysIcon } from './CalendarDaysIcon';
 export { CheckmarkIcon } from './CheckmarkIcon';
 export { CircleCheckIcon } from './CircleCheckIcon';
 export { CirclePlaceholderOnIcon } from './CirclePlaceholderOnIcon';
@@ -12,6 +14,4 @@ export { ForwardIcon } from './ForwardIcon';
 export { PlusIcon } from './PlusIcon';
 export { IconLink } from './IconLink';
 export { PencilIcon } from './PencilIcon';
-export { TabHistoryIcon } from './TabHistoryIcon';
-export { TabSettingsIcon } from './TabSettingsIcon';
-export { TabWorkoutIcon } from './TabWorkoutIcon';
+export { SettingsGearIcon } from './SettingsGearIcon';

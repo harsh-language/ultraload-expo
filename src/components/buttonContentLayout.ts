@@ -52,7 +52,7 @@ export const buttonContentStyles = StyleSheet.create({
     minWidth: 0,
   },
   labelCentered: {
-    flexShrink: 0,
+    minWidth: 0,
   },
 });
 
