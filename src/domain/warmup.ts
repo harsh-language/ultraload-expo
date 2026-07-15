@@ -1,4 +1,5 @@
 import type { ExerciseCatalogueEntry } from '../data/exercise-catalogue';
+import { getStandardSetsForExerciseToday } from './standard-sets';
 
 export interface TodayWorkoutForWarmUp {
   loggedExercises: {
@@ -21,23 +22,11 @@ export function getLastStandardSetWeightToday(
   workout: TodayWorkoutForWarmUp | null,
   exerciseId: string,
 ): number | null {
-  if (!workout) {
-    return null;
-  }
-
-  const loggedExercise = workout.loggedExercises.find(
-    (entry) => entry.exerciseId === exerciseId,
+  const standardSets = getStandardSetsForExerciseToday(workout, exerciseId).sort(
+    (a, b) => a.order - b.order,
   );
-  if (!loggedExercise) {
-    return null;
-  }
 
-  const standardSets = loggedExercise.sets
-    .filter((set) => !set.warmUp)
-    .sort((a, b) => a.order - b.order);
-
-  const lastStandardSet = standardSets.at(-1);
-  return lastStandardSet?.weight ?? null;
+  return standardSets.at(-1)?.weight ?? null;
 }
 
 export function getWarmUpThreshold(

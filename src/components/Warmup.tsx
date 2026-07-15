@@ -1,60 +1,61 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../theme/tokens';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
-import { textCase } from '../theme/textCase';
-import { CircleCheckIcon, CirclePlaceholderOnIcon } from './icons';
 
 interface WarmupProps {
   value: boolean;
   onValueChange: (value: boolean) => void;
 }
 
-function warmupColor(value: boolean, pressed: boolean) {
-  if (value && !pressed) {
-    return colors['content-1'];
-  }
-  if (value && pressed) {
-    return colors['content-2'];
-  }
-  if (!value && pressed) {
-    return colors['content-3'];
-  }
-  return colors['content-2'];
-}
-
+/** Figma `input-option-unit` — off (border-2 / content-2) ↔ on (border-1 / content-1). */
 export function Warmup({ value, onValueChange }: WarmupProps) {
   return (
     <Pressable
+      accessibilityLabel="warmup"
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       onPress={() => onValueChange(!value)}
+      style={({ pressed }) => [
+        styles.pill,
+        value && styles.on,
+        pressed && styles.pressed,
+      ]}
     >
-      {({ pressed }) => {
-        const color = warmupColor(value, pressed);
-        const Icon = value ? CircleCheckIcon : CirclePlaceholderOnIcon;
-
-        return (
-          <View style={styles.row}>
-            <Icon color={color} />
-            <Text style={[typography.para2, styles.label, { color }]}>
-              warmup
-            </Text>
-          </View>
-        );
-      }}
+      <Text
+        style={[
+          value ? typography.para1 : typography.para2,
+          value ? styles.labelOn : styles.labelOff,
+        ]}
+      >
+        W
+      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
+  pill: {
     alignItems: 'center',
-    gap: spacing['s-4'],
-    minHeight: spacing['s-10'],
-    flexShrink: 0,
+    justifyContent: 'center',
+    minHeight: spacing['s-12'],
+    minWidth: spacing['s-12'],
+    paddingHorizontal: spacing['s-8'],
+    borderRadius: radii['r-pill'],
+    borderWidth: spacing['s-1'],
+    borderColor: colors['border-2'],
+    backgroundColor: colors['bg-2'],
   },
-  label: {
-    ...textCase.lower,
+  on: {
+    borderColor: colors['border-1'],
+  },
+  pressed: {
+    backgroundColor: colors['bg-1'],
+    borderColor: colors['content-3'],
+  },
+  labelOff: {
+    color: colors['content-2'],
+  },
+  labelOn: {
+    color: colors['content-1'],
   },
 });

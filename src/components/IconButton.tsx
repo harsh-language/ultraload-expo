@@ -1,10 +1,15 @@
-import type { ReactNode } from 'react';
+import { type ReactElement } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
+import type { AppIconProps } from './icons/createIcon';
+import {
+  cloneIconWithColor,
+  pressedIconColor,
+} from './icons/pressedIconColor';
 
 interface IconButtonProps {
   onPress: () => void;
-  children: ReactNode;
+  children: ReactElement<AppIconProps>;
   accessibilityLabel: string;
   size?: 'large' | 'small';
   /** Figma pressed state — e.g. while a anchored menu is open */
@@ -32,7 +37,12 @@ export function IconButton({
         (pressed || pressedActive) && styles.pressed,
       ]}
     >
-      {children}
+      {({ pressed }) =>
+        cloneIconWithColor(
+          children,
+          pressedIconColor(pressed || pressedActive),
+        )
+      }
     </Pressable>
   );
 }

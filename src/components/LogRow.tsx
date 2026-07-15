@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { formatSetIndex } from '../domain/set-labels';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -67,10 +68,6 @@ export function LogRow(props: LogRowProps) {
       return _exhaustive;
     }
   }
-}
-
-function formatSetIndex(setIndex: number): string {
-  return String(setIndex).padStart(2, '0');
 }
 
 function RowPressable({

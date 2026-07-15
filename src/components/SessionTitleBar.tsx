@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: spacing['s-5'],
+    gap: spacing['s-7'],
     minWidth: 0,
   },
   date: {

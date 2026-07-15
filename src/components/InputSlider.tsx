@@ -7,7 +7,6 @@ import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 
 const KNOB_WIDTH = spacing['s-5'];
-const TRACK_INSET = spacing['s-7'];
 /** Figma disabled input-slider — `opacity-40` on the whole control. */
 const DISABLED_OPACITY = 0.4;
 
@@ -68,7 +67,8 @@ function positionCenterX(
   if (positionCount <= 1) {
     return trackWidth / 2;
   }
-  const minCenter = TRACK_INSET + KNOB_WIDTH / 2;
+  // Travel stays inside trackInner — outer zone already applies s-4 / s-7 padding.
+  const minCenter = KNOB_WIDTH / 2;
   const maxCenter = trackWidth - KNOB_WIDTH / 2;
   return (
     minCenter + index * ((maxCenter - minCenter) / (positionCount - 1))
@@ -102,7 +102,7 @@ function xToNearestIndex(
     return 0;
   }
 
-  const minCenter = TRACK_INSET + KNOB_WIDTH / 2;
+  const minCenter = KNOB_WIDTH / 2;
   const maxCenter = trackWidth - KNOB_WIDTH / 2;
   const stepPx = (maxCenter - minCenter) / (positionCount - 1);
   const index = Math.round((x - minCenter) / stepPx);
@@ -205,8 +205,18 @@ export function InputSlider({
       }}
       style={[styles.pill, { borderColor }]}
     >
-      <GestureDetector gesture={gesture}>
-        <View style={styles.trackZone}>
+      <View style={[styles.valuePanel, { borderRightColor: borderColor }]}>
+        {prefix.length > 0 ? (
+          <Text style={[typography.para2, styles.affix]}>{prefix}</Text>
+        ) : null}
+        <Text style={styles.value}>{displayValue}</Text>
+        {suffix.length > 0 ? (
+          <Text style={[typography.para2, styles.affix]}>{suffix}</Text>
+        ) : null}
+      </View>
+
+      <View style={styles.trackZone}>
+        <GestureDetector gesture={gesture}>
           <View style={styles.trackInner} onLayout={handleTrackLayout}>
             <View
               pointerEvents="none"
@@ -224,17 +234,7 @@ export function InputSlider({
               ]}
             />
           </View>
-        </View>
-      </GestureDetector>
-
-      <View style={[styles.valuePanel, { borderLeftColor: borderColor }]}>
-        {prefix.length > 0 ? (
-          <Text style={[typography.para2, styles.affix]}>{prefix}</Text>
-        ) : null}
-        <Text style={styles.value}>{displayValue}</Text>
-        {suffix.length > 0 ? (
-          <Text style={[typography.para2, styles.affix]}>{suffix}</Text>
-        ) : null}
+        </GestureDetector>
       </View>
     </View>
   );
@@ -305,7 +305,11 @@ const styles = StyleSheet.create({
   trackZone: {
     flex: 1,
     height: '100%',
-    padding: spacing['s-4'],
+    // Figma total-range — s-7 on the outer end keeps the knob off the pill curve.
+    paddingTop: spacing['s-4'],
+    paddingBottom: spacing['s-4'],
+    paddingLeft: spacing['s-4'],
+    paddingRight: spacing['s-7'],
     justifyContent: 'center',
   },
   trackInner: {
@@ -317,10 +321,7 @@ const styles = StyleSheet.create({
     left: 0,
     height: spacing['s-11'],
     backgroundColor: colors['bg-trans-1'],
-    borderTopLeftRadius: radii['r-h-48'],
-    borderBottomLeftRadius: radii['r-h-48'],
-    borderTopRightRadius: radii['r-std'],
-    borderBottomRightRadius: radii['r-std'],
+    borderRadius: radii['r-std'],
   },
   knob: {
     position: 'absolute',
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing['s-4'],
-    borderLeftWidth: spacing['s-1'],
+    borderRightWidth: spacing['s-1'],
   },
   affix: {
     color: colors['content-2'],

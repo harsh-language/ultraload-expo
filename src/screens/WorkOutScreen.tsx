@@ -36,13 +36,18 @@ function clampSafeInset(value: number): number {
   return Math.max(value, spacing['s-5']);
 }
 
-/** Scroll content clears sticky title: status bar + top gap + title bar + list gap. */
+/** Figma section gap (title→session) + session paddingTop — both s-8. */
+const TITLE_TO_SESSION_GAP = spacing['s-8'];
+const SESSION_TOP_PADDING = spacing['s-8'];
+
+/** Scroll content clears sticky title + Figma title→session gap + session top pad. */
 function getScrollTopInset(insets: { top: number }): number {
   return (
     clampSafeInset(insets.top) +
     TITLE_TOP_GAP +
     TITLE_BAR_HEIGHT +
-    spacing['s-8']
+    TITLE_TO_SESSION_GAP +
+    SESSION_TOP_PADDING
   );
 }
 
@@ -169,9 +174,9 @@ export function WorkOutScreen() {
         <ScrollFadeView
           ref={scrollRef}
           alwaysShowBottomFade
-          alwaysShowTopFade
-          topFadeHeight={spacing['s-17']}
+          topFadeHeight={SCROLL_FADE_HEIGHT}
           bottomFadeHeight={SCROLL_FADE_HEIGHT}
+          topOffset={overlayInsets.titleTop.top + TITLE_BAR_HEIGHT}
           bottomOffset={SCROLL_FADE_BOTTOM_OFFSET}
           contentContainerStyle={scrollContentStyle}
           onContentSizeChange={handleScrollContentSizeChange}
@@ -222,40 +227,39 @@ export function WorkOutScreen() {
         </ScrollFadeView>
       ) : null}
 
-      {!addSetSheetVisible ? (
-        <View
-          pointerEvents="box-none"
-          style={[styles.titleOverlay, overlayInsets.titleTop]}
-        >
-          {titleBar}
-        </View>
-      ) : null}
+      <View
+        pointerEvents={addSetSheetVisible ? 'none' : 'box-none'}
+        style={[styles.titleOverlay, overlayInsets.titleTop]}
+      >
+        {titleBar}
+      </View>
 
-      {!addSetSheetVisible ? (
-        hasSets ? (
-          <View
-            pointerEvents="box-none"
-            style={[
-              styles.footerOverlay,
-              styles.footerRow,
-              overlayInsets.footerBottom,
-            ]}
-          >
-            {footerButtons}
-          </View>
-        ) : (
-          <View style={styles.footerEmpty}>
-            <View
-              style={[
-                styles.footerEmptyButtons,
-                { paddingBottom: overlayInsets.footerBottom.bottom },
-              ]}
-            >
-              {footerButtons}
-            </View>
-          </View>
-        )
-      ) : null}
+      {hasSets ? (
+        <View
+          pointerEvents={addSetSheetVisible ? 'none' : 'box-none'}
+          style={[
+            styles.footerOverlay,
+            styles.footerRow,
+            overlayInsets.footerBottom,
+          ]}
+        >
+          {footerButtons}
+        </View>
+      ) : (
+        <View
+          pointerEvents={addSetSheetVisible ? 'none' : 'auto'}
+          style={[
+            styles.footerEmpty,
+            {
+              paddingTop:
+                overlayInsets.titleTop.top + TITLE_BAR_HEIGHT,
+              paddingBottom: overlayInsets.footerBottom.bottom,
+            },
+          ]}
+        >
+          <View style={styles.footerEmptyButtons}>{footerButtons}</View>
+        </View>
+      )}
 
       {menu}
 

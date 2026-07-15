@@ -11,16 +11,18 @@ import {
 import { StyleSheet } from 'react-native';
 import { AppBottomSheet } from './AppBottomSheet';
 import { ExerciseDropdown } from './ExerciseDropdown';
-import { IconButton } from './IconButton';
 import { InputSlider } from './InputSlider';
 import { Warmup } from './Warmup';
 import { PrimaryButton } from './PrimaryButton';
-import { BackIcon } from './icons/BackIcon';
 import { getExerciseById, getExerciseLabel } from '../domain/catalogue';
 import {
   getExerciseIncrement,
   getExerciseSliderRange,
 } from '../domain/ranges';
+import {
+  getAddSetRecordLabel,
+  getNextStandardSetIndex,
+} from '../domain/set-labels';
 import {
   getLastStandardSetWeightToday,
   shouldAutoTagWarmUp,
@@ -267,6 +269,18 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       [handleNavigateExercise],
     );
 
+    const recordLabel = useMemo(
+      () =>
+        getAddSetRecordLabel({
+          warmUp,
+          nextStandardSetIndex: getNextStandardSetIndex(
+            todayWorkout,
+            exerciseId,
+          ),
+        }),
+      [todayWorkout, exerciseId, warmUp],
+    );
+
     if (exerciseIds.length === 0) {
       return null;
     }
@@ -277,14 +291,9 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
         onVisibilityChange={onVisibilityChange}
         footer={
           <>
-            <IconButton
-              accessibilityLabel="back"
-              onPress={() => sheetRef.current?.dismiss()}
-            >
-              <BackIcon />
-            </IconButton>
+            <Warmup onValueChange={handleWarmUpChange} value={warmUp} />
             <PrimaryButton
-              label="record set"
+              label={recordLabel}
               leadingIcon="plus"
               onPress={handleRecord}
               style={styles.recordButton}
@@ -292,10 +301,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
             />
           </>
         }
-        headerAccessory={
-          <Warmup onValueChange={handleWarmUpChange} value={warmUp} />
-        }
-        showHeaderBack={false}
         title="add new set"
       >
         <ExerciseDropdown

@@ -2,7 +2,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetView,
-  useBottomSheetModal,
+  useBottomSheetTimingConfigs,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,16 +14,16 @@ import { shadowAbove } from '../theme/shadow';
 import { resolveColorToken } from '../theme/resolveColorToken';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
-import { BackIcon, IconLink } from './icons';
+
+/** Open/close timing — overrides iOS spring default. */
+const SHEET_ANIMATION_DURATION_MS = 100;
 
 interface AppBottomSheetProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
-  headerAccessory?: ReactNode;
   onDismiss?: () => void;
   onVisibilityChange?: (visible: boolean) => void;
-  showHeaderBack?: boolean;
 }
 
 /** Figma color style `bg-gradient-bottom` — solid bg-1 + vertical bg-trans-1 → content-trans-light */
@@ -32,26 +32,10 @@ const SHEET_GRADIENT_COLORS = [
   colors['content-trans-light'],
 ] as const;
 
-function SheetHeader({
-  title,
-  showBack,
-  headerAccessory,
-}: {
-  title: string;
-  showBack: boolean;
-  headerAccessory?: ReactNode;
-}) {
-  const { dismiss } = useBottomSheetModal();
-
+function SheetHeader({ title }: { title: string }) {
   return (
     <View style={styles.header}>
-      {showBack ? (
-        <IconLink accessibilityLabel="back" onPress={() => dismiss()}>
-          <BackIcon />
-        </IconLink>
-      ) : null}
       <Text style={styles.title}>{title}</Text>
-      {headerAccessory}
     </View>
   );
 }
@@ -62,15 +46,16 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
       title,
       children,
       footer,
-      headerAccessory,
       onDismiss,
       onVisibilityChange,
-      showHeaderBack = true,
     },
     ref,
   ) {
     const insets = useSafeAreaInsets();
     const bottomInset = Math.max(insets.bottom, spacing['s-8']);
+    const animationConfigs = useBottomSheetTimingConfigs({
+      duration: SHEET_ANIMATION_DURATION_MS,
+    });
 
     const handleChange = useCallback(
       (index: number) => {
@@ -98,10 +83,10 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
     return (
       <BottomSheetModal
         ref={ref}
+        animationConfigs={animationConfigs}
         enableDynamicSizing
-        enableContentPanningGesture={false}
-        enableHandlePanningGesture={false}
-        enablePanDownToClose={false}
+        enableContentPanningGesture
+        enablePanDownToClose
         bottomInset={bottomInset}
         handleComponent={null}
         backdropComponent={renderBackdrop}
@@ -120,11 +105,7 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
             />
           </View>
           <View style={styles.inner}>
-            <SheetHeader
-              headerAccessory={headerAccessory}
-              showBack={showHeaderBack}
-              title={title}
-            />
+            <SheetHeader title={title} />
             <View style={styles.body}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>

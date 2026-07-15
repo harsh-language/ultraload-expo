@@ -7,6 +7,7 @@ import {
   View,
   type LayoutRectangle,
 } from 'react-native';
+import { interactiveContentColor } from '../theme/interactiveContentColor';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -81,8 +82,23 @@ export function OptionsMenuDropdown({
                   pressed && styles.itemPressed,
                 ]}
               >
-                <Icon color={colors['content-2']} />
-                <Text style={styles.itemLabel}>{item.label}</Text>
+                {({ pressed }) => {
+                  const contentColor = interactiveContentColor(
+                    pressed,
+                    'brighten',
+                  );
+
+                  return (
+                    <>
+                      <Icon color={contentColor} />
+                      <Text
+                        style={[styles.itemLabel, { color: contentColor }]}
+                      >
+                        {item.label}
+                      </Text>
+                    </>
+                  );
+                }}
               </Pressable>
             );
           })}
@@ -116,12 +132,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors['bg-2'],
   },
   itemPressed: {
-    opacity: 0.85,
     backgroundColor: colors['bg-trans-1'],
   },
   itemLabel: {
     ...typography.para2,
     ...textCase.lower,
-    color: colors['content-2'],
   },
 });

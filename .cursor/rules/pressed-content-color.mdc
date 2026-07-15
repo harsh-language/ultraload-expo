@@ -1,0 +1,26 @@
+---
+description: Prefer shared helpers for pressed content/icon tint (dim vs brighten)
+globs: src/components/**/*.tsx, src/theme/**
+alwaysApply: false
+---
+
+# Pressed content color
+
+Do not invent rest/pressed `content-1` / `content-2` ternaries per control.
+
+## Helpers
+
+| Need | Use |
+|------|-----|
+| Text or icon tint that dims or brightens on press | `interactiveContentColor(pressed, 'dim' \| 'brighten')` from `src/theme/interactiveContentColor.ts` |
+| Icon-only tint that dims on press | `pressedIconColor(active)` from `src/components/icons/pressedIconColor.ts` |
+| Inject tint into a single icon child | `cloneIconWithColor(children, color)` |
+
+## Shift meanings
+
+| Shift | Resting | Pressed | Examples |
+|-------|---------|---------|----------|
+| `dim` | `content-1` | `content-2` | `SecondaryButton`, `IconButton`, `IconLink` |
+| `brighten` | `content-2` | `content-1` | `OptionsMenuDropdown` items |
+
+Contract tests: `__tests__/theme/interactive-content-color.test.ts`, `__tests__/components/pressed-icon-color.test.ts`.

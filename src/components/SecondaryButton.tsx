@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { interactiveContentColor } from '../theme/interactiveContentColor';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -24,8 +25,8 @@ interface SecondaryButtonProps {
   style?: object;
 }
 
-function LeadingIcon({ type }: { type: LeadingIcon }) {
-  const props: AppIconProps = { color: colors['content-1'] };
+function LeadingIcon({ type, color }: { type: LeadingIcon; color: string }) {
+  const props: AppIconProps = { color };
   if (type === 'clock') {
     return <ClockIcon {...props} />;
   }
@@ -52,24 +53,29 @@ export function SecondaryButton({
       style={style}
       variantStyles={shellVariant}
     >
-      {(pressed) => (
-        <View
-          style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
-        >
-          <LeadingIcon type={leadingIcon} />
-          <Text
-            numberOfLines={1}
-            style={[
-              typography.para1,
-              styles.label,
-              buttonContentStyles.labelCentered,
-              pressed && !disabled && styles.pressedLabel,
-            ]}
+      {(pressed) => {
+        const contentPressed = pressed && !disabled;
+        const contentColor = interactiveContentColor(contentPressed, 'dim');
+
+        return (
+          <View
+            style={[buttonContentStyles.content, contentLayoutStyle(layout)]}
           >
-            {label}
-          </Text>
-        </View>
-      )}
+            <LeadingIcon color={contentColor} type={leadingIcon} />
+            <Text
+              numberOfLines={1}
+              style={[
+                typography.para1,
+                styles.label,
+                buttonContentStyles.labelCentered,
+                { color: contentColor },
+              ]}
+            >
+              {label}
+            </Text>
+          </View>
+        );
+      }}
     </ButtonShell>
   );
 }
@@ -90,10 +96,6 @@ const shellVariant: ButtonShellVariantStyles = {
 
 const styles = StyleSheet.create({
   label: {
-    color: colors['content-1'],
     ...textCase.lower,
-  },
-  pressedLabel: {
-    color: colors['content-2'],
   },
 });

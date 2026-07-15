@@ -13,5 +13,9 @@ export { CloseIcon } from './CloseIcon';
 export { ForwardIcon } from './ForwardIcon';
 export { PlusIcon } from './PlusIcon';
 export { IconLink } from './IconLink';
+export {
+  cloneIconWithColor,
+  pressedIconColor,
+} from './pressedIconColor';
 export { PencilIcon } from './PencilIcon';
 export { SettingsGearIcon } from './SettingsGearIcon';
