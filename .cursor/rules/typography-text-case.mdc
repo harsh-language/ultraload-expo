@@ -1,0 +1,12 @@
+---
+description: Use theme typography and textCase helpers for font metrics and casing
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# Typography and text case
+
+- Font metrics: `typography.*` from `src/theme/typography.ts`
+- Case: `textCase.*` from `src/theme/textCase.ts`
+- Do not invent ad-hoc `fontSize`, `fontFamily`, or `textTransform` outside those modules
+- Author UI copy in lowercase; components enforce upper/lower/none at render

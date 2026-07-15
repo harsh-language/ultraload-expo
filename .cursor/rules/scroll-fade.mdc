@@ -35,7 +35,7 @@ import { ScrollFadeView } from '../components/ScrollFadeView';
 
 - Tokens and visibility rules: `src/theme/scrollFade.ts` (`SCROLL_FADE_HEIGHT`, `scrollFadeGradients`, `getScrollFadeVisibility`)
 - Component: `src/components/ScrollFadeView.tsx`
-- Default fade height: `spacing['s-16']` (180px) via `fadeHeight`, or per-edge overrides
+- Default fade height: `spacing['s-16']` via `fadeHeight`, or per-edge overrides
 - Gradients: `bg-1` ↔ `content-trans-dark` — import from `scrollFade.ts`, never duplicate inline
 - Show/hide: opacity animates (~250ms) when edges enter or leave; fades stay mounted while content overflows
 

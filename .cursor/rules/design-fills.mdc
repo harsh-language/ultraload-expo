@@ -1,0 +1,16 @@
+---
+description: Fill missing or partial Figma by matching existing app design language
+alwaysApply: true
+---
+
+# Design fills
+
+When Figma is full, partial, or missing: Figma wins where it exists; the codebase wins for the rest. Invent layout composition, not a new visual language.
+
+## Rules
+
+- Prefer the nearest sibling screen and existing components/tokens over inventing new patterns
+- No new colors, radii, type scales, button styles, or one-off primitives unless nothing close exists
+- Prefer shells already in use: `OnboardingLayout`, `AppBottomSheet`, inputs, `PrimaryButton` / `SecondaryButton`, `ScrollFadeView`
+- Apply tokens, typography, icons, layering, and scroll-fade rules when composing UI
+- In the change summary, flag what was guessed vs Figma-backed
