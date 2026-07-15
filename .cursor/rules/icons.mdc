@@ -1,0 +1,11 @@
+---
+description: Use Central Icons wrappers from src/components/icons — never raw packages in screens
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Icons
+
+- Import icons from `src/components/icons/`, not raw `central-icons` / `central-icons-filled` in screens
+- New icon: add a wrapper via `createIcon` in `src/components/icons/`, export from `icons/index.ts`
+- License and package aliases stay in `AGENTS.md`

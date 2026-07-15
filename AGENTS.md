@@ -15,3 +15,29 @@ Central Icons requires `CENTRAL_LICENSE_KEY` in `.env` (copy from `.env.example`
 
 - First-time install: `npm run install:deps`
 - With [direnv](https://direnv.net/): run `direnv allow` once, then `npm install` works normally
+
+## Project map
+
+Built vs stub screens, flows, and code locations: [`taxonomy.md`](taxonomy.md).
+
+## Build stage
+
+U1 complete — first-launch onboarding + log one set on Work Out.
+
+Next is U2 — edit/delete logged sets, full BR15 warm-up history lookup, rest timer UI.
+
+## Typography
+
+Font metrics: [`src/theme/typography.ts`](src/theme/typography.ts). Case: [`src/theme/textCase.ts`](src/theme/textCase.ts). Author UI copy in lowercase; components enforce case at render.
+
+## Icons
+
+Screens import wrappers from [`src/components/icons/`](src/components/icons/). New icons use `createIcon` — do not import raw Central Icons in screens.
+
+## Data
+
+SQLite is the source of truth. Zustand is a write-through cache ([`src/stores/`](src/stores/), [`src/db/`](src/db/)).
+
+## Tests
+
+Run `npm test`. Contract tests for shared primitives follow [`.cursor/rules/component-layering.mdc`](.cursor/rules/component-layering.mdc).
