@@ -1,13 +1,21 @@
 import type { FC } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  Modal,
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type LayoutRectangle,
 } from 'react-native';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { interactiveContentColor } from '../theme/interactiveContentColor';
+import { panelTransitionTiming } from '../theme/motion';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -44,7 +52,37 @@ export function OptionsMenuDropdown({
   onClose,
   onSelect,
 }: OptionsMenuDropdownProps) {
-  if (!visible || anchorLayout == null) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const [mounted, setMounted] = useState(false);
+  const wasVisibleRef = useRef(false);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    const wasVisible = wasVisibleRef.current;
+    const shouldShow = visible && anchorLayout != null;
+    wasVisibleRef.current = shouldShow;
+
+    if (shouldShow && !wasVisible) {
+      setMounted(true);
+      opacity.value = 0;
+      opacity.value = withTiming(1, panelTransitionTiming);
+      return;
+    }
+
+    if (!shouldShow && wasVisible) {
+      opacity.value = withTiming(0, panelTransitionTiming, (finished) => {
+        if (finished) {
+          runOnJS(setMounted)(false);
+        }
+      });
+    }
+  }, [anchorLayout, opacity, visible]);
+
+  const menuStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  if (!mounted || anchorLayout == null) {
     return null;
   }
 
@@ -53,64 +91,82 @@ export function OptionsMenuDropdown({
   const menuWidth = spacing['s-17'];
 
   return (
-    <Modal animationType="fade" transparent visible onRequestClose={onClose}>
-      <Pressable accessibilityLabel="Close menu" onPress={onClose} style={styles.backdrop}>
-        <View
-          pointerEvents="box-none"
-          style={[
-            styles.menu,
-            {
-              top: menuTop,
-              right: menuRight,
-              width: menuWidth,
-            },
-          ]}
-        >
-          {MENU_ITEMS.map((item) => {
-            const Icon = item.icon;
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.overlay,
+        { width: windowWidth, height: windowHeight },
+      ]}
+    >
+      <Pressable
+        accessibilityLabel="Close menu"
+        onPress={onClose}
+        style={styles.backdrop}
+      />
+      <Animated.View
+        pointerEvents="box-none"
+        style={[
+          styles.menu,
+          menuStyle,
+          {
+            top: menuTop,
+            right: menuRight,
+            width: menuWidth,
+          },
+        ]}
+      >
+        {MENU_ITEMS.map((item) => {
+          const Icon = item.icon;
 
-            return (
-              <Pressable
-                key={item.key}
-                accessibilityRole="button"
-                onPress={() => {
-                  onSelect(item.key);
-                  onClose();
-                }}
-                style={({ pressed }) => [
-                  styles.item,
-                  pressed && styles.itemPressed,
-                ]}
-              >
-                {({ pressed }) => {
-                  const contentColor = interactiveContentColor(
-                    pressed,
-                    'brighten',
-                  );
+          return (
+            <Pressable
+              key={item.key}
+              accessibilityRole="button"
+              onPress={() => {
+                onSelect(item.key);
+                onClose();
+              }}
+              style={({ pressed }) => [
+                styles.item,
+                pressed && styles.itemPressed,
+              ]}
+            >
+              {({ pressed }) => {
+                const contentColor = interactiveContentColor(
+                  pressed,
+                  'brighten',
+                );
 
-                  return (
-                    <>
-                      <Icon color={contentColor} />
-                      <Text
-                        style={[styles.itemLabel, { color: contentColor }]}
-                      >
-                        {item.label}
-                      </Text>
-                    </>
-                  );
-                }}
-              </Pressable>
-            );
-          })}
-        </View>
-      </Pressable>
-    </Modal>
+                return (
+                  <>
+                    <Icon color={contentColor} />
+                    <Text style={[styles.itemLabel, { color: contentColor }]}>
+                      {item.label}
+                    </Text>
+                  </>
+                );
+              }}
+            </Pressable>
+          );
+        })}
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 20,
+  },
   backdrop: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   menu: {
     position: 'absolute',

@@ -29,8 +29,6 @@ export interface ExerciseCatalogueEntry {
   /** Fixed range for the 22 non-bodyweight exercises (BR14). */
   sliderRange?: SliderRange;
   increment: number;
-  /** External-load warm-up threshold for non-bodyweight exercises (BR15). */
-  warmUpThreshold?: number;
   muscleMultipliers: MuscleMultiplier[];
   isBodyweight: boolean;
   deprecated?: boolean;
@@ -44,7 +42,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 30, max: 150 },
     increment: 5,
-    warmUpThreshold: 47,
     muscleMultipliers: [
       { muscle: 'Chest', multiplier: 1 },
       { muscle: 'Triceps', multiplier: 0.5 },
@@ -72,7 +69,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Isolation',
     sliderRange: { min: 10, max: 110 },
     increment: 1,
-    warmUpThreshold: 19,
     muscleMultipliers: [{ muscle: 'Chest', multiplier: 1 }],
     isBodyweight: false,
   },
@@ -83,7 +79,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 30, max: 140 },
     increment: 5,
-    warmUpThreshold: 38,
     muscleMultipliers: [
       { muscle: 'Chest', multiplier: 1 },
       { muscle: 'Shoulders', multiplier: 0.5 },
@@ -98,7 +93,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 20, max: 110 },
     increment: 5,
-    warmUpThreshold: 30,
     muscleMultipliers: [
       { muscle: 'Shoulders', multiplier: 1 },
       { muscle: 'Triceps', multiplier: 0.5 },
@@ -113,7 +107,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 20, max: 90 },
     increment: 5,
-    warmUpThreshold: 25,
     muscleMultipliers: [
       { muscle: 'Shoulders', multiplier: 1 },
       { muscle: 'Triceps', multiplier: 0.5 },
@@ -127,7 +120,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 10, max: 80 },
     increment: 5,
-    warmUpThreshold: 21,
     muscleMultipliers: [
       { muscle: 'Shoulders', multiplier: 1 },
       { muscle: 'Triceps', multiplier: 0.33 },
@@ -153,7 +145,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 30, max: 140 },
     increment: 5,
-    warmUpThreshold: 38,
     muscleMultipliers: [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.5 },
@@ -167,7 +158,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 10, max: 70 },
     increment: 5,
-    warmUpThreshold: 17,
     muscleMultipliers: [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.5 },
@@ -181,7 +171,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 30, max: 120 },
     increment: 1,
-    warmUpThreshold: 34,
     muscleMultipliers: [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.33 },
@@ -195,7 +184,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 30, max: 140 },
     increment: 1,
-    warmUpThreshold: 38,
     muscleMultipliers: [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.5 },
@@ -209,7 +197,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 40, max: 150 },
     increment: 5,
-    warmUpThreshold: 42,
     muscleMultipliers: [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.5 },
@@ -224,7 +211,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 30, max: 270 },
     increment: 5,
-    warmUpThreshold: 66,
     muscleMultipliers: [
       { muscle: 'Glutes', multiplier: 1 },
       { muscle: 'Quads', multiplier: 0.2 },
@@ -238,7 +224,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 10, max: 140 },
     increment: 1,
-    warmUpThreshold: 28,
     muscleMultipliers: [{ muscle: 'Glutes', multiplier: 1 }],
     isBodyweight: false,
   },
@@ -249,7 +234,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 10, max: 110 },
     increment: 2.5,
-    warmUpThreshold: 23,
     muscleMultipliers: [
       { muscle: 'Glutes', multiplier: 1 },
       { muscle: 'Quads', multiplier: 0.66 },
@@ -272,7 +256,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 50, max: 210 },
     increment: 5,
-    warmUpThreshold: 57,
     muscleMultipliers: [
       { muscle: 'Glutes', multiplier: 1 },
       { muscle: 'Back', multiplier: 0.33 },
@@ -286,7 +269,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 60, max: 230 },
     increment: 5,
-    warmUpThreshold: 66,
     muscleMultipliers: [
       { muscle: 'Glutes', multiplier: 1 },
       { muscle: 'Quads', multiplier: 0.66 },
@@ -301,7 +283,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 50, max: 170 },
     increment: 5,
-    warmUpThreshold: 47,
     muscleMultipliers: [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.5 },
@@ -315,7 +296,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 50, max: 190 },
     increment: 2.5,
-    warmUpThreshold: 53,
     muscleMultipliers: [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.5 },
@@ -329,7 +309,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 50, max: 300 },
     increment: 2.5,
-    warmUpThreshold: 75,
     muscleMultipliers: [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.5 },
@@ -343,7 +322,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 10, max: 140 },
     increment: 5,
-    warmUpThreshold: 28,
     muscleMultipliers: [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.66 },
@@ -357,7 +335,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 50, max: 210 },
     increment: 5,
-    warmUpThreshold: 57,
     muscleMultipliers: [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.66 },
@@ -372,7 +349,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     type: 'Compound',
     sliderRange: { min: 30, max: 150 },
     increment: 5,
-    warmUpThreshold: 38,
     muscleMultipliers: [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.66 },

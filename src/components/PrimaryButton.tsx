@@ -10,10 +10,11 @@ import {
 } from './buttonContentLayout';
 import { ForwardIcon } from './icons/ForwardIcon';
 import { CheckmarkIcon } from './icons/CheckmarkIcon';
+import { CloseIcon } from './icons/CloseIcon';
 import { PlusIcon } from './icons/PlusIcon';
 
-type TrailingIcon = 'arrow' | 'check' | 'none';
-type LeadingIcon = 'plus' | 'none';
+type TrailingIcon = 'arrow' | 'check' | 'plus' | 'none';
+type LeadingIcon = 'plus' | 'close' | 'none';
 
 interface PrimaryButtonProps {
   label: string;
@@ -25,13 +26,35 @@ interface PrimaryButtonProps {
 }
 
 function Trailing({ type }: { type: TrailingIcon }) {
-  if (type === 'none') {
-    return null;
+  switch (type) {
+    case 'none':
+      return null;
+    case 'check':
+      return <CheckmarkIcon color={colors['content-5']} />;
+    case 'plus':
+      return <PlusIcon color={colors['content-5']} />;
+    case 'arrow':
+      return <ForwardIcon color={colors['content-5']} />;
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
   }
-  if (type === 'check') {
-    return <CheckmarkIcon color={colors['content-5']} />;
+}
+
+function Leading({ type }: { type: LeadingIcon }) {
+  switch (type) {
+    case 'none':
+      return null;
+    case 'plus':
+      return <PlusIcon color={colors['content-5']} />;
+    case 'close':
+      return <CloseIcon color={colors['content-5']} />;
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
   }
-  return <ForwardIcon color={colors['content-5']} />;
 }
 
 export function PrimaryButton({
@@ -46,10 +69,7 @@ export function PrimaryButton({
   const hasTrailing = trailingIcon !== 'none';
   const layout = getButtonContentLayout(hasLeading, hasTrailing);
 
-  const leading =
-    leadingIcon === 'plus' ? (
-      <PlusIcon color={colors['content-5']} />
-    ) : null;
+  const leading = <Leading type={leadingIcon} />;
 
   const labelText = (
     <Text

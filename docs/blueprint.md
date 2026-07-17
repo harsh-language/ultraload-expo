@@ -615,4 +615,4 @@ All product judgments resolved (2026-06-22 user confirmation):
 
 ## Approval Record
 
-Approved 2026-06-22 by Pablo. Playbook for v1 build via `docs/plans/2026-06-22-001-feat-ultraload-v1-implementation-plan.md`.
+Approved 2026-06-22 by Pablo. Playbook for v1 build via `docs/ultraload-v1-implementation-plan.md`.

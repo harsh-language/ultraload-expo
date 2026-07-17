@@ -1,0 +1,14 @@
+---
+description: Reuse the shared bottom-sheet and rest-timer gradient
+globs: src/components/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Sheet gradient
+
+Use `sheetGradientColors` from `src/theme/sheetGradient.ts` for the shared
+bottom-sheet and rest-timer fade.
+
+Do not redefine its `bg-trans-1` → `content-trans-light` colors in components.
+
+Add, edit, and delete sheets inherit this fade through `AppBottomSheet`.

@@ -1,0 +1,36 @@
+---
+description: Panel open/close/move animations use 100ms from theme/motion
+globs: src/components/**/*.{ts,tsx},src/screens/**/*.{ts,tsx},src/navigation/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Panel motion
+
+Sheets, menus, dropdowns, accordions, and other panels open, close, and move in **100ms**.
+
+## Source of truth
+
+| Need | Use |
+|------|-----|
+| Duration (ms) | `PANEL_TRANSITION_MS` from `src/theme/motion.ts` |
+| Reanimated `withTiming` / configs | `panelTransitionTiming` from `src/theme/motion.ts` |
+
+## Applies to
+
+- Bottom sheets (`AppBottomSheet` and any sheet built on it)
+- Menus and dropdowns (e.g. `OptionsMenuDropdown`)
+- Accordion expand / collapse
+- Any future overlay panel that appears, dismisses, or repositions
+
+## Does not apply to
+
+- Page / pager slides — use `slideTransitionTiming` (`SLIDE_TRANSITION_MS`)
+- Scroll edge fades — keep `ScrollFadeView` local timing
+- Small content reveals (e.g. session total) — not panels
+
+## Rules
+
+- Do not hardcode panel durations (including `100`) in components
+- Do not use RN `Modal` for menus/dropdowns — presentation blocks touches briefly after open; use an absolute overlay with `panelTransitionTiming`
+- Do not use RN `Modal` `animationType="fade"` / `"slide"` for panels — system timing is slower; use `animationType="none"` plus Reanimated with `panelTransitionTiming` only when a true Modal is required
+- Bottom sheets: pass `panelTransitionTiming.duration` into `useBottomSheetTimingConfigs`

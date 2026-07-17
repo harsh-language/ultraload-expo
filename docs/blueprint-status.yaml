@@ -27,11 +27,11 @@ sections:  # each: not_started | partial | blocked | complete
 gaps: {}
 artifacts:
   blueprint_md:
-    path: "docs/application-blueprint/blueprint.md"
+    path: "docs/blueprint.md"
     role: "Approved application blueprint (source of truth)"
     coverage: strong
   implementation_plan:
-    path: "docs/plans/2026-06-22-001-feat-ultraload-v1-implementation-plan.md"
+    path: "docs/ultraload-v1-implementation-plan.md"
     role: "Staged build plan (U0–U6)"
     coverage: strong
   figma_screens:

@@ -11,6 +11,8 @@ export { ChevronTopIcon } from './ChevronTopIcon';
 export { ClockIcon } from './ClockIcon';
 export { CloseIcon } from './CloseIcon';
 export { ForwardIcon } from './ForwardIcon';
+export { PauseIcon } from './PauseIcon';
+export { PlayIcon } from './PlayIcon';
 export { PlusIcon } from './PlusIcon';
 export { IconLink } from './IconLink';
 export {

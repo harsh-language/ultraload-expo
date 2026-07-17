@@ -186,6 +186,122 @@ export async function recordSet(
   return tree;
 }
 
+export async function loadStandardSetsForExercise(
+  db: AppDatabase,
+  exerciseId: string,
+): Promise<{ weight: number; reps: number }[]> {
+  const rows = await db
+    .select({
+      weight: sets.weight,
+      reps: sets.reps,
+    })
+    .from(sets)
+    .innerJoin(loggedExercises, eq(sets.loggedExerciseId, loggedExercises.id))
+    .where(
+      and(eq(loggedExercises.exerciseId, exerciseId), eq(sets.warmUp, false)),
+    );
+
+  return rows;
+}
+
+async function getSetWorkoutContext(
+  db: AppDatabase,
+  setId: number,
+): Promise<{
+  setId: number;
+  loggedExerciseId: number;
+  workoutId: number;
+  calendarDate: string;
+} | null> {
+  const rows = await db
+    .select({
+      setId: sets.id,
+      loggedExerciseId: sets.loggedExerciseId,
+      workoutId: loggedExercises.workoutId,
+      calendarDate: workouts.date,
+    })
+    .from(sets)
+    .innerJoin(loggedExercises, eq(sets.loggedExerciseId, loggedExercises.id))
+    .innerJoin(workouts, eq(loggedExercises.workoutId, workouts.id))
+    .where(eq(sets.id, setId))
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+async function getSetWorkoutDate(
+  db: AppDatabase,
+  setId: number,
+): Promise<string | null> {
+  const context = await getSetWorkoutContext(db, setId);
+  return context?.calendarDate ?? null;
+}
+
+export interface UpdateSetInput {
+  setId: number;
+  weight: number;
+  reps: number;
+  warmUp: boolean;
+}
+
+export async function updateSet(
+  db: AppDatabase,
+  input: UpdateSetInput,
+): Promise<TodayWorkout | null> {
+  const calendarDate = await getSetWorkoutDate(db, input.setId);
+  if (!calendarDate) {
+    return null;
+  }
+
+  await db
+    .update(sets)
+    .set({
+      weight: input.weight,
+      reps: input.reps,
+      warmUp: input.warmUp,
+    })
+    .where(eq(sets.id, input.setId));
+
+  return loadWorkoutTree(db, calendarDate);
+}
+
+export async function deleteSet(
+  db: AppDatabase,
+  setId: number,
+): Promise<TodayWorkout | null> {
+  const context = await getSetWorkoutContext(db, setId);
+  if (!context) {
+    return null;
+  }
+
+  await db.delete(sets).where(eq(sets.id, setId));
+
+  const remainingSetRows = await db
+    .select({ id: sets.id })
+    .from(sets)
+    .where(eq(sets.loggedExerciseId, context.loggedExerciseId))
+    .limit(1);
+
+  if (!remainingSetRows[0]) {
+    await db
+      .delete(loggedExercises)
+      .where(eq(loggedExercises.id, context.loggedExerciseId));
+  }
+
+  const remainingLoggedExerciseRows = await db
+    .select({ id: loggedExercises.id })
+    .from(loggedExercises)
+    .where(eq(loggedExercises.workoutId, context.workoutId))
+    .limit(1);
+
+  if (!remainingLoggedExerciseRows[0]) {
+    await db.delete(workouts).where(eq(workouts.id, context.workoutId));
+    return null;
+  }
+
+  return loadWorkoutTree(db, context.calendarDate);
+}
+
 export async function clearWorkoutForDate(
   db: AppDatabase,
   calendarDate: string,

@@ -1,0 +1,13 @@
+---
+description: Preserve the fixed development baseline workout across resets
+globs: src/db/**/*.{ts,tsx},src/components/useHomepageOptionsMenu.tsx
+alwaysApply: false
+---
+
+# Development baseline seed
+
+`DEV_BASELINE_DATE` is fixed reference history for warm-up testing.
+
+- User-data reset must preserve its workout and sets.
+- `seedDevBaselineSets` is insert-if-missing and must not wipe existing data.
+- App startup and reset may call the seed safely after migrations or user reset.

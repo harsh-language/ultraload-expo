@@ -1,10 +1,9 @@
 import type { ExerciseCatalogueEntry } from '../data/exercise-catalogue';
-import { getStandardSetsForExerciseToday } from './standard-sets';
 
 export interface TodayWorkoutForWarmUp {
   loggedExercises: {
     exerciseId: string;
-    sets: { weight: number; warmUp: boolean; order: number }[];
+    sets: { weight: number; reps: number; warmUp: boolean; order: number }[];
   }[];
 }
 
@@ -17,16 +16,37 @@ export interface WarmUpTagInput {
   referenceWeight: number | null;
 }
 
-/** U1 interim — last standard set weight for an exercise logged today. */
-export function getLastStandardSetWeightToday(
-  workout: TodayWorkoutForWarmUp | null,
-  exerciseId: string,
+export interface StandardSetForReference {
+  weight: number;
+  reps: number;
+}
+
+const REFERENCE_REP_START = 6;
+
+/** BR15 — heaviest standard-set weight at 6 reps, else 7, 8, 9, … */
+export function getReferenceWeightFromHistory(
+  standardSets: StandardSetForReference[],
 ): number | null {
-  const standardSets = getStandardSetsForExerciseToday(workout, exerciseId).sort(
-    (a, b) => a.order - b.order,
+  if (standardSets.length === 0) {
+    return null;
+  }
+
+  const maxReps = standardSets.reduce(
+    (max, set) => Math.max(max, set.reps),
+    REFERENCE_REP_START,
   );
 
-  return standardSets.at(-1)?.weight ?? null;
+  for (let reps = REFERENCE_REP_START; reps <= maxReps; reps += 1) {
+    const weightsAtRep = standardSets
+      .filter((set) => set.reps === reps)
+      .map((set) => set.weight);
+
+    if (weightsAtRep.length > 0) {
+      return Math.max(...weightsAtRep);
+    }
+  }
+
+  return null;
 }
 
 export function getWarmUpThreshold(

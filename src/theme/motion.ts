@@ -1,5 +1,16 @@
 import { Easing } from 'react-native-reanimated';
 
+/**
+ * Open / close / move duration for sheets, menus, dropdowns, and other panels.
+ * Use for every panel appear, dismiss, or reposition animation.
+ */
+export const PANEL_TRANSITION_MS = 100;
+
+export const panelTransitionTiming = {
+  duration: PANEL_TRANSITION_MS,
+} as const;
+
+/** Horizontal page / slide transitions (onboarding pager, etc.). */
 export const SLIDE_TRANSITION_MS = 280;
 
 export const slideTransitionEasing = Easing.bezier(0.4, 0, 0.2, 1);
