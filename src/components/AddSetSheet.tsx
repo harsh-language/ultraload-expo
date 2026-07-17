@@ -14,6 +14,7 @@ import { ExerciseDropdown } from './ExerciseDropdown';
 import { InputSlider } from './InputSlider';
 import { Warmup } from './Warmup';
 import { PrimaryButton } from './PrimaryButton';
+import { getLastSetToday } from '../domain/defaults';
 import { getExerciseById, getExerciseLabel } from '../domain/catalogue';
 import {
   getExerciseIncrement,
@@ -21,10 +22,10 @@ import {
 } from '../domain/ranges';
 import {
   getAddSetRecordLabel,
+  getEditSetRecordLabel,
   getNextStandardSetIndex,
 } from '../domain/set-labels';
 import {
-  getLastStandardSetWeightToday,
   shouldAutoTagWarmUp,
   type TodayWorkoutForWarmUp,
 } from '../domain/warmup';
@@ -33,8 +34,20 @@ const REPS_MIN = 1;
 const REPS_MAX = 20;
 const REPS_STEP = 1;
 
+type SheetMode = 'add' | 'edit';
+
+export interface EditableSet {
+  id: number;
+  exerciseId: string;
+  weight: number;
+  reps: number;
+  warmUp: boolean;
+}
+
 export interface AddSetSheetHandle {
   present: () => void;
+  presentForEdit: (set: EditableSet) => void;
+  dismiss: () => void;
 }
 
 interface AddSetSheetProps {
@@ -43,65 +56,72 @@ interface AddSetSheetProps {
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
   todayWorkout: TodayWorkoutForWarmUp | null;
+  referenceWeightByExerciseId: Record<string, number | null>;
   onRecord: (payload: {
     exerciseId: string;
     weight: number;
     reps: number;
     warmUp: boolean;
   }) => void;
+  onUpdate: (
+    setId: number,
+    payload: {
+      exerciseId: string;
+      weight: number;
+      reps: number;
+      warmUp: boolean;
+    },
+  ) => void;
   onVisibilityChange?: (visible: boolean) => void;
+}
+
+interface DraftContext {
+  bodyweight: number | null;
+  warmUpAutoTagEnabled: boolean;
+  warmUpPercent: number;
+  todayWorkout: TodayWorkoutForWarmUp | null;
+  referenceWeightByExerciseId: Record<string, number | null>;
 }
 
 function getWarmUpForDraft(
   exerciseId: string,
   weight: number,
-  bodyweight: number | null,
-  warmUpAutoTagEnabled: boolean,
-  warmUpPercent: number,
-  todayWorkout: TodayWorkoutForWarmUp | null,
+  context: DraftContext,
 ): boolean {
   const exercise = getExerciseById(exerciseId);
   if (!exercise) {
     return false;
   }
 
-  const referenceWeight = getLastStandardSetWeightToday(todayWorkout, exerciseId);
+  const referenceWeight =
+    context.referenceWeightByExerciseId[exerciseId] ?? null;
 
   return shouldAutoTagWarmUp({
     exercise,
     weight,
-    bodyweight,
-    warmUpAutoTagEnabled,
-    warmUpPercent,
+    bodyweight: context.bodyweight,
+    warmUpAutoTagEnabled: context.warmUpAutoTagEnabled,
+    warmUpPercent: context.warmUpPercent,
     referenceWeight,
   });
 }
 
-function selectExercise(
-  id: string,
-  bodyweight: number | null,
-  warmUpAutoTagEnabled: boolean,
-  warmUpPercent: number,
-  todayWorkout: TodayWorkoutForWarmUp | null,
-) {
-  const nextExercise = getExerciseById(id);
-  if (!nextExercise) {
+function getExerciseDraft(exerciseId: string, context: DraftContext) {
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise) {
     return null;
   }
 
-  const nextRange = getExerciseSliderRange(nextExercise, bodyweight);
+  const sliderRange = getExerciseSliderRange(exercise, context.bodyweight);
+  const lastSet = getLastSetToday(context.todayWorkout, exerciseId);
+  const weight = lastSet?.weight ?? sliderRange.min;
+  const reps = lastSet?.reps ?? REPS_MIN;
 
   return {
-    exerciseId: id,
-    weight: nextRange.min,
-    warmUp: getWarmUpForDraft(
-      id,
-      nextRange.min,
-      bodyweight,
-      warmUpAutoTagEnabled,
-      warmUpPercent,
-      todayWorkout,
-    ),
+    exerciseId,
+    weight,
+    reps,
+    warmUp: getWarmUpForDraft(exerciseId, weight, context),
   };
 }
 
@@ -113,13 +133,16 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       warmUpAutoTagEnabled,
       warmUpPercent,
       todayWorkout,
+      referenceWeightByExerciseId,
       onRecord,
+      onUpdate,
       onVisibilityChange,
     },
     ref,
   ) {
     const sheetRef = useRef<BottomSheetModal>(null);
-    const draftInitializedRef = useRef(false);
+    const [mode, setMode] = useState<SheetMode>('add');
+    const [editingSetId, setEditingSetId] = useState<number | null>(null);
     const [exerciseId, setExerciseId] = useState(exerciseIds[0] ?? '');
     const [reps, setReps] = useState(REPS_MIN);
     const [weight, setWeight] = useState(0);
@@ -142,88 +165,88 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
 
     const increment = exercise ? getExerciseIncrement(exercise) : 1;
 
-    const initializeDraft = useCallback(() => {
+    const draftContext = useMemo<DraftContext>(
+      () => ({
+        bodyweight,
+        warmUpAutoTagEnabled,
+        warmUpPercent,
+        todayWorkout,
+        referenceWeightByExerciseId,
+      }),
+      [
+        bodyweight,
+        referenceWeightByExerciseId,
+        todayWorkout,
+        warmUpAutoTagEnabled,
+        warmUpPercent,
+      ],
+    );
+
+    const applyDraftFields = useCallback(
+      (
+        nextExerciseId: string,
+        draft: { reps: number; weight: number; warmUp: boolean } | null,
+      ) => {
+        setExerciseId(nextExerciseId);
+        setReps(draft?.reps ?? REPS_MIN);
+        setWeight(draft?.weight ?? 0);
+        setWarmUpTouched(false);
+        setWarmUp(draft?.warmUp ?? false);
+      },
+      [],
+    );
+
+    const initializeAddDraft = useCallback(() => {
       const nextExerciseId = exerciseIds[0] ?? '';
-      const selection = nextExerciseId
-        ? selectExercise(
-            nextExerciseId,
-            bodyweight,
-            warmUpAutoTagEnabled,
-            warmUpPercent,
-            todayWorkout,
-          )
+      const draft = nextExerciseId
+        ? getExerciseDraft(nextExerciseId, draftContext)
         : null;
 
-      setExerciseId(nextExerciseId);
-      setReps(REPS_MIN);
-      setWeight(selection?.weight ?? 0);
-      setWarmUpTouched(false);
-      setWarmUp(selection?.warmUp ?? false);
-    }, [
-      bodyweight,
-      exerciseIds,
-      todayWorkout,
-      warmUpAutoTagEnabled,
-      warmUpPercent,
-    ]);
+      setMode('add');
+      setEditingSetId(null);
+      applyDraftFields(nextExerciseId, draft);
+    }, [applyDraftFields, draftContext, exerciseIds]);
+
+    const initializeEditDraft = useCallback((set: EditableSet) => {
+      setMode('edit');
+      setEditingSetId(set.id);
+      setExerciseId(set.exerciseId);
+      setReps(set.reps);
+      setWeight(set.weight);
+      setWarmUp(set.warmUp);
+      setWarmUpTouched(true);
+    }, []);
 
     const refreshWarmUpDraft = useCallback(() => {
+      if (mode === 'edit') {
+        return;
+      }
+
       setWarmUpTouched(false);
-      setWarmUp(
-        getWarmUpForDraft(
-          exerciseId,
-          weight,
-          bodyweight,
-          warmUpAutoTagEnabled,
-          warmUpPercent,
-          todayWorkout,
-        ),
-      );
-    }, [
-      bodyweight,
-      exerciseId,
-      todayWorkout,
-      warmUpAutoTagEnabled,
-      warmUpPercent,
-      weight,
-    ]);
+      setWarmUp(getWarmUpForDraft(exerciseId, weight, draftContext));
+    }, [draftContext, exerciseId, mode, weight]);
 
     useImperativeHandle(ref, () => ({
       present: () => {
-        if (!draftInitializedRef.current) {
-          initializeDraft();
-          draftInitializedRef.current = true;
-        } else {
-          refreshWarmUpDraft();
-        }
+        initializeAddDraft();
         sheetRef.current?.present();
+      },
+      presentForEdit: (set: EditableSet) => {
+        initializeEditDraft(set);
+        sheetRef.current?.present();
+      },
+      dismiss: () => {
+        sheetRef.current?.dismiss();
       },
     }));
 
     useEffect(() => {
-      if (!exerciseId || warmUpTouched) {
+      if (!exerciseId || warmUpTouched || mode === 'edit') {
         return;
       }
 
-      setWarmUp(
-        getWarmUpForDraft(
-          exerciseId,
-          weight,
-          bodyweight,
-          warmUpAutoTagEnabled,
-          warmUpPercent,
-          todayWorkout,
-        ),
-      );
-    }, [
-      exerciseId,
-      weight,
-      bodyweight,
-      warmUpAutoTagEnabled,
-      warmUpPercent,
-      todayWorkout,
-      warmUpTouched,
-    ]);
+      setWarmUp(getWarmUpForDraft(exerciseId, weight, draftContext));
+    }, [draftContext, exerciseId, mode, warmUpTouched, weight]);
 
     useEffect(() => {
       if (exerciseIds.length > 0 && !exerciseIds.includes(exerciseId)) {
@@ -232,31 +255,62 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       }
     }, [exerciseId, exerciseIds]);
 
-    const handleRecord = useCallback(() => {
+    const handleSave = useCallback(() => {
       if (!exerciseId) {
         return;
       }
 
-      onRecord({ exerciseId, weight, reps, warmUp });
+      const payload = { exerciseId, weight, reps, warmUp };
+
+      if (mode === 'edit' && editingSetId != null) {
+        onUpdate(editingSetId, payload);
+      } else {
+        onRecord(payload);
+      }
+
       sheetRef.current?.dismiss();
-    }, [exerciseId, onRecord, reps, warmUp, weight]);
+    }, [
+      editingSetId,
+      exerciseId,
+      mode,
+      onRecord,
+      onUpdate,
+      reps,
+      warmUp,
+      weight,
+    ]);
 
     const handleWarmUpChange = useCallback((value: boolean) => {
       setWarmUpTouched(true);
       setWarmUp(value);
     }, []);
 
+    const applyExerciseDraft = useCallback(
+      (nextExerciseId: string) => {
+        const draft = getExerciseDraft(nextExerciseId, draftContext);
+        if (!draft) {
+          return;
+        }
+
+        applyDraftFields(nextExerciseId, draft);
+      },
+      [applyDraftFields, draftContext],
+    );
+
     const handleNavigateExercise = useCallback(
       (delta: -1 | 1) => {
+        if (mode === 'edit') {
+          return;
+        }
+
         const targetIndex = exerciseIndex + delta;
         if (targetIndex < 0 || targetIndex >= exerciseIds.length) {
           return;
         }
 
-        setExerciseId(exerciseIds[targetIndex]);
-        setWarmUpTouched(false);
+        applyExerciseDraft(exerciseIds[targetIndex]);
       },
-      [exerciseIds, exerciseIndex],
+      [applyExerciseDraft, exerciseIds, exerciseIndex, mode],
     );
 
     const handlePreviousExercise = useCallback(
@@ -269,17 +323,16 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       [handleNavigateExercise],
     );
 
-    const recordLabel = useMemo(
-      () =>
-        getAddSetRecordLabel({
-          warmUp,
-          nextStandardSetIndex: getNextStandardSetIndex(
-            todayWorkout,
-            exerciseId,
-          ),
-        }),
-      [todayWorkout, exerciseId, warmUp],
-    );
+    const recordLabel = useMemo(() => {
+      if (mode === 'edit') {
+        return getEditSetRecordLabel(warmUp);
+      }
+
+      return getAddSetRecordLabel({
+        warmUp,
+        nextStandardSetIndex: getNextStandardSetIndex(todayWorkout, exerciseId),
+      });
+    }, [exerciseId, mode, todayWorkout, warmUp]);
 
     if (exerciseIds.length === 0) {
       return null;
@@ -294,19 +347,20 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
             <Warmup onValueChange={handleWarmUpChange} value={warmUp} />
             <PrimaryButton
               label={recordLabel}
-              leadingIcon="plus"
-              onPress={handleRecord}
+              leadingIcon="none"
+              onPress={handleSave}
               style={styles.recordButton}
-              trailingIcon="none"
+              trailingIcon={mode === 'add' ? 'plus' : 'check'}
             />
           </>
         }
-        title="add new set"
+        title={mode === 'edit' ? 'edit set' : 'add new set'}
       >
         <ExerciseDropdown
           canNext={exerciseIndex >= 0 && exerciseIndex < exerciseIds.length - 1}
           canPrevious={exerciseIndex > 0}
           label={getExerciseLabel(exerciseId)}
+          navigationDisabled={mode === 'edit'}
           onNext={handleNextExercise}
           onPrevious={handlePreviousExercise}
         />
@@ -329,7 +383,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
           suffix="kg"
           value={weight}
         />
-
       </AppBottomSheet>
     );
   },

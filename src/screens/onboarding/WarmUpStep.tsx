@@ -50,9 +50,9 @@ export function WarmUpStep({
 
           <Accordion
             items={[
-              'auto-tag applies after you log a standard set for that exercise today',
-              'logging a weight in warmup range, automatically tags the set as “warmup”',
-              'manually tag set as “warmup” anytime',
+              'autotags set below a fixed weight %',
+              'starts tagging after 2nd session',
+              'manual tagging still available',
             ]}
             title="how it works"
           />

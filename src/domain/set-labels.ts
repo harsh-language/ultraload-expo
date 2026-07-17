@@ -32,3 +32,8 @@ export function getAddSetRecordLabel(options: {
 
   return `record set ${formatSetIndex(options.nextStandardSetIndex)}`;
 }
+
+/** Edit Set sheet — primary CTA copy. */
+export function getEditSetRecordLabel(warmUp: boolean): string {
+  return warmUp ? 'save warmup set' : 'save set';
+}

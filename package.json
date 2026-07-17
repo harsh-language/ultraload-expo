@@ -12,6 +12,7 @@
     "expo": "~56.0.12",
     "expo-font": "~56.0.7",
     "expo-linear-gradient": "~56.0.4",
+    "expo-notifications": "~56.0.0",
     "expo-sqlite": "~56.0.5",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",

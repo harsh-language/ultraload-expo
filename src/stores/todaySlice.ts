@@ -1,7 +1,13 @@
 import { create } from 'zustand';
 import type { AppDatabase } from '../db/client';
 import { getLocalCalendarDate } from '../domain/day-record';
-import { loadWorkoutTree, recordSet as persistSet, clearWorkoutForDate } from '../db/workoutRepository';
+import {
+  deleteSet as persistDeleteSet,
+  loadWorkoutTree,
+  recordSet as persistSet,
+  clearWorkoutForDate,
+  updateSet as persistUpdateSet,
+} from '../db/workoutRepository';
 
 export interface TodaySet {
   id: number;
@@ -32,11 +38,20 @@ export interface RecordSetPayload {
   warmUp: boolean;
 }
 
+export interface UpdateSetPayload {
+  setId: number;
+  weight: number;
+  reps: number;
+  warmUp: boolean;
+}
+
 interface TodaySlice {
   workout: TodayWorkout | null;
   hydrated: boolean;
   hydrate: (db: AppDatabase) => Promise<void>;
   recordSet: (db: AppDatabase, payload: RecordSetPayload) => Promise<void>;
+  updateSet: (db: AppDatabase, payload: UpdateSetPayload) => Promise<void>;
+  deleteSet: (db: AppDatabase, setId: number) => Promise<void>;
   clearTodayWorkout: (db: AppDatabase) => Promise<void>;
   clear: () => void;
 }
@@ -58,6 +73,14 @@ export const useTodayStore = create<TodaySlice>((set) => ({
       reps: payload.reps,
       warmUp: payload.warmUp,
     });
+    set({ workout, hydrated: true });
+  },
+  updateSet: async (db, payload) => {
+    const workout = await persistUpdateSet(db, payload);
+    set({ workout, hydrated: true });
+  },
+  deleteSet: async (db, setId) => {
+    const workout = await persistDeleteSet(db, setId);
     set({ workout, hydrated: true });
   },
   clearTodayWorkout: async (db) => {

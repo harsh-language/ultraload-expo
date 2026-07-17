@@ -6,6 +6,10 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before 
 
 UI spacing, radius, borders, and colors come from Figma variables in [`src/theme/tokens.ts`](src/theme/tokens.ts). Regenerate with `figma_export_tokens` — never edit that file by hand. For 8-digit transparent tokens in SVG or opacity-only APIs, use [`resolveColorToken`](src/theme/resolveColorToken.ts). See [`.cursor/rules/figma-design-tokens.mdc`](.cursor/rules/figma-design-tokens.mdc) for mapping and conventions.
 
+## Motion
+
+Panel open / close / move (sheets, menus, dropdowns, accordions): `PANEL_TRANSITION_MS` / `panelTransitionTiming` in [`src/theme/motion.ts`](src/theme/motion.ts) — **100ms**. See [`.cursor/rules/panel-motion.mdc`](.cursor/rules/panel-motion.mdc).
+
 ## Dependencies
 
 Central Icons requires `CENTRAL_LICENSE_KEY` in `.env` (copy from `.env.example`).
@@ -20,11 +24,32 @@ Central Icons requires `CENTRAL_LICENSE_KEY` in `.env` (copy from `.env.example`
 
 Built vs stub screens, flows, and code locations: [`taxonomy.md`](taxonomy.md).
 
+## Product design
+
+When shaping, editing, or reviewing user-facing UI, load the
+`harsh-product-design` skill.
+
+Applies to:
+- screens and components
+- copy, interaction, accessibility, and states
+- build/edit work when Figma is full, partial, or missing
+
+Skip:
+- backend-only work with no user-visible effect
+- config, docs, and tests with no UI impact
+
+The skill selects its mode automatically from the request. Implement and
+Harden include Build mechanics (Figma inspection, composition, contract-test
+follow-through) and a post-change auto-learn pass that only proposes guidance
+for human approval.
+
+Local product decisions live in [`docs/product-design/`](docs/product-design/).
+
 ## Build stage
 
-U1 complete — first-launch onboarding + log one set on Work Out.
+U2 complete — Work Out supports add/edit/delete, full BR15 warm-up history lookup, and rest timer UI.
 
-Next is U2 — edit/delete logged sets, full BR15 warm-up history lookup, rest timer UI.
+Next is U3 — Settings hub, plan editing, units, and bodyweight-driven ranges.
 
 ## Typography
 

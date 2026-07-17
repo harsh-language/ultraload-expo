@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-sqlite', 'expo-font'],
+  plugins: ['expo-sqlite', 'expo-font', 'expo-notifications'],
   extra: {
     eas: {
       projectId: 'ultraload-local',

@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { formatSetIndex } from '../domain/set-labels';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 import { CloseIcon, IconLink, PencilIcon } from './icons';
+import { logSetTextStyles } from './logSetTextStyles';
 
 export type LogStatDirection = 'up' | 'down' | 'flat';
 
@@ -110,23 +111,34 @@ function LogSetRow(props: LogSetRowProps) {
   const repsLabel = `${reps} reps`;
   const prefixLabel = warmUp ? 'W' : formatSetIndex(props.setIndex);
 
-  return (
-    <RowPressable onPress={onPress} bordered>
+  const content = (
+    <>
       <View style={styles.setContent}>
-        <Text style={styles.setPrefix}>{prefixLabel}</Text>
-        <Text style={styles.weight}>{weightLabel}</Text>
-        <Text style={styles.reps}>{repsLabel}</Text>
+        <Text style={logSetTextStyles.setPrefix}>{prefixLabel}</Text>
+        <Text style={logSetTextStyles.weight}>{weightLabel}</Text>
+        <Text style={logSetTextStyles.reps}>{repsLabel}</Text>
       </View>
       {showActions ? (
         <View style={styles.actions}>
           <IconLink accessibilityLabel="edit set" onPress={onEdit}>
             <PencilIcon />
           </IconLink>
-          <IconLink accessibilityLabel="delete set" onPress={onDelete}>
+          <IconLink accessibilityLabel="cancel set" onPress={onDelete}>
             <CloseIcon />
           </IconLink>
         </View>
       ) : null}
+    </>
+  );
+
+  // Figma Work Out: actions only — row itself is not a hit target
+  if (showActions && !onPress) {
+    return <View style={[styles.row, styles.rowBordered]}>{content}</View>;
+  }
+
+  return (
+    <RowPressable onPress={onPress} bordered>
+      {content}
     </RowPressable>
   );
 }
@@ -189,11 +201,6 @@ function LogSessionRow({
   );
 }
 
-const textVerticalCenter = Platform.select({
-  android: { includeFontPadding: false, textAlignVertical: 'center' as const },
-  default: {},
-});
-
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
@@ -219,25 +226,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing['s-5'],
-  },
-  setPrefix: {
-    ...typography.para2,
-    color: colors['content-2'],
-    width: spacing['s-8'],
-    textAlign: 'center',
-    ...textVerticalCenter,
-  },
-  weight: {
-    ...typography.para1,
-    color: colors['content-1'],
-    ...textCase.none,
-    ...textVerticalCenter,
-  },
-  reps: {
-    ...typography.para2,
-    color: colors['content-2'],
-    ...textCase.lower,
-    ...textVerticalCenter,
   },
   actions: {
     flexDirection: 'row',

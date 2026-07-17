@@ -10,6 +10,7 @@ interface ExerciseDropdownProps {
   onNext: () => void;
   canPrevious: boolean;
   canNext: boolean;
+  navigationDisabled?: boolean;
 }
 
 function getIconColor(enabled: boolean, pressed: boolean): string {
@@ -28,25 +29,29 @@ export function ExerciseDropdown({
   onNext,
   canPrevious,
   canNext,
+  navigationDisabled = false,
 }: ExerciseDropdownProps) {
+  const previousEnabled = canPrevious && !navigationDisabled;
+  const nextEnabled = canNext && !navigationDisabled;
+
   return (
     <View style={styles.container}>
       <Pressable
         accessibilityLabel="previous exercise"
         accessibilityRole="button"
-        disabled={!canPrevious}
+        disabled={!previousEnabled}
         onPress={onPrevious}
         style={({ pressed }) => [
           styles.endCap,
           styles.leftCap,
           {
             borderColor:
-              pressed && canPrevious ? colors['border-1'] : colors['border-2'],
+              pressed && previousEnabled ? colors['border-1'] : colors['border-2'],
           },
         ]}
       >
         {({ pressed }) => (
-          <BackIcon color={getIconColor(canPrevious, pressed)} />
+          <BackIcon color={getIconColor(previousEnabled, pressed)} />
         )}
       </Pressable>
 
@@ -59,19 +64,19 @@ export function ExerciseDropdown({
       <Pressable
         accessibilityLabel="next exercise"
         accessibilityRole="button"
-        disabled={!canNext}
+        disabled={!nextEnabled}
         onPress={onNext}
         style={({ pressed }) => [
           styles.endCap,
           styles.rightCap,
           {
             borderColor:
-              pressed && canNext ? colors['border-1'] : colors['border-2'],
+              pressed && nextEnabled ? colors['border-1'] : colors['border-2'],
           },
         ]}
       >
         {({ pressed }) => (
-          <ForwardIcon color={getIconColor(canNext, pressed)} />
+          <ForwardIcon color={getIconColor(nextEnabled, pressed)} />
         )}
       </Pressable>
     </View>

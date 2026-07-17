@@ -1,6 +1,6 @@
 ---
 type: feat
-origin: docs/application-blueprint/blueprint.md
+origin: docs/blueprint.md
 created: 2026-06-22
 status: ready
 ---
@@ -9,7 +9,7 @@ status: ready
 
 ## Summary
 
-Build **UltraLoad**, a personal offline strength-training app (Expo + TypeScript), from an empty repo through seven implementation stages aligned to the approved [application blueprint](docs/application-blueprint/blueprint.md). Each stage ends with a **device checkpoint** compared to Figma. Shared UI (bottom sheet, sliders, log rows) is built once in Stage 0–1 and reused across Work Out and History. **Stage 7** is App Store release (tooling only — no new product features).
+Build **UltraLoad**, a personal offline strength-training app (Expo + TypeScript), from an empty repo through seven implementation stages aligned to the approved [application blueprint](docs/blueprint.md). Each stage ends with a **device checkpoint** compared to Figma. Shared UI (bottom sheet, sliders, log rows) is built once in Stage 0–1 and reused across Work Out and History. **Stage 7** is App Store release (tooling only — no new product features).
 
 ---
 
@@ -124,8 +124,9 @@ ultraload/
 │   └── utils/
 ├── __tests__/domain/                  # T1–T26
 └── docs/
-    ├── application-blueprint/
-    └── plans/
+    ├── blueprint.md
+    ├── blueprint-status.yaml
+    └── ultraload-v1-implementation-plan.md
 ```
 
 ---
@@ -460,7 +461,7 @@ ultraload/
 
 ## Sources & Research
 
-- **Origin:** [docs/application-blueprint/blueprint.md](docs/application-blueprint/blueprint.md) (approved 2026-06-22)
+- **Origin:** [docs/blueprint.md](docs/blueprint.md) (approved 2026-06-22)
 - **Human summary:** [taxonomy.md](taxonomy.md)
 - **Design:** Figma ultraload-v1 + v1-components (links in blueprint frontmatter)
 - **Local codebase:** Greenfield — no prior patterns

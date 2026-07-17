@@ -1,0 +1,84 @@
+# Coverage Gaps
+
+Use this file for missing standards, contradictions, stale docs, and open
+questions. Do not silently upgrade a candidate here into an accepted rule.
+
+## Contradictions
+
+### taxonomy-vs-current-u2-code
+
+Status: open
+Type: contradiction
+Source: `taxonomy.md`, `src/screens/WorkOutScreen.tsx`, `src/components/DeleteSetSheet.tsx`, `src/components/RestTimer.tsx`
+
+Observation:
+- `taxonomy.md` still describes edit/delete and rest timer as not built or stub.
+- Current code implements set editing, set deletion, and a visible rest-timer
+  surface on Work Out.
+
+Why it matters:
+- Learn mode needs a stable way to detect code that has advanced beyond the
+  screen map and build-stage notes.
+
+Follow-up:
+- Confirm whether `taxonomy.md` should be updated now or whether the mismatch is
+  intentional while U2 is in flight.
+
+## Missing standards
+
+### history-and-settings-surfaces-not-yet-extracted
+
+Status: open
+Type: missing-standard
+Source: `docs/blueprint.md`, `taxonomy.md`
+
+Observation:
+- History list, chart, session detail, and full Settings flows are specified in
+  the blueprint but not yet implemented as stable UI surfaces in code.
+
+Why it matters:
+- The skill can route to blueprint intent, but it should not invent accepted UI
+  rules for surfaces that do not yet exist in shipped code.
+
+Follow-up:
+- Add these surfaces once implementation creates repeated decisions worth
+  codifying.
+
+### rest-timer-finish-behavior-beyond-current-bar
+
+Status: open
+Type: missing-standard
+Source: `src/components/RestTimer.tsx`, `src/hooks/useRestTimer.ts`, `docs/blueprint.md`
+
+Observation:
+- The current timer bar covers running, stop, dismiss, and background
+  notification behavior.
+- The skill does not yet have accepted guidance for timer completion language,
+  repeated-use patterns, or future history/session-detail reuse.
+
+Why it matters:
+- Timer UX is still new enough that one implementation should not be promoted
+  into a broad standard without more evidence.
+
+Follow-up:
+- Revisit after additional timer-related commits or a second timer surface.
+
+## Candidate learn-mode checks
+
+### repeated-one-off-vs-general-rule
+
+Status: open
+Type: process-gap
+Source: `docs/agentic-product-design.md`
+
+Observation:
+- The repo now has a learn mode, but the threshold for "repeated enough to
+  accept" is still human judgment rather than an explicit numeric rule.
+
+Why it matters:
+- This is correct for now, but future learn passes should keep flagging whether
+  a candidate comes from a single file, one commit cluster, or repeated cross-
+  surface evidence.
+
+Follow-up:
+- Keep new learn-mode additions `status: proposed` until confirmed by a human.

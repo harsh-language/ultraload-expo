@@ -15,9 +15,9 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Area | Status |
 |------|--------|
 | App shell, splash, onboarding | **Built** |
-| Work Out — log today's sets | **Built** (add set only; no edit/delete yet) |
+| Work Out — log today's sets | **Built** (add, edit, delete, warm-up auto-tag) |
 | Options menu (history, settings, reset) | **Built** (reset wired for dev; history/settings navigate stubs; **remove reset before U7 / App Store compile**) |
-| Rest timer | **Stub** (store + button; countdown UI not wired) |
+| Rest timer | **Built** (foreground countdown, pause/resume/dismiss, background notification) |
 | History (list, chart, session detail) | **Not built** (options menu entry only) |
 | Settings, export/import | **Not built** (options menu entry only) |
 | Progress math (% change, chart weighting) | **Not built** (schema + domain helpers only) |
@@ -32,9 +32,10 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Onboarding step 2 — exercises | Pick plan exercises from catalogue | Built — `ExercisePickerStep` + `ExercisePicker` (scrollable list, edge fades, selection ticker) |
 | Onboarding step 3 — rest | Default rest-timer duration | Built — `RestTimerStep` |
 | Onboarding step 4 — warm-up | Warm-up % preset + auto-tag toggle | Built — `WarmUpStep` (accordion “how it works”) |
-| Work Out (home) | Log and review today's sets, grouped by exercise | Built — `WorkOutScreen` |
-| Add Set sheet | Pick exercise, set reps + weight via sliders, warm-up toggle | Built — `AddSetSheet` |
-| Rest timer | Optional countdown between sets | Not built (button present, no UI) |
+| Work Out (home) | Log, edit, and delete today's sets, grouped by exercise | Built — `WorkOutScreen` |
+| Add/Edit Set sheet | Pick exercise, set reps + weight via sliders, warm-up toggle | Built — `AddSetSheet` |
+| Delete Set sheet | Confirm deletion with a preview of the selected set | Built — `DeleteSetSheet` |
+| Rest timer | Optional countdown between sets | Built — `RestTimer` |
 | History — list | Per-day total weight + % change over time | Not built |
 | History — chart | Progress trends with exercise / muscle-group filters | Not built |
 | Session detail | Review (and edit) a past day's sets | Not built |
@@ -99,7 +100,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Typography & text casing | `src/theme/typography.ts`, `src/theme/textCase.ts` |
 | Scroll edge fades | `src/theme/scrollFade.ts`, `ScrollFadeView.tsx` — `fadeHeight` (default), `topFadeHeight`, `bottomFadeHeight`, `topOffset`, `bottomOffset` |
 | Unit tests | `__tests__/` — domain, scroll-fade, exercise-picker layout, onboarding insets |
-| Progress math (totals, % change, weighting) | _not built_ — see `docs/application-blueprint/blueprint.md` |
+| Progress math (totals, % change, weighting) | _not built_ — see `docs/blueprint.md` |
 | Export / import | _not built_ |
 
 ## Keeping this current

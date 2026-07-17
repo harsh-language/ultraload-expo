@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, ne } from 'drizzle-orm';
 import type { AppDatabase, DbOrTransaction } from './client';
 import {
   profile,
@@ -9,6 +9,7 @@ import {
   type Profile,
 } from './schema';
 import type { DisplayUnit } from '../data/exercise-catalogue';
+import { DEV_BASELINE_DATE } from './devSeed';
 
 export interface ProfileState {
   bodyweight: number | null;
@@ -180,10 +181,11 @@ export async function ensurePersistedRows(db: AppDatabase): Promise<void> {
   }
 }
 
-/** Dev-only — wipe all user data and return app to fresh onboarding state. */
+/** Dev-only — wipe user data; keep the fixed baseline seed day intact. */
 export async function resetAllUserData(db: AppDatabase): Promise<void> {
   await db.transaction(async (tx) => {
-    await tx.delete(workouts);
+    // Cascade deletes logged exercises + sets for non-baseline workouts
+    await tx.delete(workouts).where(ne(workouts.date, DEV_BASELINE_DATE));
     await saveProfile(tx, DEFAULT_PROFILE);
     await savePlan(tx, DEFAULT_PLAN);
     await saveSettings(tx, DEFAULT_SETTINGS);

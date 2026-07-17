@@ -1,6 +1,7 @@
 import {
   formatSetIndex,
   getAddSetRecordLabel,
+  getEditSetRecordLabel,
   getNextStandardSetIndex,
 } from '../../src/domain/set-labels';
 
@@ -62,5 +63,12 @@ describe('getAddSetRecordLabel', () => {
     expect(
       getAddSetRecordLabel({ warmUp: false, nextStandardSetIndex: 2 }),
     ).toBe('record set 02');
+  });
+});
+
+describe('getEditSetRecordLabel', () => {
+  it('labels edit save for warmup vs standard sets', () => {
+    expect(getEditSetRecordLabel(true)).toBe('save warmup set');
+    expect(getEditSetRecordLabel(false)).toBe('save set');
   });
 });

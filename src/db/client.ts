@@ -11,12 +11,15 @@ export function getDatabase(): ExpoSQLiteDatabase<typeof schema> {
     const expoDb = openDatabaseSync(DATABASE_NAME, {
       enableChangeListener: true,
     });
+    // SQLite FK cascades are off unless enabled per connection
+    expoDb.execSync('PRAGMA foreign_keys = ON');
     dbInstance = drizzle(expoDb, { schema });
   }
   return dbInstance;
 }
 
 export function createDatabase(expoDb: SQLiteDatabase): ExpoSQLiteDatabase<typeof schema> {
+  expoDb.execSync('PRAGMA foreign_keys = ON');
   return drizzle(expoDb, { schema });
 }
 

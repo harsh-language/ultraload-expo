@@ -1,26 +1,13 @@
 import { getExerciseById } from '../../src/domain/catalogue';
 import {
-  getLastStandardSetWeightToday,
+  getReferenceWeightFromHistory,
   getWarmUpThreshold,
   shouldAutoTagWarmUp,
-  type TodayWorkoutForWarmUp,
 } from '../../src/domain/warmup';
 
 describe('warmup domain', () => {
   const dip = getExerciseById('dip-weighted');
   const bench = getExerciseById('bench-press');
-
-  const todayWorkoutWithBenchStandard: TodayWorkoutForWarmUp = {
-    loggedExercises: [
-      {
-        exerciseId: 'bench-press',
-        sets: [
-          { weight: 80, warmUp: true, order: 1 },
-          { weight: 100, warmUp: false, order: 2 },
-        ],
-      },
-    ],
-  };
 
   it('tags ◊ sets warm-up when total weight ≤ bodyweight (T9 partial)', () => {
     expect(dip).toBeDefined();
@@ -127,7 +114,7 @@ describe('warmup domain', () => {
     ).toBe(false);
   });
 
-  it('does not auto-tag when global warm-up tagging is off', () => {
+  it('does not auto-tag when global warm-up tagging is off (T23)', () => {
     expect(dip).toBeDefined();
     if (!dip) {
       return;
@@ -150,14 +137,29 @@ describe('warmup domain', () => {
     expect(getWarmUpThreshold(50, null)).toBeNull();
   });
 
-  it('uses today last standard set weight and ignores warm-up sets', () => {
+  it('prefers heaviest 6-rep standard set over heavier higher-rep sets (T15)', () => {
     expect(
-      getLastStandardSetWeightToday(todayWorkoutWithBenchStandard, 'bench-press'),
-    ).toBe(100);
-    expect(getLastStandardSetWeightToday(null, 'bench-press')).toBeNull();
+      getReferenceWeightFromHistory([
+        { weight: 80, reps: 8 },
+        { weight: 90, reps: 6 },
+        { weight: 85, reps: 7 },
+      ]),
+    ).toBe(90);
+  });
+
+  it('falls back through rep cascade when no 6-rep set exists (T15)', () => {
     expect(
-      getLastStandardSetWeightToday(todayWorkoutWithBenchStandard, 'overhead-press'),
-    ).toBeNull();
+      getReferenceWeightFromHistory([
+        { weight: 80, reps: 8 },
+        { weight: 85, reps: 7 },
+      ]),
+    ).toBe(85);
+
+    expect(getReferenceWeightFromHistory([{ weight: 70, reps: 10 }])).toBe(70);
+  });
+
+  it('returns null when no standard-set history exists (T15)', () => {
+    expect(getReferenceWeightFromHistory([])).toBeNull();
   });
 
   it('does not continue warm-up from previous logged warm-up set', () => {

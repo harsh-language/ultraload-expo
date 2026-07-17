@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { LayoutRectangle, View } from 'react-native';
 import { getDatabase } from '../db/client';
+import { seedDevBaselineSets } from '../db/devSeed';
 import { resetAllUserData } from '../db/repositories';
 import { hydrateStores } from '../stores';
 import { useDevAppResetStore } from '../stores/devAppResetSlice';
@@ -27,6 +28,7 @@ export function useHomepageOptionsMenu() {
     if (key === 'reset') {
       const db = getDatabase();
       await resetAllUserData(db);
+      await seedDevBaselineSets(db);
       await hydrateStores(db);
       useDevAppResetStore.getState().trigger();
       return;
@@ -36,10 +38,15 @@ export function useHomepageOptionsMenu() {
   }, []);
 
   const handleMenuPress = useCallback(() => {
+    if (menuVisible) {
+      closeMenu();
+      return;
+    }
+
     menuButtonRef.current?.measureInWindow((x, y, width, height) => {
       openMenuFromAnchor({ x, y, width, height });
     });
-  }, [openMenuFromAnchor]);
+  }, [closeMenu, menuVisible, openMenuFromAnchor]);
 
   const menu = (
     <OptionsMenuDropdown
