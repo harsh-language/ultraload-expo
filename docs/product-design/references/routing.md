@@ -40,7 +40,7 @@ These code paths own product behavior that UI guidance must respect.
 | Behavior | Source |
 | --- | --- |
 | First set of the day creates the workout | `src/stores/todaySlice.ts`, `docs/blueprint.md` |
-| Warm-up threshold and bodyweight handling | `src/domain/warmup.ts`, `docs/blueprint.md` |
+| Warm-up threshold and warm-up handling | `src/domain/warmup.ts`, `docs/blueprint.md` |
 | Last set today seeds add-set defaults | `src/domain/defaults.ts`, `docs/blueprint.md` |
 | Standard-set numbering and CTA copy | `src/domain/set-labels.ts` |
 | Session total shows standard sets only | `src/domain/session-totals.ts` |

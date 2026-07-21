@@ -1,8 +1,11 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useRef, useState } from 'react';
 import type { LayoutRectangle, View } from 'react-native';
 import { getDatabase } from '../db/client';
 import { seedDevBaselineSets } from '../db/devSeed';
 import { resetAllUserData } from '../db/repositories';
+import type { MainStackParamList } from '../navigation/types';
 import { hydrateStores } from '../stores';
 import { useDevAppResetStore } from '../stores/devAppResetSlice';
 import {
@@ -10,7 +13,10 @@ import {
   type OptionsMenuKey,
 } from './OptionsMenuDropdown';
 
+type MainNavigation = NativeStackNavigationProp<MainStackParamList, 'WorkOut'>;
+
 export function useHomepageOptionsMenu() {
+  const navigation = useNavigation<MainNavigation>();
   const menuButtonRef = useRef<View>(null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<LayoutRectangle | null>(null);
@@ -24,18 +30,34 @@ export function useHomepageOptionsMenu() {
     setMenuVisible(false);
   }, []);
 
-  const handleSelect = useCallback(async (key: OptionsMenuKey) => {
-    if (key === 'reset') {
-      const db = getDatabase();
-      await resetAllUserData(db);
-      await seedDevBaselineSets(db);
-      await hydrateStores(db);
-      useDevAppResetStore.getState().trigger();
-      return;
-    }
+  const handleSelect = useCallback(
+    async (key: OptionsMenuKey) => {
+      closeMenu();
 
-    // U3/U4: navigate to History or Settings
-  }, []);
+      if (key === 'reset') {
+        const db = getDatabase();
+        await resetAllUserData(db);
+        await seedDevBaselineSets(db);
+        await hydrateStores(db);
+        useDevAppResetStore.getState().trigger();
+        return;
+      }
+
+      if (key === 'settings') {
+        navigation.navigate('Settings');
+        return;
+      }
+
+      if (key === 'history') {
+        // U4 — History stack route
+        return;
+      }
+
+      const _exhaustive: never = key;
+      return _exhaustive;
+    },
+    [closeMenu, navigation],
+  );
 
   const handleMenuPress = useCallback(() => {
     if (menuVisible) {

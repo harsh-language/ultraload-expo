@@ -44,7 +44,7 @@ describe('catalogue domain', () => {
     );
   });
 
-  it('includes all 25 v1 catalogue exercises', () => {
-    expect(getAllExercises()).toHaveLength(25);
+  it('includes all 22 v1 catalogue exercises', () => {
+    expect(getAllExercises()).toHaveLength(22);
   });
 });

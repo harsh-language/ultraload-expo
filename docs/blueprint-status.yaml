@@ -45,7 +45,7 @@ artifacts:
   strength_standards_pdf:
     path: "docs/Strength Standards Report.pdf"
     ref: "male 1RM @ 75kg reference"
-    role: "Basis for non-bodyweight slider ranges; derived numbers tabulated in blueprint §6"
+    role: "Basis for catalogue slider ranges; derived numbers tabulated in blueprint §6"
     coverage: strong
 artifact_gap_analysis:
   completed: true
@@ -98,9 +98,9 @@ artifact_gap_analysis:
       priority: high
       source: plan_md
       signal: "Bodyweight exercises show total weight; ranges 'recompute immediately' but recompute formula not given"
-      question: "What is the exact formula to recompute bodyweight-exercise total-weight ranges when bodyweight changes (how 70-190 @75kg ref shifts)?"
+      question: "Superseded — bodyweight-exercise ranges removed from product."
       status: answered
-      resolution: "D1/BR18: range = [0.5x, 2x] current bodyweight, recomputed live; supersedes 75kg-ref ranges for the 3 ◊ exercises."
+      resolution: "Superseded — bodyweight-exercise catalogue mode removed; all exercises use fixed ranges."
     - id: G5
       section: business_rules
       priority: medium
@@ -108,7 +108,7 @@ artifact_gap_analysis:
       signal: "Glute bridge curl ceiling = 2x bodyweight, no strength standard, warm-up n/a, increment listed as 1"
       question: "Confirm glute bridge curl uses a 1 kg increment against the 2x bodyweight ceiling (no auto warm-up)."
       status: answered
-      resolution: "D1: glute bridge curl now matches the other 2 ◊ exercises — 0.5x-2x bw range, 1 kg increment, warm-up at total <= bodyweight (BR18/BR26)."
+      resolution: "Superseded — bodyweight-exercise catalogue mode removed; all exercises use fixed ranges."
     - id: G6
       section: analytics_measurement
       priority: low

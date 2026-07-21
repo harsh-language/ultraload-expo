@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ExerciseCatalogueEntry, MuscleGroup } from '../../data/exercise-catalogue';
 import { getSelectableExercises } from '../../domain/catalogue';
@@ -22,13 +23,12 @@ const MUSCLE_ORDER: MuscleGroup[] = [
   'Triceps',
 ];
 
-interface ExercisePickerProps {
-  step: number;
-  title: string;
-  selectedIds: string[];
-  onToggle: (exerciseId: string) => void;
-  exercises?: ExerciseCatalogueEntry[];
-}
+export const exercisePickerSpacing = {
+  contentGap: spacing['s-8'],
+  listStackGap: spacing['s-8'],
+  listStackPaddingVertical: spacing['s-8'],
+  exerciseGroupGap: spacing['s-5'],
+} as const;
 
 function groupByMuscle(
   exercises: ExerciseCatalogueEntry[],
@@ -44,12 +44,57 @@ function groupByMuscle(
   return groups;
 }
 
-export const exercisePickerSpacing = {
-  contentGap: spacing['s-8'],
-  listStackGap: spacing['s-8'],
-  listStackPaddingVertical: spacing['s-8'],
-  exerciseGroupGap: spacing['s-5'],
-} as const;
+interface ExercisePickerListProps {
+  selectedIds: string[];
+  onToggle: (exerciseId: string) => void;
+  exercises?: ExerciseCatalogueEntry[];
+}
+
+/** Shared muscle-group option list — used by onboarding and Settings add-exercises. */
+export function ExercisePickerList({
+  selectedIds,
+  onToggle,
+  exercises = getSelectableExercises(),
+}: ExercisePickerListProps) {
+  const grouped = useMemo(() => groupByMuscle(exercises), [exercises]);
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  return (
+    <View style={styles.listStack}>
+      {MUSCLE_ORDER.flatMap((muscle) => {
+        const items = grouped.get(muscle);
+        if (!items?.length) {
+          return [];
+        }
+
+        return [
+          <SectionDivider key={`${muscle}-divider`} label={muscle} />,
+          <View key={`${muscle}-group`} style={styles.exerciseGroup}>
+            {items.map((exercise) => (
+              <InputOption
+                key={exercise.id}
+                label={exercise.name}
+                onPress={() => onToggle(exercise.id)}
+                selected={selectedSet.has(exercise.id)}
+              />
+            ))}
+          </View>,
+        ];
+      })}
+    </View>
+  );
+}
+
+interface ExercisePickerProps {
+  step: number;
+  title: string;
+  selectedIds: string[];
+  onToggle: (exerciseId: string) => void;
+  exercises?: ExerciseCatalogueEntry[];
+  /** Override scroll bottom inset (defaults to onboarding footer clearance). */
+  contentBottomInset?: number;
+  showHeader?: boolean;
+}
 
 export function ExercisePicker({
   step,
@@ -57,11 +102,12 @@ export function ExercisePicker({
   selectedIds,
   onToggle,
   exercises = getSelectableExercises(),
+  contentBottomInset,
+  showHeader = true,
 }: ExercisePickerProps) {
   const insets = useSafeAreaInsets();
-  const grouped = useMemo(() => groupByMuscle(exercises), [exercises]);
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const scrollBottomInset = getOnboardingScrollBottomInset(insets);
+  const scrollBottomInset =
+    contentBottomInset ?? getOnboardingScrollBottomInset(insets);
 
   return (
     <ScrollFadeView
@@ -73,32 +119,24 @@ export function ExercisePicker({
       showsVerticalScrollIndicator={false}
       style={styles.scroll}
     >
-      <OnboardingProgress step={step} />
-      <Text style={styles.title}>{title}</Text>
-      <View style={styles.listStack}>
-        {MUSCLE_ORDER.flatMap((muscle) => {
-          const items = grouped.get(muscle);
-          if (!items?.length) {
-            return [];
-          }
-
-          return [
-            <SectionDivider key={`${muscle}-divider`} label={muscle} />,
-            <View key={`${muscle}-group`} style={styles.exerciseGroup}>
-              {items.map((exercise) => (
-                <InputOption
-                  key={exercise.id}
-                  label={exercise.name}
-                  onPress={() => onToggle(exercise.id)}
-                  selected={selectedSet.has(exercise.id)}
-                />
-              ))}
-            </View>,
-          ];
-        })}
-      </View>
+      {showHeader ? (
+        <>
+          <OnboardingProgress step={step} />
+          <Text style={styles.title}>{title}</Text>
+        </>
+      ) : null}
+      <ExercisePickerList
+        exercises={exercises}
+        onToggle={onToggle}
+        selectedIds={selectedIds}
+      />
     </ScrollFadeView>
   );
+}
+
+/** Bottom safe padding for Settings add-exercises (no overlay footer). */
+export function getAddExercisesScrollBottomInset(insets: EdgeInsets): number {
+  return Math.max(insets.bottom, spacing['s-8']) + spacing['s-8'];
 }
 
 const styles = StyleSheet.create({

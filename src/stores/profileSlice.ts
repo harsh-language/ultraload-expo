@@ -27,6 +27,25 @@ interface ProfileSlice extends ProfileState {
   ) => Promise<void>;
 }
 
+export function mergeProfilePatch(
+  current: ProfileState,
+  patch: Partial<ProfileState>,
+): ProfileState {
+  return {
+    bodyweight:
+      patch.bodyweight !== undefined ? patch.bodyweight : current.bodyweight,
+    name: patch.name !== undefined ? patch.name : current.name,
+    height: patch.height !== undefined ? patch.height : current.height,
+    age: patch.age !== undefined ? patch.age : current.age,
+    units: patch.units ?? current.units,
+    warmUpPercent: patch.warmUpPercent ?? current.warmUpPercent,
+    warmUpAutoTagEnabled:
+      patch.warmUpAutoTagEnabled ?? current.warmUpAutoTagEnabled,
+    restTimerSeconds: patch.restTimerSeconds ?? current.restTimerSeconds,
+    onboardingComplete: patch.onboardingComplete ?? current.onboardingComplete,
+  };
+}
+
 export const useProfileStore = create<ProfileSlice>((set, get) => ({
   ...DEFAULT_PROFILE,
   hydrated: false,
@@ -44,18 +63,7 @@ export const useProfileStore = create<ProfileSlice>((set, get) => ({
       return;
     }
 
-    const profileState: ProfileState = {
-      bodyweight: patch.bodyweight ?? current.bodyweight,
-      name: patch.name ?? current.name,
-      height: patch.height ?? current.height,
-      age: patch.age ?? current.age,
-      units: patch.units ?? current.units,
-      warmUpPercent: patch.warmUpPercent ?? current.warmUpPercent,
-      warmUpAutoTagEnabled:
-        patch.warmUpAutoTagEnabled ?? current.warmUpAutoTagEnabled,
-      restTimerSeconds: patch.restTimerSeconds ?? current.restTimerSeconds,
-      onboardingComplete: patch.onboardingComplete ?? current.onboardingComplete,
-    };
+    const profileState = mergeProfilePatch(current, patch);
     await saveProfile(db, profileState);
     set({ ...profileState, hydrated: true });
   },

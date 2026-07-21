@@ -28,9 +28,9 @@ The blueprint is approved and complete (18/18 sections). The repo has spec artif
 | R3 | Editable catalogue seed module drives all exercise metadata (BR28–BR31) | §5–6, §9 |
 | R4 | Work Out home shell; History/Settings via options menu + stack | §4, §12 |
 | R5 | Onboarding: splash → bodyweight → exercise picker → rest → warm-up → Work Out | FL1, F2 |
-| R6 | Notepad logging: Add Set sheet, record/edit/delete, warm-up rules | FL2–3, F1, F4, BR4–5, BR18, BR26–27 |
+| R6 | Notepad logging: Add Set sheet, record/edit/delete, warm-up rules | FL2–3, F1, F4, BR4–5, BR27 |
 | R7 | Rest timer (optional, 3s–5min, background notification on dev build) | FL4, F5, BR20 |
-| R8 | Settings hub: bodyweight, plan edit, warm-up, per-exercise overrides (non-◊), units | FL8, FL12, F10–11, F16 |
+| R8 | Settings hub: bodyweight, plan edit, warm-up, per-exercise overrides, units | FL8, FL12, F10–11 |
 | R9 | History list + session detail + edit with progress math | FL5–6, F6–7, F9, BR6–12 |
 | R10 | History chart with exercise/muscle-group filters and time ranges | FL7, F8, BR13, BR23 |
 | R11 | Export/import JSON round-trip; reset wipes and replays onboarding | FL9–11, F12–14, T22–T24 |
@@ -106,8 +106,8 @@ ultraload/
 │   │   └── migrations/
 │   ├── domain/
 │   │   ├── progress.ts                # BR6–13, BR8–9
-│   │   ├── warmup.ts                  # BR4–5, BR26–27
-│   │   ├── ranges.ts                  # BR14–15, BR18–19, BR25
+│   │   ├── warmup.ts                  # BR4–5, BR15, BR27
+│   │   ├── ranges.ts                  # BR14–15, BR19, BR25
 │   │   ├── units.ts                   # BR17
 │   │   └── catalogue.ts               # lookup, deprecated filter, orphan fallback
 │   ├── stores/
@@ -133,7 +133,7 @@ ultraload/
 
 ## Scope Boundaries
 
-**In scope:** Everything in blueprint MVP (F1–F16), Stages 0–7, T1–T26 domain tests, **iOS App Store release (U7)**.
+**In scope:** Everything in blueprint MVP (F1–F15), Stages 0–7, T1–T26 domain tests, **iOS App Store release (U7)**.
 
 **Deferred to follow-up work:**
 - Full accessibility audit (VoiceOver, contrast) — out of v1 per §10
@@ -186,7 +186,7 @@ ultraload/
 
 **Approach:**
 1. `npx create-expo-app` with TypeScript template; add Drizzle, Zustand, React Navigation, expo-sqlite.
-2. Port all 25 exercises + multipliers from blueprint §6 into `exercise-catalogue.ts` with stable ids and `deprecated?: boolean`.
+2. Port all 22 exercises + multipliers from blueprint §6 into `exercise-catalogue.ts` with stable ids and `deprecated?: boolean`.
 3. Define Drizzle schema for Profile, WorkoutPlan, Workout, LoggedExercise, Set, Settings overrides.
 4. Pull Figma variables via MCP → `src/theme/tokens.ts`; load Geist font.
 5. Build 3–5 core components; render on device in a smoke screen.
@@ -224,17 +224,17 @@ ultraload/
 2. Work Out empty state per Figma.
 3. Add Set sheet: exercise picker (plan only), reps slider, weight slider, warm-up toggle visible.
 4. Record Set → creates workout if first of day (BR1) → groups under exercise.
-5. **Interim warm-up auto-tag (U1):** when `warmUpAutoTagEnabled` is on — ◊ exercises: total weight ≤ bodyweight (BR26); other exercises: auto-tag when `weight ≤ (warmUpPercent / 100) × lastStandardWeightToday` if today's workout already has a standard set for that exercise; otherwise no auto-tag. Wire `warmUpPercent` from profile; do not use catalogue `warmUpThreshold`.
+5. **Interim warm-up auto-tag (U1):** when `warmUpAutoTagEnabled` is on — auto-tag when `weight ≤ (warmUpPercent / 100) × lastStandardWeightToday` if today's workout already has a standard set for that exercise; otherwise no auto-tag. Wire `warmUpPercent` from profile; do not use catalogue `warmUpThreshold`.
 
 **Test scenarios:**
-- `src/domain/warmup.test.ts`: ◊ total ≤ bodyweight tags warm-up (T9 partial); non-◊ auto-tags at/below percent of today's last standard set; no auto-tag before first standard set today
+- `src/domain/warmup.test.ts`: auto-tags at/below percent of today's last standard set; no auto-tag before first standard set today
 - `__tests__/domain/day-record.test.ts`: first set creates one workout per calendar day (T10)
 
 **Verification (design gate — do not proceed to U2 until passed):**
 - Fresh install → complete onboarding → log one set → appears under correct exercise
 - Compare splash, one onboarding step, Work Out main, Add Set sheet to Figma on device
 - Log standard bench set (e.g. 100 kg) → open Add Set again → 45 kg auto-tags warm-up at 50%
-- First set of the day for an exercise does not auto-tag as warm-up (unless ◊ rule applies)
+- First set of the day for an exercise does not auto-tag as warm-up
 
 ---
 
@@ -255,14 +255,13 @@ ultraload/
 
 **Approach:**
 1. Tap logged set row → sheet in edit mode; delete → confirmation overlay.
-2. Replace U1 today-only reference with **full BR15** history lookup: scan all workout history (standard sets only), prefer heaviest weight at 6 reps, else 7, 8, 9, …; threshold = `warmUpPercent / 100 × referenceWeight`. Remove `warmUpThreshold` from `exercise-catalogue.ts`. BR5, BR26, BR27 one-set override and global toggle remain.
+2. Replace U1 today-only reference with **full BR15** history lookup: scan all workout history (standard sets only), prefer heaviest weight at 6 reps, else 7, 8, 9, …; threshold = `warmUpPercent / 100 × referenceWeight`. Remove `warmUpThreshold` from `exercise-catalogue.ts`. BR5, BR27 one-set override and global toggle remain.
 3. Default reps/weight from last set today (BR21).
 4. Rest timer user-triggered; wire expo-notifications on dev build.
 5. Revisit WarmUpStep accordion copy to match full history-based rule.
 
 **Test scenarios:**
 - `warmup.test.ts`: full BR15 6→7→8 rep cascade (T15); override one set only (T12); global off (T23); warm-up excluded from totals (T1 partial)
-- `ranges.test.ts`: ◊ live recompute on bodyweight change (T8)
 
 **Verification:**
 - Full Work Out Figma inventory on device
@@ -273,7 +272,7 @@ ultraload/
 
 ### U3. Settings (Stage 3)
 
-**Goal:** Settings hub + plan editing + units + bodyweight-driven ◊ ranges.
+**Goal:** Settings hub + plan editing + units + per-exercise overrides.
 
 **Requirements:** R8, R12
 
@@ -288,9 +287,8 @@ ultraload/
 
 **Approach:**
 1. Settings hub sections per blueprint §4.
-2. Bodyweight change → immediate ◊ range recompute (BR18).
 3. Plan toggle off → confirmation bottom sheet; toggle on → immediate.
-4. Per-exercise overrides for **non-◊ only** (BR29).
+4. Per-exercise overrides (BR29).
 5. Unit toggle kg/lbs/stone uniform display (BR17).
 
 **Test scenarios:**
@@ -298,7 +296,6 @@ ultraload/
 - `catalogue.test.ts`: deprecated not in picker (T25)
 
 **Verification:**
-- Change bodyweight → Work Out ◊ sliders updated without restart
 - Add/remove plan exercises updates pickers
 - Units apply uniformly across app
 
@@ -333,7 +330,7 @@ ultraload/
 - T5 re-enable after remove
 - T6 edit past day recalc
 - T13 day-total aggregation
-- T14 non-◊ range derivation
+- T14 range derivation
 
 **Verification:**
 - Log several varied days → list totals + % correct
@@ -396,7 +393,7 @@ ultraload/
 **Note:** If **Reset** appears on the Work Out options menu during development, treat it as a dev convenience only — not shipping UI. Remove it in **U7** before the production App Store compile (reset remains on Settings).
 
 **Test scenarios:**
-- T22: export → import round-trip preserves all fields + ◊ weight semantics
+- T22: export → import round-trip preserves all fields
 - T24: malformed / bad version / unknown id rejected
 - T21: reset clears and replays onboarding
 

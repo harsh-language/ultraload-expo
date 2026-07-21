@@ -1,4 +1,4 @@
-import type { ExerciseCatalogueEntry } from '../data/exercise-catalogue';
+import type { PerExerciseOverride } from '../db/schema';
 
 export interface TodayWorkoutForWarmUp {
   loggedExercises: {
@@ -8,12 +8,18 @@ export interface TodayWorkoutForWarmUp {
 }
 
 export interface WarmUpTagInput {
-  exercise: ExerciseCatalogueEntry;
   weight: number;
-  bodyweight: number | null;
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
   referenceWeight: number | null;
+}
+
+/** Effective warm-up % for auto-tag (per-exercise override when set). */
+export function getEffectiveWarmUpPercent(
+  globalWarmUpPercent: number,
+  override?: PerExerciseOverride | null,
+): number {
+  return override?.warmUpPercent ?? globalWarmUpPercent;
 }
 
 export interface StandardSetForReference {
@@ -60,24 +66,15 @@ export function getWarmUpThreshold(
   return (warmUpPercent / 100) * referenceWeight;
 }
 
-/** BR4 / BR26 — auto-tag when global warm-up tagging is enabled. */
+/** BR4 — auto-tag when global warm-up tagging is enabled. */
 export function shouldAutoTagWarmUp({
-  exercise,
   weight,
-  bodyweight,
   warmUpAutoTagEnabled,
   warmUpPercent,
   referenceWeight,
 }: WarmUpTagInput): boolean {
   if (!warmUpAutoTagEnabled) {
     return false;
-  }
-
-  if (exercise.isBodyweight) {
-    if (bodyweight == null) {
-      return false;
-    }
-    return weight <= bodyweight;
   }
 
   const threshold = getWarmUpThreshold(warmUpPercent, referenceWeight);

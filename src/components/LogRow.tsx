@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { formatSetIndex } from '../domain/set-labels';
+import { formatDisplayWeight } from '../domain/units';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -107,7 +108,7 @@ function LogSetRow(props: LogSetRowProps) {
     onPress,
   } = props;
   const warmUp = props.warmUp === true;
-  const weightLabel = `${weight} ${unit}`;
+  const weightLabel = `${formatDisplayWeight(weight)} ${unit}`;
   const repsLabel = `${reps} reps`;
   const prefixLabel = warmUp ? 'W' : formatSetIndex(props.setIndex);
 

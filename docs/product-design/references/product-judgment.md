@@ -48,17 +48,15 @@ Status: accepted
 Scope: add/edit set flow, warm-up logic, and future settings that affect
 warm-up behavior
 Rule: Auto-tagging must be derived from real lifting context, not guessed UI
-copy. For non-bodyweight exercises, use the history-derived reference weight.
-For bodyweight exercises, compare total lifted weight to bodyweight.
+copy. Use the history-derived reference weight (BR15).
 Why: Warm-up classification is a product decision with training semantics, not
 just a presentation detail.
-Exceptions: When auto-tagging is disabled or the reference/bodyweight needed for
+Exceptions: When auto-tagging is disabled or the reference needed for
 the rule is unavailable, do not auto-tag.
 Source: `docs/blueprint.md`, `src/domain/warmup.ts`, `src/screens/onboarding/WarmUpStep.tsx`
 Bad example: Treating all low absolute weights as warm-ups or baking a fixed kg
 cutoff into the UI.
-Good example: `shouldAutoTagWarmUp()` branches on `exercise.isBodyweight` and
-the onboarding copy describes the 6-rep reference rule.
+Good example: `shouldAutoTagWarmUp()` applies BR15 history-derived thresholds uniformly.
 
 ## rule/defaults-follow-todays-last-set
 Status: accepted

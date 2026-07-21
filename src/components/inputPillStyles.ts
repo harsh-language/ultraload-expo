@@ -17,6 +17,11 @@ export const inputPillStyles = StyleSheet.create({
   pillFocused: {
     borderColor: colors['border-1'],
   },
+  leadingLabel: {
+    color: colors['content-3'],
+    flexShrink: 0,
+    ...textCase.lower,
+  },
   input: {
     flex: 1,
     color: colors['content-3'],

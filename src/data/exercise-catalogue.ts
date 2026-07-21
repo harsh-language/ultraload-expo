@@ -26,11 +26,10 @@ export interface ExerciseCatalogueEntry {
   name: string;
   primaryMuscle: MuscleGroup;
   type: ExerciseType;
-  /** Fixed range for the 22 non-bodyweight exercises (BR14). */
-  sliderRange?: SliderRange;
+  /** Fixed range from 75 kg strength standards (BR14). */
+  sliderRange: SliderRange;
   increment: number;
   muscleMultipliers: MuscleMultiplier[];
-  isBodyweight: boolean;
   deprecated?: boolean;
 }
 
@@ -47,20 +46,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Triceps', multiplier: 0.5 },
       { muscle: 'Shoulders', multiplier: 0.33 },
     ],
-    isBodyweight: false,
-  },
-  {
-    id: 'dip-weighted',
-    name: 'dip (weighted)',
-    primaryMuscle: 'Chest',
-    type: 'Compound',
-    increment: 1,
-    muscleMultipliers: [
-      { muscle: 'Chest', multiplier: 1 },
-      { muscle: 'Triceps', multiplier: 0.5 },
-      { muscle: 'Shoulders', multiplier: 0.33 },
-    ],
-    isBodyweight: true,
   },
   {
     id: 'crossover',
@@ -70,7 +55,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     sliderRange: { min: 10, max: 110 },
     increment: 1,
     muscleMultipliers: [{ muscle: 'Chest', multiplier: 1 }],
-    isBodyweight: false,
   },
   {
     id: 'incline-bench-30',
@@ -84,7 +68,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Shoulders', multiplier: 0.5 },
       { muscle: 'Triceps', multiplier: 0.33 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'overhead-press',
@@ -98,7 +81,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Triceps', multiplier: 0.5 },
       { muscle: 'Chest', multiplier: 0.2 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'z-press',
@@ -111,7 +93,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Shoulders', multiplier: 1 },
       { muscle: 'Triceps', multiplier: 0.5 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'modified-bradford-press',
@@ -124,19 +105,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Shoulders', multiplier: 1 },
       { muscle: 'Triceps', multiplier: 0.33 },
     ],
-    isBodyweight: false,
-  },
-  {
-    id: 'weighted-pull-ups',
-    name: 'weighted pull-ups',
-    primaryMuscle: 'Back',
-    type: 'Compound',
-    increment: 1,
-    muscleMultipliers: [
-      { muscle: 'Back', multiplier: 1 },
-      { muscle: 'Biceps', multiplier: 0.5 },
-    ],
-    isBodyweight: true,
   },
   {
     id: 'rows',
@@ -149,7 +117,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.5 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'meadows-row',
@@ -162,7 +129,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.5 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'high-cable-row',
@@ -175,7 +141,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.33 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'lat-pulldown',
@@ -188,7 +153,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Back', multiplier: 1 },
       { muscle: 'Biceps', multiplier: 0.5 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'dead-row',
@@ -202,7 +166,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Glutes', multiplier: 0.5 },
       { muscle: 'Biceps', multiplier: 0.33 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'barbell-hip-thrust',
@@ -215,7 +178,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Glutes', multiplier: 1 },
       { muscle: 'Quads', multiplier: 0.2 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'cable-pull-through',
@@ -225,7 +187,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
     sliderRange: { min: 10, max: 140 },
     increment: 1,
     muscleMultipliers: [{ muscle: 'Glutes', multiplier: 1 }],
-    isBodyweight: false,
   },
   {
     id: 'dumbbell-leaning-step-up',
@@ -238,16 +199,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Glutes', multiplier: 1 },
       { muscle: 'Quads', multiplier: 0.66 },
     ],
-    isBodyweight: false,
-  },
-  {
-    id: 'gluteus-bridge-curl',
-    name: 'gluteus bridge curl',
-    primaryMuscle: 'Glutes',
-    type: 'Isolation',
-    increment: 1,
-    muscleMultipliers: [{ muscle: 'Glutes', multiplier: 1 }],
-    isBodyweight: true,
   },
   {
     id: 'romanian-deadlifts',
@@ -260,7 +211,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Glutes', multiplier: 1 },
       { muscle: 'Back', multiplier: 0.33 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'low-bar-squats',
@@ -274,7 +224,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Quads', multiplier: 0.66 },
       { muscle: 'Back', multiplier: 0.2 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'front-squat',
@@ -287,7 +236,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.5 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'belt-squat',
@@ -300,7 +248,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.5 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'hack-squat',
@@ -313,7 +260,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.5 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'bulgarian-split-squat',
@@ -326,7 +272,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.66 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'high-bar-back-squat',
@@ -340,7 +285,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Glutes', multiplier: 0.66 },
       { muscle: 'Back', multiplier: 0.2 },
     ],
-    isBodyweight: false,
   },
   {
     id: 'reverse-lunge',
@@ -353,7 +297,6 @@ export const EXERCISE_CATALOGUE: ExerciseCatalogueEntry[] = [
       { muscle: 'Quads', multiplier: 1 },
       { muscle: 'Glutes', multiplier: 0.66 },
     ],
-    isBodyweight: false,
   },
 ];
 

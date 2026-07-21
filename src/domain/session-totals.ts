@@ -1,3 +1,6 @@
+import type { DisplayUnit } from '../data/exercise-catalogue';
+import { getUnitLabel, kgToDisplay } from './units';
+
 export interface WorkoutForSessionTotal {
   loggedExercises: {
     sets: { weight: number; reps: number; warmUp: boolean }[];
@@ -35,7 +38,15 @@ export function hasStandardSets(workout: WorkoutForSessionTotal | null): boolean
   );
 }
 
-export function formatSessionTotalWeightLabel(totalKg: number): string {
-  const rounded = Math.round(totalKg);
-  return `${rounded.toLocaleString('en-GB')} kg`;
+/** Session total label in the profile display unit (BR17). */
+export function formatSessionTotalWeightLabel(
+  totalKg: number,
+  unit: DisplayUnit = 'kg',
+): string {
+  const display = kgToDisplay(totalKg, unit);
+  const grouped = display.toLocaleString('en-GB', {
+    minimumFractionDigits: Number.isInteger(display) ? 0 : 1,
+    maximumFractionDigits: 1,
+  });
+  return `${grouped} ${getUnitLabel(unit)}`;
 }

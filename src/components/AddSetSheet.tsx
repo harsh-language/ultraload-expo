@@ -14,6 +14,8 @@ import { ExerciseDropdown } from './ExerciseDropdown';
 import { InputSlider } from './InputSlider';
 import { Warmup } from './Warmup';
 import { PrimaryButton } from './PrimaryButton';
+import type { DisplayUnit } from '../data/exercise-catalogue';
+import type { PerExerciseOverride } from '../db/schema';
 import { getLastSetToday } from '../domain/defaults';
 import { getExerciseById, getExerciseLabel } from '../domain/catalogue';
 import {
@@ -25,7 +27,9 @@ import {
   getEditSetRecordLabel,
   getNextStandardSetIndex,
 } from '../domain/set-labels';
+import { formatWeight, getUnitLabel } from '../domain/units';
 import {
+  getEffectiveWarmUpPercent,
   shouldAutoTagWarmUp,
   type TodayWorkoutForWarmUp,
 } from '../domain/warmup';
@@ -52,9 +56,10 @@ export interface AddSetSheetHandle {
 
 interface AddSetSheetProps {
   exerciseIds: string[];
-  bodyweight: number | null;
+  units: DisplayUnit;
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
+  perExerciseOverrides: Record<string, PerExerciseOverride>;
   todayWorkout: TodayWorkoutForWarmUp | null;
   referenceWeightByExerciseId: Record<string, number | null>;
   onRecord: (payload: {
@@ -76,9 +81,9 @@ interface AddSetSheetProps {
 }
 
 interface DraftContext {
-  bodyweight: number | null;
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
+  perExerciseOverrides: Record<string, PerExerciseOverride>;
   todayWorkout: TodayWorkoutForWarmUp | null;
   referenceWeightByExerciseId: Record<string, number | null>;
 }
@@ -93,15 +98,14 @@ function getWarmUpForDraft(
     return false;
   }
 
+  const override = context.perExerciseOverrides[exerciseId] ?? null;
   const referenceWeight =
     context.referenceWeightByExerciseId[exerciseId] ?? null;
 
   return shouldAutoTagWarmUp({
-    exercise,
     weight,
-    bodyweight: context.bodyweight,
     warmUpAutoTagEnabled: context.warmUpAutoTagEnabled,
-    warmUpPercent: context.warmUpPercent,
+    warmUpPercent: getEffectiveWarmUpPercent(context.warmUpPercent, override),
     referenceWeight,
   });
 }
@@ -112,7 +116,8 @@ function getExerciseDraft(exerciseId: string, context: DraftContext) {
     return null;
   }
 
-  const sliderRange = getExerciseSliderRange(exercise, context.bodyweight);
+  const override = context.perExerciseOverrides[exerciseId] ?? null;
+  const sliderRange = getExerciseSliderRange(exercise, override);
   const lastSet = getLastSetToday(context.todayWorkout, exerciseId);
   const weight = lastSet?.weight ?? sliderRange.min;
   const reps = lastSet?.reps ?? REPS_MIN;
@@ -129,9 +134,10 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
   function AddSetSheet(
     {
       exerciseIds,
-      bodyweight,
+      units,
       warmUpAutoTagEnabled,
       warmUpPercent,
+      perExerciseOverrides,
       todayWorkout,
       referenceWeightByExerciseId,
       onRecord,
@@ -155,26 +161,31 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
     );
 
     const exerciseIndex = exerciseIds.indexOf(exerciseId);
+    const override = exerciseId
+      ? (perExerciseOverrides[exerciseId] ?? null)
+      : null;
 
     const sliderRange = useMemo(() => {
       if (!exercise) {
         return { min: 0, max: 100 };
       }
-      return getExerciseSliderRange(exercise, bodyweight);
-    }, [exercise, bodyweight]);
+      return getExerciseSliderRange(exercise, override);
+    }, [exercise, override]);
 
-    const increment = exercise ? getExerciseIncrement(exercise) : 1;
+    const increment = exercise
+      ? getExerciseIncrement(exercise, override)
+      : 1;
 
     const draftContext = useMemo<DraftContext>(
       () => ({
-        bodyweight,
         warmUpAutoTagEnabled,
         warmUpPercent,
+        perExerciseOverrides,
         todayWorkout,
         referenceWeightByExerciseId,
       }),
       [
-        bodyweight,
+        perExerciseOverrides,
         referenceWeightByExerciseId,
         todayWorkout,
         warmUpAutoTagEnabled,
@@ -216,15 +227,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       setWarmUp(set.warmUp);
       setWarmUpTouched(true);
     }, []);
-
-    const refreshWarmUpDraft = useCallback(() => {
-      if (mode === 'edit') {
-        return;
-      }
-
-      setWarmUpTouched(false);
-      setWarmUp(getWarmUpForDraft(exerciseId, weight, draftContext));
-    }, [draftContext, exerciseId, mode, weight]);
 
     useImperativeHandle(ref, () => ({
       present: () => {
@@ -334,6 +336,12 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       });
     }, [exerciseId, mode, todayWorkout, warmUp]);
 
+    const unitLabel = getUnitLabel(units);
+    const formatWeightValue = useCallback(
+      (valueKg: number) => formatWeight(valueKg, units),
+      [units],
+    );
+
     if (exerciseIds.length === 0) {
       return null;
     }
@@ -375,12 +383,12 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
         />
 
         <InputSlider
-          formatValue={(value) => value.toFixed(increment < 1 ? 1 : 0)}
+          formatValue={formatWeightValue}
           maximumValue={sliderRange.max}
           minimumValue={sliderRange.min}
           onValueChange={setWeight}
           step={increment}
-          suffix="kg"
+          suffix={unitLabel}
           value={weight}
         />
       </AppBottomSheet>

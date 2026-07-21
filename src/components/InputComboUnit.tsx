@@ -13,31 +13,42 @@ interface InputComboUnitProps {
   value: string;
   onChangeText: (value: string) => void;
   unit: string;
+  /** Figma Settings `labelLeft` — e.g. `body weight :` */
+  leadingLabel?: string;
   placeholder?: string;
   keyboardType?: TextInputProps['keyboardType'];
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoFocus?: boolean;
+  onBlur?: () => void;
 }
 
 export function InputComboUnit({
   value,
   onChangeText,
   unit,
+  leadingLabel,
   placeholder,
   keyboardType = 'default',
   autoCapitalize,
   autoFocus = false,
+  onBlur,
 }: InputComboUnitProps) {
   const [focused, setFocused] = useState(false);
   const hasValue = value.trim().length > 0;
 
   return (
     <Pressable style={[styles.pill, focused && styles.pillFocused]}>
+      {leadingLabel ? (
+        <Text style={[typography.para2, styles.leadingLabel]}>{leadingLabel}</Text>
+      ) : null}
       <TextInput
         autoCapitalize={autoCapitalize}
         autoFocus={autoFocus}
         keyboardType={keyboardType}
-        onBlur={() => setFocused(false)}
+        onBlur={() => {
+          setFocused(false);
+          onBlur?.();
+        }}
         onChangeText={onChangeText}
         onFocus={() => setFocused(true)}
         placeholder={placeholder}
