@@ -19,17 +19,6 @@ const bench: ExerciseCatalogueEntry = {
   sliderRange: { min: 30, max: 150 },
   increment: 5,
   muscleMultipliers: [{ muscle: 'Chest', multiplier: 1 }],
-  isBodyweight: false,
-};
-
-const dip: ExerciseCatalogueEntry = {
-  id: 'dip',
-  name: 'dip',
-  primaryMuscle: 'Chest',
-  type: 'Compound',
-  increment: 1,
-  muscleMultipliers: [{ muscle: 'Chest', multiplier: 1 }],
-  isBodyweight: true,
 };
 
 const row: ExerciseCatalogueEntry = {
@@ -40,7 +29,6 @@ const row: ExerciseCatalogueEntry = {
   sliderRange: { min: 20, max: 120 },
   increment: 5,
   muscleMultipliers: [{ muscle: 'Back', multiplier: 1 }],
-  isBodyweight: false,
 };
 
 describe('exercise-overrides', () => {
@@ -62,14 +50,12 @@ describe('exercise-overrides', () => {
     ).toBe(true);
   });
 
-  it('detects common increment only when every non-bodyweight exercise matches', () => {
+  it('detects common increment only when every exercise matches', () => {
     const overrides: Record<string, PerExerciseOverride> = {
       'bench-press': { ...emptyOverride(), increment: 2.5 },
       row: { ...emptyOverride(), increment: 2.5 },
     };
-    expect(
-      getCommonIncrementOverride(overrides, [bench, dip, row]),
-    ).toBe(2.5);
+    expect(getCommonIncrementOverride(overrides, [bench, row])).toBe(2.5);
 
     expect(
       getCommonIncrementOverride(
@@ -77,7 +63,7 @@ describe('exercise-overrides', () => {
           'bench-press': { ...emptyOverride(), increment: 2.5 },
           row: { ...emptyOverride(), increment: 5 },
         },
-        [bench, dip, row],
+        [bench, row],
       ),
     ).toBeNull();
 
@@ -86,16 +72,15 @@ describe('exercise-overrides', () => {
         {
           'bench-press': { ...emptyOverride(), increment: 2.5 },
         },
-        [bench, dip, row],
+        [bench, row],
       ),
     ).toBeNull();
   });
 
-  it('applies common increment to non-bodyweight exercises only', () => {
-    const next = applyCommonIncrement({}, [bench, dip, row], 2.5);
+  it('applies common increment to all exercises', () => {
+    const next = applyCommonIncrement({}, [bench, row], 2.5);
     expect(next['bench-press']?.increment).toBe(2.5);
     expect(next.row?.increment).toBe(2.5);
-    expect(next.dip).toBeUndefined();
   });
 
   it('clears common increment without dropping other override fields', () => {
@@ -107,7 +92,7 @@ describe('exercise-overrides', () => {
       },
       row: { ...emptyOverride(), increment: 2.5 },
     };
-    const next = applyCommonIncrement(current, [bench, dip, row], null);
+    const next = applyCommonIncrement(current, [bench, row], null);
     expect(next['bench-press']).toEqual({
       warmUpPercent: 40,
       sliderRange: null,

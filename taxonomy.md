@@ -53,17 +53,17 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 - **Navigate elsewhere:** session title bar chevron → options menu (`OptionsMenuDropdown`) — Settings opens the Settings stack; History remains a stub; dev reset wipes data and replays onboarding.
 - **Edit/delete sets:** tap a logged row to edit; delete opens a confirmation sheet.
 - **Rest timer:** Work Out supports start, pause/resume, dismiss, and a background notification.
-- **Manage settings:** edit profile, warm-up/rest presets, display units, plan exercises, and non-◊ exercise overrides; changes write through to SQLite.
+- **Manage settings:** edit profile, warm-up/rest presets, display units, plan exercises, and per-exercise overrides; changes write through to SQLite.
 - **Review progress / export:** planned — History is U4/U5; export/import/reset are U6.
 
 ## Key concepts
 
-- **Standard vs warm-up sets:** only standard (non-warm-up) sets count toward progress. Auto-tag when weight ≤ `warmUpPercent` × reference weight from logged history (BR15). ◊ exercises use total weight ≤ bodyweight (BR26). Warm-up sets are never used when finding the reference. Manual toggle can override one set.
+- **Standard vs warm-up sets:** only standard (non-warm-up) sets count toward progress. Auto-tag when weight ≤ `warmUpPercent` × reference weight from logged history (BR15). Warm-up sets are never used when finding the reference. Manual toggle can override one set.
 - **Total weight moved:** Σ(weight × reps) per exercise per day; Work Out shows today's total. History comparisons are not built yet.
 - **% change:** compares an exercise to its previous session — **not implemented yet**.
 - **Muscle-group weighting:** each exercise contributes to one or more muscle groups by a multiplier — used for the future chart filter (`getFilterableMuscleGroups` in `domain/catalogue.ts`).
-- **Built-in catalogue:** seed data in `src/data/exercise-catalogue.ts`. Drives exercises, sliders, toggles, and future chart filters. v1 has 25 exercises. **Ids never change** — edit display names/ranges freely; retire with `deprecated: true`. No in-app custom exercises.
-- **Units & bodyweight:** weights stay in kg in SQLite and display as kg, lbs, or stone (rounded to 0.5). The 3 ◊ exercises use **total weight** (bodyweight + added), a **0.5×–2× bodyweight** range, and total ≤ bodyweight warm-up logic. Non-◊ exercises can override warm-up %, slider range, and increment.
+- **Built-in catalogue:** seed data in `src/data/exercise-catalogue.ts`. Drives exercises, sliders, toggles, and future chart filters. v1 has 22 exercises. **Ids never change** — edit display names/ranges freely; retire with `deprecated: true`. No in-app custom exercises.
+- **Units & bodyweight:** weights stay in kg in SQLite and display as kg, lbs, or stone (rounded to 0.5). Profile bodyweight is a personal field. Exercises use fixed catalogue ranges (overridable in Settings).
 
 ## Find in code
 

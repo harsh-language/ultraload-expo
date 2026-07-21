@@ -47,7 +47,7 @@ Local product decisions live in [`docs/product-design/`](docs/product-design/).
 
 ## Build stage
 
-U3 complete — Settings supports profile, plan editing, units, presets, and non-bodyweight exercise overrides.
+U3 complete — Settings supports profile, plan editing, units, presets, and per-exercise overrides.
 
 Next is U4 — History list and session detail.
 

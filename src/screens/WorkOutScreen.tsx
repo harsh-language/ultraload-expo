@@ -139,7 +139,6 @@ export function WorkOutScreen() {
     Record<string, number | null>
   >({});
 
-  const bodyweight = useProfileStore((state) => state.bodyweight);
   const units = useProfileStore((state) => state.units);
   const restTimerSeconds = useProfileStore((state) => state.restTimerSeconds);
   const warmUpAutoTagEnabled = useProfileStore(
@@ -508,7 +507,6 @@ export function WorkOutScreen() {
 
       <AddSetSheet
         ref={sheetRef}
-        bodyweight={bodyweight}
         exerciseIds={exerciseIds}
         onRecord={handleRecord}
         onUpdate={handleUpdate}

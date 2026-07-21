@@ -33,19 +33,18 @@ export function isOverrideActive(override: PerExerciseOverride | undefined): boo
 }
 
 /**
- * When every non-bodyweight exercise shares the same non-null increment
- * override, return that value — otherwise null (common increment off).
+ * When every exercise shares the same non-null increment override,
+ * return that value — otherwise null (common increment off).
  */
 export function getCommonIncrementOverride(
   overrides: Record<string, PerExerciseOverride>,
   exercises: readonly ExerciseCatalogueEntry[],
 ): number | null {
-  const nonBodyweight = exercises.filter((exercise) => !exercise.isBodyweight);
-  if (nonBodyweight.length === 0) {
+  if (exercises.length === 0) {
     return null;
   }
 
-  const increments = nonBodyweight.map(
+  const increments = exercises.map(
     (exercise) => overrides[exercise.id]?.increment ?? null,
   );
   if (increments.some((increment) => increment == null)) {
@@ -64,10 +63,6 @@ export function applyCommonIncrement(
   const next: Record<string, PerExerciseOverride> = { ...overrides };
 
   for (const exercise of exercises) {
-    if (exercise.isBodyweight) {
-      continue;
-    }
-
     const current = next[exercise.id] ?? emptyOverride();
     const updated: PerExerciseOverride = {
       ...current,

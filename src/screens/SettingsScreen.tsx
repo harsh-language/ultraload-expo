@@ -433,25 +433,19 @@ export function SettingsScreen({ navigation }: Props) {
             {planExercises.map((exercise) => {
               const expanded = expandedExerciseId === exercise.id;
               const override = perExerciseOverrides[exercise.id];
-              const canOverride = !exercise.isBodyweight;
 
               return (
                 <View key={exercise.id} style={styles.exerciseBlock}>
                   <InputTag
                     label={exercise.name}
-                    onPress={
-                      canOverride
-                        ? () =>
-                            setExpandedExerciseId(
-                              expanded ? null : exercise.id,
-                            )
-                        : undefined
+                    onPress={() =>
+                      setExpandedExerciseId(expanded ? null : exercise.id)
                     }
                     onRemove={() => handleRemoveRequest(exercise.id)}
                     removeDisabled={exerciseIds.length <= 1}
                     selected={expanded}
                   />
-                  {expanded && canOverride ? (
+                  {expanded ? (
                     <ExerciseOverridePanel
                       catalogueIncrement={exercise.increment}
                       catalogueRange={exercise.sliderRange}
@@ -593,7 +587,7 @@ export function SettingsScreen({ navigation }: Props) {
 
 interface ExerciseOverridePanelProps {
   override: PerExerciseOverride | undefined;
-  catalogueRange: { min: number; max: number } | undefined;
+  catalogueRange: { min: number; max: number };
   catalogueIncrement: number;
   globalWarmUpPercent: number;
   units: DisplayUnit;
@@ -614,7 +608,7 @@ function ExerciseOverridePanel({
 }: ExerciseOverridePanelProps) {
   const warmUp =
     override?.warmUpPercent ?? globalWarmUpPercent;
-  const range = override?.sliderRange ?? catalogueRange ?? { min: 0, max: 100 };
+  const range = override?.sliderRange ?? catalogueRange;
   const increment = override?.increment ?? catalogueIncrement;
   const unitLabel = getUnitLabel(units);
 

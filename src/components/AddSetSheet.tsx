@@ -56,7 +56,6 @@ export interface AddSetSheetHandle {
 
 interface AddSetSheetProps {
   exerciseIds: string[];
-  bodyweight: number | null;
   units: DisplayUnit;
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
@@ -82,7 +81,6 @@ interface AddSetSheetProps {
 }
 
 interface DraftContext {
-  bodyweight: number | null;
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
   perExerciseOverrides: Record<string, PerExerciseOverride>;
@@ -105,15 +103,9 @@ function getWarmUpForDraft(
     context.referenceWeightByExerciseId[exerciseId] ?? null;
 
   return shouldAutoTagWarmUp({
-    exercise,
     weight,
-    bodyweight: context.bodyweight,
     warmUpAutoTagEnabled: context.warmUpAutoTagEnabled,
-    warmUpPercent: getEffectiveWarmUpPercent(
-      exercise,
-      context.warmUpPercent,
-      override,
-    ),
+    warmUpPercent: getEffectiveWarmUpPercent(context.warmUpPercent, override),
     referenceWeight,
   });
 }
@@ -125,11 +117,7 @@ function getExerciseDraft(exerciseId: string, context: DraftContext) {
   }
 
   const override = context.perExerciseOverrides[exerciseId] ?? null;
-  const sliderRange = getExerciseSliderRange(
-    exercise,
-    context.bodyweight,
-    override,
-  );
+  const sliderRange = getExerciseSliderRange(exercise, override);
   const lastSet = getLastSetToday(context.todayWorkout, exerciseId);
   const weight = lastSet?.weight ?? sliderRange.min;
   const reps = lastSet?.reps ?? REPS_MIN;
@@ -146,7 +134,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
   function AddSetSheet(
     {
       exerciseIds,
-      bodyweight,
       units,
       warmUpAutoTagEnabled,
       warmUpPercent,
@@ -182,8 +169,8 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       if (!exercise) {
         return { min: 0, max: 100 };
       }
-      return getExerciseSliderRange(exercise, bodyweight, override);
-    }, [bodyweight, exercise, override]);
+      return getExerciseSliderRange(exercise, override);
+    }, [exercise, override]);
 
     const increment = exercise
       ? getExerciseIncrement(exercise, override)
@@ -191,7 +178,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
 
     const draftContext = useMemo<DraftContext>(
       () => ({
-        bodyweight,
         warmUpAutoTagEnabled,
         warmUpPercent,
         perExerciseOverrides,
@@ -199,7 +185,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
         referenceWeightByExerciseId,
       }),
       [
-        bodyweight,
         perExerciseOverrides,
         referenceWeightByExerciseId,
         todayWorkout,
