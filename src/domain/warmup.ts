@@ -1,4 +1,5 @@
 import type { ExerciseCatalogueEntry } from '../data/exercise-catalogue';
+import type { PerExerciseOverride } from '../db/schema';
 
 export interface TodayWorkoutForWarmUp {
   loggedExercises: {
@@ -14,6 +15,22 @@ export interface WarmUpTagInput {
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
   referenceWeight: number | null;
+}
+
+/**
+ * Effective warm-up % for auto-tag. Bodyweight (◊) exercises ignore overrides
+ * (BR26 uses bodyweight, not percent). Non-◊ use override when set (BR29).
+ */
+export function getEffectiveWarmUpPercent(
+  exercise: ExerciseCatalogueEntry,
+  globalWarmUpPercent: number,
+  override?: PerExerciseOverride | null,
+): number {
+  if (exercise.isBodyweight) {
+    return globalWarmUpPercent;
+  }
+
+  return override?.warmUpPercent ?? globalWarmUpPercent;
 }
 
 export interface StandardSetForReference {

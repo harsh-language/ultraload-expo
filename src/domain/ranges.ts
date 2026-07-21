@@ -9,15 +9,14 @@ export function getBodyweightExerciseRange(bodyweight: number): SliderRange {
   };
 }
 
+/**
+ * Slider bounds in kg. Bodyweight (◊) exercises ignore overrides (BR18/BR29).
+ */
 export function getExerciseSliderRange(
   exercise: ExerciseCatalogueEntry,
   bodyweight: number | null,
   override?: PerExerciseOverride | null,
 ): SliderRange {
-  if (override?.sliderRange) {
-    return override.sliderRange;
-  }
-
   if (exercise.isBodyweight) {
     if (bodyweight == null) {
       return { min: 0, max: 100 };
@@ -25,12 +24,23 @@ export function getExerciseSliderRange(
     return getBodyweightExerciseRange(bodyweight);
   }
 
+  if (override?.sliderRange) {
+    return override.sliderRange;
+  }
+
   return exercise.sliderRange ?? { min: 0, max: 100 };
 }
 
+/**
+ * Increment in kg. Bodyweight (◊) exercises ignore overrides (BR18/BR29).
+ */
 export function getExerciseIncrement(
   exercise: ExerciseCatalogueEntry,
   override?: PerExerciseOverride | null,
 ): number {
+  if (exercise.isBodyweight) {
+    return exercise.increment;
+  }
+
   return override?.increment ?? exercise.increment;
 }

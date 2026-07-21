@@ -8,7 +8,9 @@ import {
   useState,
 } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import type { DisplayUnit } from '../data/exercise-catalogue';
 import { formatSetIndex } from '../domain/set-labels';
+import { formatWeightLabel } from '../domain/units';
 import { colors, spacing } from '../theme/tokens';
 import { AppBottomSheet } from './AppBottomSheet';
 import { PrimaryButton } from './PrimaryButton';
@@ -16,6 +18,7 @@ import { logSetTextStyles } from './logSetTextStyles';
 
 export interface DeletableSet {
   id: number;
+  /** Stored kg. */
   weight: number;
   reps: number;
   warmUp: boolean;
@@ -29,6 +32,7 @@ export interface DeleteSetSheetHandle {
 }
 
 interface DeleteSetSheetProps {
+  units: DisplayUnit;
   onConfirm: (setId: number) => void;
   onVisibilityChange?: (visible: boolean) => void;
 }
@@ -50,11 +54,17 @@ function getDeleteSetTitle(set: DeletableSet | null): string {
  * Exception to the list `LogRow`: taller (s-13), no fill, top + bottom borders
  * so the sheet gradient shows through.
  */
-function DeleteSetPreview({ set }: { set: DeletableSet }) {
+function DeleteSetPreview({
+  set,
+  units,
+}: {
+  set: DeletableSet;
+  units: DisplayUnit;
+}) {
   const prefixLabel = set.warmUp
     ? 'W'
     : formatSetIndex(set.setIndex ?? 1);
-  const weightLabel = `${set.weight} kg`;
+  const weightLabel = formatWeightLabel(set.weight, units);
   const repsLabel = `${set.reps} reps`;
 
   return (
@@ -69,7 +79,7 @@ function DeleteSetPreview({ set }: { set: DeletableSet }) {
 export const DeleteSetSheet = forwardRef<
   DeleteSetSheetHandle,
   DeleteSetSheetProps
->(function DeleteSetSheet({ onConfirm, onVisibilityChange }, ref) {
+>(function DeleteSetSheet({ units, onConfirm, onVisibilityChange }, ref) {
   const sheetRef = useRef<BottomSheetModal>(null);
   const shouldPresentRef = useRef(false);
   const [pendingSet, setPendingSet] = useState<DeletableSet | null>(null);
@@ -123,7 +133,9 @@ export const DeleteSetSheet = forwardRef<
       sectionGap={spacing['s-8']}
       title={getDeleteSetTitle(pendingSet)}
     >
-      {pendingSet == null ? null : <DeleteSetPreview set={pendingSet} />}
+      {pendingSet == null ? null : (
+        <DeleteSetPreview set={pendingSet} units={units} />
+      )}
     </AppBottomSheet>
   );
 });

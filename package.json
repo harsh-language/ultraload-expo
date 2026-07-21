@@ -5,6 +5,7 @@
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.14",
     "@react-navigation/native": "^7.3.3",
+    "@react-navigation/native-stack": "^7.18.2",
     "babel-preset-expo": "~56.0.0",
     "central-icons": "npm:@central-icons-react-native/square-outlined-radius-0-stroke-2@^1.1.281",
     "central-icons-filled": "npm:@central-icons-react-native/square-filled-radius-0-stroke-2@^1.1.282",

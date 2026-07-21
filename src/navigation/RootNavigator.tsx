@@ -1,4 +1,5 @@
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useProfileStore } from '../stores/profileSlice';
@@ -6,7 +7,10 @@ import { useDevAppResetStore } from '../stores/devAppResetSlice';
 import { OnboardingFlow } from '../screens/onboarding/OnboardingFlow';
 import { SplashScreen } from '../screens/SplashScreen';
 import { WorkOutScreen } from '../screens/WorkOutScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { AddExercisesScreen } from '../screens/AddExercisesScreen';
 import { colors } from '../theme/tokens';
+import type { MainStackParamList } from './types';
 
 const navTheme = {
   ...DarkTheme,
@@ -21,6 +25,25 @@ const navTheme = {
 };
 
 type AppPhase = 'splash' | 'onboarding' | 'main';
+
+const MainStack = createNativeStackNavigator<MainStackParamList>();
+
+function MainStackNavigator() {
+  return (
+    <MainStack.Navigator
+      initialRouteName="WorkOut"
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors['bg-1'] },
+        animation: 'slide_from_right',
+      }}
+    >
+      <MainStack.Screen component={WorkOutScreen} name="WorkOut" />
+      <MainStack.Screen component={SettingsScreen} name="Settings" />
+      <MainStack.Screen component={AddExercisesScreen} name="AddExercises" />
+    </MainStack.Navigator>
+  );
+}
 
 export function RootNavigator() {
   const onboardingComplete = useProfileStore((state) => state.onboardingComplete);
@@ -59,7 +82,7 @@ export function RootNavigator() {
   return (
     <NavigationContainer theme={navTheme}>
       <View style={styles.root}>
-        <WorkOutScreen />
+        <MainStackNavigator />
       </View>
     </NavigationContainer>
   );

@@ -47,9 +47,9 @@ Local product decisions live in [`docs/product-design/`](docs/product-design/).
 
 ## Build stage
 
-U2 complete — Work Out supports add/edit/delete, full BR15 warm-up history lookup, and rest timer UI.
+U3 complete — Settings supports profile, plan editing, units, presets, and non-bodyweight exercise overrides.
 
-Next is U3 — Settings hub, plan editing, units, and bodyweight-driven ranges.
+Next is U4 — History list and session detail.
 
 ## Typography
 

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   Text,
@@ -18,6 +18,9 @@ interface InputHeightFieldProps {
   onChangeText: (value: string) => void;
   unit?: string;
   placeholder?: string;
+  /** Figma Settings `labelLeft` — e.g. `height :` */
+  leadingLabel?: string;
+  onBlur?: () => void;
 }
 
 export function InputHeightField({
@@ -25,11 +28,17 @@ export function InputHeightField({
   onChangeText,
   unit = 'feet / inches',
   placeholder = 'your height',
+  leadingLabel,
+  onBlur,
 }: InputHeightFieldProps) {
   const [focused, setFocused] = useState(false);
   const [digits, setDigits] = useState(() => extractHeightDigits(value));
   const displayValue = formatHeightDigits(digits);
   const hasValue = digits.length > 0;
+
+  useEffect(() => {
+    setDigits(extractHeightDigits(value));
+  }, [value]);
 
   const handleChangeText = useCallback(
     (next: string) => {
@@ -42,9 +51,15 @@ export function InputHeightField({
 
   return (
     <Pressable style={[styles.pill, focused && styles.pillFocused]}>
+      {leadingLabel ? (
+        <Text style={[typography.para2, styles.leadingLabel]}>{leadingLabel}</Text>
+      ) : null}
       <TextInput
         keyboardType="number-pad"
-        onBlur={() => setFocused(false)}
+        onBlur={() => {
+          setFocused(false);
+          onBlur?.();
+        }}
         onChangeText={handleChangeText}
         onFocus={() => setFocused(true)}
         placeholder={placeholder}

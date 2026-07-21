@@ -23,9 +23,11 @@ import { loadStandardSetsForExercise } from '../db/workoutRepository';
 import { getExerciseLabel } from '../domain/catalogue';
 import { getReferenceWeightFromHistory } from '../domain/warmup';
 import { useRestTimer } from '../hooks/useRestTimer';
+import { getUnitLabel, kgToDisplay } from '../domain/units';
 import {
   usePlanStore,
   useProfileStore,
+  useSettingsStore,
   useTodayStore,
 } from '../stores';
 import type { TodaySet } from '../stores/todaySlice';
@@ -138,16 +140,21 @@ export function WorkOutScreen() {
   >({});
 
   const bodyweight = useProfileStore((state) => state.bodyweight);
+  const units = useProfileStore((state) => state.units);
   const restTimerSeconds = useProfileStore((state) => state.restTimerSeconds);
   const warmUpAutoTagEnabled = useProfileStore(
     (state) => state.warmUpAutoTagEnabled,
   );
   const warmUpPercent = useProfileStore((state) => state.warmUpPercent);
+  const perExerciseOverrides = useSettingsStore(
+    (state) => state.perExerciseOverrides,
+  );
   const exerciseIds = usePlanStore((state) => state.exerciseIds);
   const workout = useTodayStore((state) => state.workout);
   const recordSet = useTodayStore((state) => state.recordSet);
   const updateSet = useTodayStore((state) => state.updateSet);
   const deleteSet = useTodayStore((state) => state.deleteSet);
+  const unitLabel = getUnitLabel(units);
 
   const {
     remainingSeconds,
@@ -237,7 +244,21 @@ export function WorkOutScreen() {
     scrollRef.current?.scrollToEnd({ animated: false });
   }, []);
 
-  const hasSets = (workout?.loggedExercises.length ?? 0) > 0;
+  const visibleLoggedExercises = useMemo(
+    () =>
+      workout?.loggedExercises.filter((loggedExercise) =>
+        exerciseIds.includes(loggedExercise.exerciseId),
+      ) ?? [],
+    [exerciseIds, workout],
+  );
+  const visibleWorkout = useMemo(
+    () =>
+      workout == null
+        ? null
+        : { ...workout, loggedExercises: visibleLoggedExercises },
+    [visibleLoggedExercises, workout],
+  );
+  const hasSets = visibleLoggedExercises.length > 0;
   const sheetChromeHidden = addSetSheetVisible || deleteSetSheetVisible;
   const timerBarVisible =
     remainingSeconds != null && totalSeconds != null;
@@ -251,7 +272,8 @@ export function WorkOutScreen() {
       menuButtonRef={menuButtonRef}
       menuOpen={menuVisible}
       onMenuPress={handleMenuPress}
-      workout={workout}
+      units={units}
+      workout={visibleWorkout}
     />
   );
 
@@ -323,7 +345,7 @@ export function WorkOutScreen() {
           style={styles.scroll}
         >
           <View style={styles.session}>
-            {workout?.loggedExercises.map((loggedExercise) => {
+            {visibleLoggedExercises.map((loggedExercise) => {
               let standardSetIndex = 0;
 
               return (
@@ -347,8 +369,9 @@ export function WorkOutScreen() {
                             reps={set.reps}
                             showActions
                             type="set"
+                            unit={unitLabel}
                             warmUp
-                            weight={set.weight}
+                            weight={kgToDisplay(set.weight, units)}
                           />
                         );
                       }
@@ -368,7 +391,8 @@ export function WorkOutScreen() {
                           setIndex={setIndex}
                           showActions
                           type="set"
-                          weight={set.weight}
+                          unit={unitLabel}
+                          weight={kgToDisplay(set.weight, units)}
                         />
                       );
                     })}
@@ -489,8 +513,10 @@ export function WorkOutScreen() {
         onRecord={handleRecord}
         onUpdate={handleUpdate}
         onVisibilityChange={setAddSetSheetVisible}
+        perExerciseOverrides={perExerciseOverrides}
         referenceWeightByExerciseId={referenceWeightByExerciseId}
         todayWorkout={workout}
+        units={units}
         warmUpAutoTagEnabled={warmUpAutoTagEnabled}
         warmUpPercent={warmUpPercent}
       />
@@ -501,6 +527,7 @@ export function WorkOutScreen() {
           void handleConfirmDelete(setId);
         }}
         onVisibilityChange={setDeleteSetSheetVisible}
+        units={units}
       />
     </View>
   );

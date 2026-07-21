@@ -73,6 +73,13 @@ export function heightPartsToInches(parts: HeightParts): number {
   return parts.feet * 12 + parts.inches;
 }
 
+/** Reverse of heightPartsToInches for Settings field hydration. */
+export function inchesToHeightDigits(totalInches: number): string {
+  const feet = Math.floor(totalInches / 12);
+  const inches = clampInches(Math.round(totalInches % 12));
+  return `${feet}${inches}`;
+}
+
 /** Parse optional height input; null when empty or incomplete (feet only). */
 export function parseOptionalHeight(value: string): number | null {
   const parts = parseHeightDigits(extractHeightDigits(value));

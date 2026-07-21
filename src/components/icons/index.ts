@@ -6,6 +6,7 @@ export { CalendarDaysIcon } from './CalendarDaysIcon';
 export { CheckmarkIcon } from './CheckmarkIcon';
 export { CircleCheckIcon } from './CircleCheckIcon';
 export { CirclePlaceholderOnIcon } from './CirclePlaceholderOnIcon';
+export { CircleXIcon } from './CircleXIcon';
 export { ChevronBottomIcon } from './ChevronBottomIcon';
 export { ChevronTopIcon } from './ChevronTopIcon';
 export { ClockIcon } from './ClockIcon';

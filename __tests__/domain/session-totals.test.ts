@@ -41,8 +41,10 @@ describe('session totals domain', () => {
     expect(hasStandardSets(workoutWithStandardSets)).toBe(true);
   });
 
-  it('formats session total with grouped thousands and kg suffix', () => {
+  it('formats session total with grouped thousands and unit suffix', () => {
     expect(formatSessionTotalWeightLabel(5355)).toBe('5,355 kg');
     expect(formatSessionTotalWeightLabel(100)).toBe('100 kg');
+    expect(formatSessionTotalWeightLabel(100, 'lbs')).toBe('220.5 lbs');
+    expect(formatSessionTotalWeightLabel(100, 'stone')).toBe('15.5 st');
   });
 });

@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 import { View } from 'react-native';
+import type { DisplayUnit } from '../data/exercise-catalogue';
 import {
   formatSessionTotalWeightLabel,
   getSessionTotalWeightMoved,
@@ -21,6 +22,7 @@ function formatSessionDateLabel(date: Date = new Date()): string {
 
 interface TodaySessionTitleBarProps {
   workout: WorkoutForSessionTotal | null;
+  units: DisplayUnit;
   menuButtonRef?: RefObject<View | null>;
   onMenuPress?: () => void;
   menuOpen?: boolean;
@@ -28,12 +30,13 @@ interface TodaySessionTitleBarProps {
 
 export function TodaySessionTitleBar({
   workout,
+  units,
   menuButtonRef,
   onMenuPress,
   menuOpen = false,
 }: TodaySessionTitleBarProps) {
   const totalLabel = hasStandardSets(workout)
-    ? formatSessionTotalWeightLabel(getSessionTotalWeightMoved(workout))
+    ? formatSessionTotalWeightLabel(getSessionTotalWeightMoved(workout), units)
     : undefined;
 
   return (

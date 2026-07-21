@@ -1,5 +1,6 @@
 import { getExerciseById } from '../../src/domain/catalogue';
 import {
+  getEffectiveWarmUpPercent,
   getReferenceWeightFromHistory,
   getWarmUpThreshold,
   shouldAutoTagWarmUp,
@@ -189,5 +190,72 @@ describe('warmup domain', () => {
         referenceWeight: 100,
       }),
     ).toBe(true);
+  });
+
+  it('resolves per-exercise warmUpPercent override for non-bodyweight only', () => {
+    expect(bench).toBeDefined();
+    expect(dip).toBeDefined();
+    if (!bench || !dip) {
+      return;
+    }
+
+    expect(
+      getEffectiveWarmUpPercent(bench, 50, {
+        warmUpPercent: 40,
+        sliderRange: null,
+        increment: null,
+      }),
+    ).toBe(40);
+
+    expect(
+      getEffectiveWarmUpPercent(bench, 50, {
+        warmUpPercent: null,
+        sliderRange: null,
+        increment: null,
+      }),
+    ).toBe(50);
+
+    expect(
+      getEffectiveWarmUpPercent(dip, 50, {
+        warmUpPercent: 40,
+        sliderRange: null,
+        increment: null,
+      }),
+    ).toBe(50);
+  });
+
+  it('auto-tags non-bodyweight using per-exercise warmUpPercent override', () => {
+    expect(bench).toBeDefined();
+    if (!bench) {
+      return;
+    }
+
+    const warmUpPercent = getEffectiveWarmUpPercent(bench, 50, {
+      warmUpPercent: 40,
+      sliderRange: null,
+      increment: null,
+    });
+
+    expect(
+      shouldAutoTagWarmUp({
+        exercise: bench,
+        weight: 40,
+        bodyweight: 75,
+        warmUpAutoTagEnabled: true,
+        warmUpPercent,
+        referenceWeight: 100,
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldAutoTagWarmUp({
+        exercise: bench,
+        weight: 45,
+        bodyweight: 75,
+        warmUpAutoTagEnabled: true,
+        warmUpPercent,
+        referenceWeight: 100,
+      }),
+    ).toBe(false);
   });
 });
