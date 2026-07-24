@@ -3,13 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton } from '../components/IconButton';
-import {
-  RemoveExerciseSheet,
-  type RemoveExerciseSheetHandle,
-} from '../components/RemoveExerciseSheet';
 import { BackIcon } from '../components/icons/BackIcon';
 import { getDatabase } from '../db/client';
-import { getExerciseById } from '../domain/catalogue';
 import type { MainStackParamList } from '../navigation/types';
 import { usePlanStore } from '../stores';
 import { colors, spacing } from '../theme/tokens';
@@ -24,7 +19,6 @@ type Props = NativeStackScreenProps<MainStackParamList, 'AddExercises'>;
 
 export function AddExercisesScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const removeSheetRef = useRef<RemoveExerciseSheetHandle>(null);
   const exerciseIds = usePlanStore((state) => state.exerciseIds);
   const updatePlan = usePlanStore((state) => state.updatePlan);
   const exerciseIdsRef = useRef(exerciseIds);
@@ -37,31 +31,13 @@ export function AddExercisesScreen({ navigation }: Props) {
         if (currentIds.length <= 1) {
           return;
         }
-        const exercise = getExerciseById(exerciseId);
-        if (exercise == null) {
-          return;
-        }
-        removeSheetRef.current?.present({
-          id: exercise.id,
-          name: exercise.name,
-        });
+        const nextIds = currentIds.filter((id) => id !== exerciseId);
+        exerciseIdsRef.current = nextIds;
+        void updatePlan(getDatabase(), nextIds);
         return;
       }
 
       const nextIds = [...currentIds, exerciseId];
-      exerciseIdsRef.current = nextIds;
-      void updatePlan(getDatabase(), nextIds);
-    },
-    [updatePlan],
-  );
-
-  const handleRemoveConfirm = useCallback(
-    (exerciseId: string) => {
-      const currentIds = exerciseIdsRef.current;
-      if (currentIds.length <= 1) {
-        return;
-      }
-      const nextIds = currentIds.filter((id) => id !== exerciseId);
       exerciseIdsRef.current = nextIds;
       void updatePlan(getDatabase(), nextIds);
     },
@@ -90,11 +66,6 @@ export function AddExercisesScreen({ navigation }: Props) {
           title="exercises"
         />
       </View>
-
-      <RemoveExerciseSheet
-        ref={removeSheetRef}
-        onConfirm={handleRemoveConfirm}
-      />
     </View>
   );
 }

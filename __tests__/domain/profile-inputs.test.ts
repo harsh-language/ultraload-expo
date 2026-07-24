@@ -1,7 +1,9 @@
 import {
   AGE_MAX,
   BODYWEIGHT_MAX,
+  isValidAgeInput,
   isValidBodyweight,
+  parseAgeForSave,
   parseOptionalInt,
   sanitizeAge,
   sanitizeBodyweight,
@@ -73,6 +75,32 @@ describe('profile-inputs', () => {
     it('returns null for empty input', () => {
       expect(parseOptionalInt('')).toBeNull();
       expect(parseOptionalInt('   ')).toBeNull();
+    });
+  });
+
+  describe('parseAgeForSave', () => {
+    it('stores empty as 0', () => {
+      expect(parseAgeForSave('')).toBe(0);
+      expect(parseAgeForSave('   ')).toBe(0);
+    });
+
+    it('parses age values', () => {
+      expect(parseAgeForSave('28')).toBe(28);
+    });
+  });
+
+  describe('isValidAgeInput', () => {
+    it('allows empty', () => {
+      expect(isValidAgeInput('')).toBe(true);
+    });
+
+    it('allows in-range ages', () => {
+      expect(isValidAgeInput('0')).toBe(true);
+      expect(isValidAgeInput(String(AGE_MAX))).toBe(true);
+    });
+
+    it('rejects out of range', () => {
+      expect(isValidAgeInput(String(AGE_MAX + 1))).toBe(false);
     });
   });
 

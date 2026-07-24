@@ -177,3 +177,50 @@ Source: `docs/blueprint.md`, `src/screens/WorkOutScreen.tsx`
 Bad example: Starting the timer automatically after every recorded set.
 Good example: Separate `start timer` / `start rest timer` buttons that call
 `startTimer(restTimerSeconds)`.
+
+## Settings
+
+Canonical homes:
+
+- `src/screens/SettingsScreen.tsx`
+- `src/screens/AddExercisesScreen.tsx`
+- `src/components/InputComboUnit.tsx`
+- `src/components/InputHeightField.tsx`
+- `src/domain/profile-inputs.ts`
+- `src/domain/height-input.ts`
+- `src/stores/planSlice.ts`
+
+## rule/settings-profile-saves-valid-drafts-immediately
+Status: proposed
+Scope: Settings profile fields (body weight, height, age)
+Rule: Persist a profile field as soon as the draft is valid. Body weight is
+required and must stay in range; empty drafts do not overwrite the last saved
+value. Height and age may be cleared; empty saves as `0` (unused / future
+wiring) and displays blank. Incomplete height (feet only) is not saved; blur
+reverts to the last saved value. Tap outside / drag dismisses the keyboard.
+Why: Leaving Settings via back should keep what the user already typed when it
+was valid, without a separate save control.
+Exceptions: Per-exercise range min/max still persist on blur only.
+Source: `src/screens/SettingsScreen.tsx`, `parseAgeForSave`, `parseHeightForSave`
+Bad example: Saving profile fields only on blur so a back press drops a valid
+draft, or forbidding empty height/age.
+Good example: `handleBodyweightChange` / `handleHeightChange` / `handleAgeChange`
+write through when valid; clear height/age → `0`.
+
+## rule/plan-remove-is-reversible-hide-without-confirm
+Status: accepted
+Scope: Settings exercise tags and Add Exercises toggles
+Rule: Removing an exercise from the workout plan only updates the plan list.
+Logged sets are never deleted. The exercise disappears from pickers and from
+today’s / history visibility filters until re-added; re-adding restores those
+records. Do not show a confirmation sheet — removal is instant and reversible.
+Keep the last-plan-exercise guard (cannot remove the final exercise).
+Why: The consequence is temporary hide, not permanent data loss, so a confirm
+step adds ceremony without protecting anything.
+Exceptions: True destructive data wipe (dev reset / future export-delete) stays
+behind its own confirmations.
+Source: `docs/blueprint.md` FL8/BR3 (updated 2026-07-22),
+`src/screens/SettingsScreen.tsx`, `src/screens/AddExercisesScreen.tsx`,
+`WorkOutScreen` plan-filtered `visibleLoggedExercises`
+Bad example: Confirm bottom sheet or deleting logged rows when the plan changes.
+Good example: `handleRemove` / Add Exercises toggle-off call `updatePlan` only.

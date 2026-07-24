@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Pressable,
   Text,
@@ -34,14 +34,24 @@ export function InputComboUnit({
   onBlur,
 }: InputComboUnitProps) {
   const [focused, setFocused] = useState(false);
+  const inputRef = useRef<TextInput>(null);
   const hasValue = value.trim().length > 0;
 
   return (
-    <Pressable style={[styles.pill, focused && styles.pillFocused]}>
+    <Pressable
+      accessibilityRole="none"
+      onPress={() => {
+        inputRef.current?.focus();
+      }}
+      style={[styles.pill, focused && styles.pillFocused]}
+    >
       {leadingLabel ? (
-        <Text style={[typography.para2, styles.leadingLabel]}>{leadingLabel}</Text>
+        <Text pointerEvents="none" style={[typography.para2, styles.leadingLabel]}>
+          {leadingLabel}
+        </Text>
       ) : null}
       <TextInput
+        ref={inputRef}
         autoCapitalize={autoCapitalize}
         autoFocus={autoFocus}
         keyboardType={keyboardType}
@@ -62,6 +72,7 @@ export function InputComboUnit({
       />
       {unit ? (
         <Text
+          pointerEvents="none"
           style={[
             typography.para2,
             styles.unit,

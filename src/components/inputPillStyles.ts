@@ -1,6 +1,15 @@
 import { StyleSheet } from 'react-native';
-import { colors, radii, spacing } from '../theme/tokens';
+import { colors, radii, spacing, tokens } from '../theme/tokens';
 import { textCase } from '../theme/textCase';
+
+/**
+ * One shared line box for label / value / unit.
+ * Figma `input-text` pairs Para-1 (M-H 22) with Para-2 (M-P 25); that
+ * mismatch lifts the filled value ~2px. Use M-P for the whole row so ink
+ * centers with the labels. Explicit input height also stops iOS TextInput
+ * from using a taller intrinsic box that top-aligns glyphs.
+ */
+const PILL_LINE_HEIGHT = tokens.font.height['M-P'];
 
 export const inputPillStyles = StyleSheet.create({
   pill: {
@@ -20,12 +29,17 @@ export const inputPillStyles = StyleSheet.create({
   leadingLabel: {
     color: colors['content-3'],
     flexShrink: 0,
+    lineHeight: PILL_LINE_HEIGHT,
     ...textCase.lower,
   },
   input: {
     flex: 1,
+    minWidth: 0,
+    height: PILL_LINE_HEIGHT,
+    lineHeight: PILL_LINE_HEIGHT,
     color: colors['content-3'],
-    paddingVertical: 0,
+    padding: 0,
+    margin: 0,
     textAlignVertical: 'center',
     includeFontPadding: false,
     ...textCase.none,
@@ -35,6 +49,8 @@ export const inputPillStyles = StyleSheet.create({
   },
   unit: {
     color: colors['content-2'],
+    flexShrink: 0,
+    lineHeight: PILL_LINE_HEIGHT,
     ...textCase.lower,
   },
   unitFocused: {

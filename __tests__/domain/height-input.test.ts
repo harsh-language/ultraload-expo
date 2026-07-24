@@ -1,6 +1,7 @@
 import {
   formatHeightDigits,
   inchesToHeightDigits,
+  parseHeightForSave,
   parseOptionalHeight,
 } from '../../src/domain/height-input';
 
@@ -15,5 +16,11 @@ describe('height input', () => {
     expect(parseOptionalHeight('')).toBeNull();
     expect(parseOptionalHeight(`5'`)).toBeNull();
     expect(parseOptionalHeight(`5' 10"`)).toBe(70);
+  });
+
+  it('parseHeightForSave clears empty to 0 and skips incomplete', () => {
+    expect(parseHeightForSave('')).toBe(0);
+    expect(parseHeightForSave(`5'`)).toBeUndefined();
+    expect(parseHeightForSave(`5' 10"`)).toBe(70);
   });
 });

@@ -281,13 +281,12 @@ ultraload/
 **Files:**
 - `src/screens/SettingsScreen.tsx` (SCR14)
 - `src/screens/AddExercisesScreen.tsx` (SCR15)
-- `src/components/RemoveExerciseSheet.tsx` — confirmation bottom sheet (FL8)
 - `src/domain/units.ts`
 - `src/stores/settingsSlice.ts`, `src/stores/profileSlice.ts`
 
 **Approach:**
 1. Settings hub sections per blueprint §4.
-3. Plan toggle off → confirmation bottom sheet; toggle on → immediate.
+3. Plan remove/toggle-off is instant hide (FL8); past sets kept (BR3); no confirm sheet.
 4. Per-exercise overrides (BR29).
 5. Unit toggle kg/lbs/stone uniform display (BR17).
 

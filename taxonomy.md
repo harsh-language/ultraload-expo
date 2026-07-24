@@ -41,7 +41,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | History — chart | Progress trends with exercise / muscle-group filters | Not built |
 | Session detail | Review (and edit) a past day's sets | Not built |
 | Settings | Profile, plan, presets, units, and per-exercise overrides | Built — `SettingsScreen` |
-| Add exercises | Add/remove exercises from the workout plan | Built — `AddExercisesScreen` + `RemoveExerciseSheet` |
+| Add exercises | Add/remove exercises from the workout plan | Built — `AddExercisesScreen` (instant toggle; plan hide only, past sets kept) |
 
 ## Flows and actions
 
@@ -80,7 +80,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Onboarding steps | `BodyweightStep`, `ExercisePickerStep`, `RestTimerStep`, `WarmUpStep` |
 | Exercise picker list | `src/screens/onboarding/ExercisePicker.tsx` |
 | Work Out | `src/screens/WorkOutScreen.tsx` |
-| Settings and plan editing | `src/screens/SettingsScreen.tsx`, `AddExercisesScreen.tsx`, `src/components/RemoveExerciseSheet.tsx` |
+| Settings and plan editing | `src/screens/SettingsScreen.tsx`, `AddExercisesScreen.tsx` |
 | Add Set sheet | `src/components/AddSetSheet.tsx` |
 | Log list UI | `LogRow.tsx`, `ScrollFadeView.tsx` |
 | Onboarding inputs | `InputComboUnit`, `InputHeightField`, `InputOption`, `InputSlider`, `InputSliderCaption`, `InputToggle`, `Accordion`, `SectionDivider` |

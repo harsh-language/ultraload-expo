@@ -32,6 +32,8 @@ export interface ScrollFadeViewProps extends ScrollViewProps {
   alwaysShowBottomFade?: boolean;
   /** Show top fade even when scrolled to top (e.g. workout title overlay). */
   alwaysShowTopFade?: boolean;
+  /** When false, never render the top fade (e.g. chrome title bar replaces it). Default true. */
+  topFadeEnabled?: boolean;
 }
 
 export const ScrollFadeView = forwardRef<ScrollView, ScrollFadeViewProps>(
@@ -44,6 +46,7 @@ export const ScrollFadeView = forwardRef<ScrollView, ScrollFadeViewProps>(
       bottomOffset = 0,
       alwaysShowBottomFade = false,
       alwaysShowTopFade = false,
+      topFadeEnabled = true,
       onScroll,
       onLayout,
       onContentSizeChange,
@@ -77,7 +80,8 @@ export const ScrollFadeView = forwardRef<ScrollView, ScrollFadeViewProps>(
   const hasOverflow =
     viewportHeight > 0 && contentHeight > viewportHeight + 1;
   const showBottomFade = alwaysShowBottomFade || (hasOverflow && showBottom);
-  const showTopFade = alwaysShowTopFade || (hasOverflow && showTop);
+  const showTopFade =
+    topFadeEnabled && (alwaysShowTopFade || (hasOverflow && showTop));
 
   useEffect(() => {
     topOpacity.value = withTiming(showTopFade ? 1 : 0, {

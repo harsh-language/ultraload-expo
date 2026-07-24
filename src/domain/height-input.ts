@@ -90,6 +90,21 @@ export function parseOptionalHeight(value: string): number | null {
   return heightPartsToInches(parts);
 }
 
+/**
+ * Settings height for persistence.
+ * - Empty → `0` (cleared / unused; future wiring)
+ * - Complete feet+inches → total inches
+ * - Incomplete (e.g. feet only) → `undefined` (not ready to save)
+ */
+export function parseHeightForSave(value: string): number | undefined {
+  const digits = extractHeightDigits(value);
+  if (!digits) {
+    return 0;
+  }
+  const inches = parseOptionalHeight(value);
+  return inches ?? undefined;
+}
+
 /** Apply edit relative to previous digits (credit-card style over formatted display). */
 export function applyHeightDigitChange(
   previousDigits: string,

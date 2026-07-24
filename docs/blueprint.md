@@ -55,7 +55,7 @@ UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sess
 |----|---------|---------|
 | F1 | Notepad set logging | Add/edit/delete sets via a bottom sheet; sets group under their exercise automatically. No "start workout" — first set of the day creates the record (BR1). |
 | F2 | First-launch onboarding | Splash → bodyweight (required) → exercise picker (≥1) → rest timer preset → warm-up preset → Work Out. Replayed on reset. |
-| F3 | Catalogue + workout plan | 22 built-in exercises (E3); flat ordered plan chosen at onboarding, editable in Settings. Only plan exercises are visible (BR2); removal hides history until re-enabled (BR3), with confirmation bottom sheet (FL8). |
+| F3 | Catalogue + workout plan | 22 built-in exercises (E3); flat ordered plan chosen at onboarding, editable in Settings. Only plan exercises are visible (BR2); removal hides history until re-enabled (BR3) — instant, no confirmation (FL8). |
 | F4 | Warm-up auto-tag + override | Sets at weight ≤ history-derived threshold auto-tag as warm-up (BR4, BR15); toggle always visible; manual override applies to one set only (BR5). |
 | F5 | Rest timer | Optional, user-triggered, global range 3 s – 5 min (BR20); background notification when app is backgrounded. |
 | F6 | History list | Per-day rows: day total weight + day % change, or "—" when no comparison (BR7, BR9, BR10). |
@@ -119,7 +119,7 @@ Tap a day → session detail (read-only, grouped exercise → sets) → top-righ
 Work Out home → options menu → History → Chart view → default Y = session total, 10 latest visible. Filter by exercise (Y switches to that exercise) or by muscle group (weighted calc, BR13). Time range month/year/all-time; horizontal scroll along timeline.
 
 ### FL8 — Edit workout plan (F3)
-Settings → Edit workout plan → add-exercises sub-screen → toggle exercise **off** → **confirmation bottom sheet** (same pattern as set delete): *"This exercise will be hidden from your workout and History until you add it back. Your past sets are kept."* → Confirm hides exercise + history (BR3); Cancel leaves plan unchanged. Toggle **on** re-enables immediately (no confirmation).
+Settings → Edit workout plan → add-exercises sub-screen (or Settings exercise tags) → toggle exercise **off** / remove → **instant** hide from pickers, Work Out, and History (BR3). Past sets stay in SQLite; re-adding the exercise restores visibility. No confirmation sheet — removal is reversible hide, not data loss. Cannot remove the last remaining plan exercise. Toggle **on** / add re-enables immediately.
 
 ### FL9 — Export data (F12)
 Settings → Export → overlay alert → JSON snapshot to share sheet (Save to Files, AirDrop, etc.).
@@ -409,7 +409,7 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 - **Warm-up tagging:** auto per BR4/BR15 (weight ≤ history-derived threshold); manual override one set only.
 - **Rest timer:** user-triggered only; range 3 s–5 min; background → notification (iOS Live Activity-style; Android equivalent if available).
 - **Chart:** filter by exercise / muscle group; switch time range; horizontal scroll along timeline.
-- **Remove exercise from plan:** toggle off on add-exercises screen → confirmation bottom sheet → Confirm hides (sets kept) / Cancel unchanged.
+- **Remove exercise from plan:** toggle off on add-exercises (or remove on Settings) → instant hide; sets kept; re-add restores visibility (FL8, BR3). No confirmation.
 - **Android:** match Figma on both platforms; no long-press or custom gestures in v1.
 
 ## 14. Edge Cases & Failure States
@@ -421,7 +421,7 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 | Standard set after a warm-up-only prior session | Cannot compare against warm-up sets; "—" if nothing valid (BR11) |
 | Nothing valid to compare | "—" (BR10) |
 | Editing a past day | Recalculate all downstream % changes (BR12) |
-| Removed from **workout plan** (in app) | Hidden from lists/filters/pickers/History after confirm bottom sheet (FL8); re-enable restores history (BR3). Catalogue row unchanged. |
+| Removed from **workout plan** (in app) | Instant hide from lists/filters/pickers/History (FL8); logged sets kept; re-enable restores history (BR3). Catalogue row unchanged. No confirmation. |
 | Catalogue entry **deprecated** | Excluded from onboarding + add-exercises picker (BR30); existing plan/history still resolves name and metadata |
 | Catalogue id **missing** but in history | Sets shown under fallback label; read-only; excluded from new logging and chart filters (BR31) |
 | Cancel in-progress set | Bottom sheet closes, nothing recorded |
@@ -564,13 +564,14 @@ Covers every SQLite-persisted field in §7. Weights always in kg (external load,
 
 ## Outstanding Questions
 
-All product judgments resolved (2026-06-22 user confirmation):
+All product judgments resolved (2026-06-22 user confirmation), with later
+overrides applied in place when production decisions change the interaction:
 
 | Topic | Decision |
 |-------|----------|
 | Day % vs day total | Keep simple equal-weight average (BR9) |
 | Volume metric | No extra disclaimer in spec (user knows what they measure) |
-| Exercise removal | Confirmation **bottom sheet** before hiding; past sets kept |
+| Exercise removal | **Instant hide** (no confirmation); past sets kept; re-add restores visibility (FL8, BR3) — updated 2026-07-22 |
 | Onboarding vs friction | Keep 4 steps; "no friction" = daily logging, not first-time setup |
 | Catalogue maintainability | Single editable seed-data file (BR28); ids immutable (BR29); retire via `deprecated: true` (BR30); blueprint table is v1 snapshot only |
 

@@ -14,6 +14,26 @@ Load when work changes the user's task, default, consequence, navigation,
 - Non-goals: workout start flows, training splits, extra configuration, and UI
   that asks the user to manage state the product can derive
 
+## rule/later-product-decisions-update-the-blueprint
+Status: accepted
+Scope: Any production-stage product decision that changes flow, consequence,
+permissions, or data semantics relative to `docs/blueprint.md`
+Rule: When Pablo prioritizes or decides something during build that conflicts
+with an earlier blueprint judgment, treat the **later decision as source of
+truth**. Update `docs/blueprint.md` in the same change (or immediately after)
+so IDs (FL*, BR*, F*, SCR*) match shipped intent. Do not leave agents following
+stale blueprint text. Local `docs/product-design/` rules may record the
+decision; the blueprint must still be rewritten so the two stay aligned.
+Why: The blueprint is the living product contract for UltraLoad, not a frozen
+archive. Prior blueprint rows lose to explicit later decisions.
+Exceptions: Purely mechanical typo fixes; speculative ideas that were not
+decided for production.
+Source: User decision 2026-07-22 (plan-remove confirm removed; meta-rule)
+Bad example: Shipping instant plan-remove while FL8 still requires a confirm
+sheet, and only logging a coverage gap forever.
+Good example: Rewrite FL8 / F3 / edge-case rows when confirm is dropped; accept
+the matching product-design rule.
+
 ## rule/notepad-first-set-creates-day
 Status: accepted
 Scope: Work Out home and any future logging entry point

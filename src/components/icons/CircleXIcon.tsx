@@ -1,5 +1,5 @@
-/** Figma: circle-x → Central `IconCircleX` (square-outlined, stroke 2) */
-import { IconCircleX } from 'central-icons/IconCircleX';
+/** Figma: circle-x (filled) → Central `IconCircleX` */
+import { IconCircleX } from 'central-icons-filled/IconCircleX';
 import { createIcon } from './createIcon';
 
 export const CircleXIcon = createIcon(IconCircleX);

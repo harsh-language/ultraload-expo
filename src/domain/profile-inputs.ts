@@ -74,6 +74,26 @@ export function parseOptionalInt(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/**
+ * Settings / profile age for persistence.
+ * Empty is valid and stores `0` (unused; future wiring).
+ */
+export function parseAgeForSave(value: string): number {
+  return parseOptionalInt(value) ?? 0;
+}
+
+/** Empty age is valid; non-empty must parse in range after sanitize. */
+export function isValidAgeInput(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return true;
+  }
+  const parsed = Number.parseInt(trimmed, 10);
+  return (
+    Number.isFinite(parsed) && parsed >= AGE_MIN && parsed <= AGE_MAX
+  );
+}
+
 export function sanitizeName(raw: string): string {
   return raw.replace(/[^a-zA-Z0-9 ]/g, '').toLowerCase();
 }

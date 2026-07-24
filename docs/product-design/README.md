@@ -18,5 +18,7 @@ Local product decisions for UI work. Process lives in the global skill
 1. Load skill `harsh-product-design`
 2. Read this tree for product judgment
 3. Route visual mechanics to `.cursor/rules/*.mdc` via `references/routing.md`
+4. If a later production decision conflicts with `docs/blueprint.md`, update the
+   blueprint — see `rule/later-product-decisions-update-the-blueprint`
 
 Do not put an invokable `SKILL.md` here.

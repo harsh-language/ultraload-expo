@@ -50,6 +50,7 @@ Only tune via props when layout requires it:
 | `bottomFadeHeight` | Bottom band only — overrides `fadeHeight` |
 | `topOffset` | Push top fade below pinned header |
 | `bottomOffset` | Push bottom fade above pinned footer |
+| `topFadeEnabled` | Set `false` when pinned chrome replaces the top fade (e.g. Settings title bar) |
 
 ## Layering
 

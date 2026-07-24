@@ -45,6 +45,11 @@ for human approval.
 
 Local product decisions live in [`docs/product-design/`](docs/product-design/).
 
+**Blueprint precedence:** Later production decisions override earlier
+`docs/blueprint.md` rows. When a decision changes flow, consequence, or data
+semantics, rewrite the blueprint in the same change so it matches shipped
+intent (`rule/later-product-decisions-update-the-blueprint`).
+
 ## Build stage
 
 U3 complete — Settings supports profile, plan editing, units, presets, and per-exercise overrides.

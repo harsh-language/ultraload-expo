@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   Text,
@@ -32,6 +32,7 @@ export function InputHeightField({
   onBlur,
 }: InputHeightFieldProps) {
   const [focused, setFocused] = useState(false);
+  const inputRef = useRef<TextInput>(null);
   const [digits, setDigits] = useState(() => extractHeightDigits(value));
   const displayValue = formatHeightDigits(digits);
   const hasValue = digits.length > 0;
@@ -50,11 +51,20 @@ export function InputHeightField({
   );
 
   return (
-    <Pressable style={[styles.pill, focused && styles.pillFocused]}>
+    <Pressable
+      accessibilityRole="none"
+      onPress={() => {
+        inputRef.current?.focus();
+      }}
+      style={[styles.pill, focused && styles.pillFocused]}
+    >
       {leadingLabel ? (
-        <Text style={[typography.para2, styles.leadingLabel]}>{leadingLabel}</Text>
+        <Text pointerEvents="none" style={[typography.para2, styles.leadingLabel]}>
+          {leadingLabel}
+        </Text>
       ) : null}
       <TextInput
+        ref={inputRef}
         keyboardType="number-pad"
         onBlur={() => {
           setFocused(false);
@@ -73,6 +83,7 @@ export function InputHeightField({
       />
       {unit ? (
         <Text
+          pointerEvents="none"
           style={[
             typography.para2,
             styles.unit,

@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
+  Keyboard,
   StyleSheet,
   Text,
   View,
@@ -14,10 +16,6 @@ import { InputHeightField } from '../components/InputHeightField';
 import { InputSlider } from '../components/InputSlider';
 import { InputTag } from '../components/InputTag';
 import { InputToggle } from '../components/InputToggle';
-import {
-  RemoveExerciseSheet,
-  type RemoveExerciseSheetHandle,
-} from '../components/RemoveExerciseSheet';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { SectionDivider } from '../components/SectionDivider';
@@ -40,14 +38,14 @@ import {
 import {
   formatHeightDigits,
   inchesToHeightDigits,
-  parseOptionalHeight,
+  parseHeightForSave,
 } from '../domain/height-input';
 import {
   BODYWEIGHT_MAX,
   BODYWEIGHT_MIN,
+  isValidBodyweight,
+  parseAgeForSave,
   sanitizeAge,
-  sanitizeName,
-  parseOptionalInt,
 } from '../domain/profile-inputs';
 import {
   REST_TIMER_MAX_SECONDS,
@@ -68,9 +66,16 @@ import {
   useProfileStore,
   useSettingsStore,
 } from '../stores';
-import { colors, spacing } from '../theme/tokens';
+import { shadowBelow } from '../theme/shadow';
+import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+
+/** Figma session-title-bar fill — vertical content-trans-light → bg-trans-1 over bg-1 */
+const TITLE_BAR_GRADIENT = [
+  colors['content-trans-light'],
+  colors['bg-trans-1'],
+] as const;
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Settings'>;
 
@@ -108,12 +113,17 @@ function bodyweightDisplayString(
   return formatDisplayWeight(kgToDisplay(bodyweightKg, units));
 }
 
+/** Empty / 0 age is cleared — optional for future wiring. */
 function ageDisplayString(age: number | null): string {
-  return age == null ? '' : String(age);
+  if (age == null || age === 0) {
+    return '';
+  }
+  return String(age);
 }
 
+/** Empty / 0 height is cleared — optional for future wiring. */
 function heightDisplayString(heightInches: number | null): string {
-  if (heightInches == null) {
+  if (heightInches == null || heightInches === 0) {
     return '';
   }
   return formatHeightDigits(inchesToHeightDigits(heightInches));
@@ -121,10 +131,8 @@ function heightDisplayString(heightInches: number | null): string {
 
 export function SettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const removeSheetRef = useRef<RemoveExerciseSheetHandle>(null);
 
   const bodyweightKg = useProfileStore((s) => s.bodyweight);
-  const nameValue = useProfileStore((s) => s.name);
   const heightInches = useProfileStore((s) => s.height);
   const ageValue = useProfileStore((s) => s.age);
   const units = useProfileStore((s) => s.units);
@@ -153,7 +161,6 @@ export function SettingsScreen({ navigation }: Props) {
     heightDisplayString(heightInches),
   );
   const [ageText, setAgeText] = useState(() => ageDisplayString(ageValue));
-  const [nameText, setNameText] = useState(nameValue ?? '');
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(
     null,
   );
@@ -172,10 +179,6 @@ export function SettingsScreen({ navigation }: Props) {
   useEffect(() => {
     setAgeText(ageDisplayString(ageValue));
   }, [ageValue]);
-
-  useEffect(() => {
-    setNameText(nameValue ?? '');
-  }, [nameValue]);
 
   useEffect(() => {
     if (commonIncrement != null) {
@@ -199,6 +202,10 @@ export function SettingsScreen({ navigation }: Props) {
   );
 
   const persistBodyweight = useCallback(async () => {
+    if (!isValidBodyweight(bodyweightText)) {
+      setBodyweightText(bodyweightDisplayString(bodyweightKg, units));
+      return;
+    }
     const displayValue = Number.parseFloat(bodyweightText);
     const kg = displayToKg(displayValue, units);
     if (
@@ -213,22 +220,61 @@ export function SettingsScreen({ navigation }: Props) {
   }, [bodyweightKg, bodyweightText, units, updateProfile]);
 
   const persistHeight = useCallback(async () => {
-    await updateProfile(getDatabase(), {
-      height: parseOptionalHeight(heightText),
-    });
-  }, [heightText, updateProfile]);
+    const next = parseHeightForSave(heightText);
+    if (next === undefined) {
+      setHeightText(heightDisplayString(heightInches));
+      return;
+    }
+    await updateProfile(getDatabase(), { height: next });
+  }, [heightInches, heightText, updateProfile]);
 
   const persistAge = useCallback(async () => {
     await updateProfile(getDatabase(), {
-      age: parseOptionalInt(ageText),
+      age: parseAgeForSave(ageText),
     });
   }, [ageText, updateProfile]);
 
-  const persistName = useCallback(async () => {
-    await updateProfile(getDatabase(), {
-      name: nameText.trim() || null,
-    });
-  }, [nameText, updateProfile]);
+  const handleBodyweightChange = useCallback(
+    (value: string) => {
+      const next = sanitizeDisplayWeightInput(value);
+      setBodyweightText(next);
+      if (!isValidBodyweight(next)) {
+        return;
+      }
+      const displayValue = Number.parseFloat(next);
+      const kg = displayToKg(displayValue, units);
+      if (
+        !Number.isFinite(kg) ||
+        kg < BODYWEIGHT_MIN ||
+        kg > BODYWEIGHT_MAX
+      ) {
+        return;
+      }
+      void updateProfile(getDatabase(), { bodyweight: kg });
+    },
+    [units, updateProfile],
+  );
+
+  const handleHeightChange = useCallback(
+    (value: string) => {
+      setHeightText(value);
+      const next = parseHeightForSave(value);
+      if (next === undefined) {
+        return;
+      }
+      void updateProfile(getDatabase(), { height: next });
+    },
+    [updateProfile],
+  );
+
+  const handleAgeChange = useCallback(
+    (value: string) => {
+      const next = sanitizeAge(value);
+      setAgeText(next);
+      void updateProfile(getDatabase(), { age: parseAgeForSave(next) });
+    },
+    [updateProfile],
+  );
 
   const handleUnitsChange = useCallback(
     async (next: DisplayUnit) => {
@@ -255,25 +301,11 @@ export function SettingsScreen({ navigation }: Props) {
     [bodyweightKg, bodyweightText, units, updateProfile],
   );
 
-  const handleRemoveRequest = useCallback(
-    (exerciseId: string) => {
+  const handleRemove = useCallback(
+    async (exerciseId: string) => {
       if (exerciseIds.length <= 1) {
         return;
       }
-      const exercise = getExerciseById(exerciseId);
-      if (exercise == null) {
-        return;
-      }
-      removeSheetRef.current?.present({
-        id: exercise.id,
-        name: exercise.name,
-      });
-    },
-    [exerciseIds.length],
-  );
-
-  const handleRemoveConfirm = useCallback(
-    async (exerciseId: string) => {
       const nextIds = exerciseIds.filter((id) => id !== exerciseId);
       await updatePlan(getDatabase(), nextIds);
       if (expandedExerciseId === exerciseId) {
@@ -352,15 +384,24 @@ export function SettingsScreen({ navigation }: Props) {
     incrementSliderIndex >= 0 ? incrementSliderIndex : 1;
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + spacing['s-8'] }]}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.titleBar}>
+        <LinearGradient
+          colors={[...TITLE_BAR_GRADIENT]}
+          end={{ x: 0.5, y: 1 }}
+          pointerEvents="none"
+          start={{ x: 0.5, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
         <IconButton
           accessibilityLabel="back"
           onPress={() => navigation.goBack()}
         >
           <BackIcon />
         </IconButton>
-        <Text style={styles.title}>settings</Text>
+        <Pressable onPress={Keyboard.dismiss} style={styles.titlePress}>
+          <Text style={styles.title}>settings</Text>
+        </Pressable>
       </View>
 
       <ScrollFadeView
@@ -371,107 +412,97 @@ export function SettingsScreen({ navigation }: Props) {
               Math.max(insets.bottom, spacing['s-8']) + spacing['s-8'],
           },
         ]}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
+        topFadeEnabled={false}
       >
+        <Pressable onPress={Keyboard.dismiss} style={styles.dismissArea}>
         <View style={styles.intro}>
           <Text style={styles.introTitle}>any updates made here will</Text>
           <View style={styles.introRow}>
             <CircleXIcon color={colors['content-2']} />
-            <Text style={styles.introLine}>not affect past session</Text>
+            <Text style={styles.introLine}>not affect past sessions</Text>
           </View>
           <View style={styles.introRow}>
-            <CircleCheckIcon color={colors['content-1']} />
-            <Text style={styles.introLine}>only affect future session</Text>
+            <CircleCheckIcon color={colors['content-2']} />
+            <Text style={styles.introLine}>only affect future sessions</Text>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <SectionDivider label="profile" />
-          <View style={styles.stackGap8}>
-            <InputComboUnit
-              keyboardType="decimal-pad"
-              leadingLabel="body weight :"
-              onBlur={persistBodyweight}
-              onChangeText={(value) =>
-                setBodyweightText(sanitizeDisplayWeightInput(value))
-              }
-              placeholder="required"
-              unit={getUnitLabel(units)}
-              value={bodyweightText}
-            />
-            <InputHeightField
-              leadingLabel="height :"
-              onBlur={persistHeight}
-              onChangeText={setHeightText}
-              value={heightText}
-            />
-            <InputComboUnit
-              keyboardType="number-pad"
-              leadingLabel="age :"
-              onBlur={persistAge}
-              onChangeText={(value) => setAgeText(sanitizeAge(value))}
-              placeholder="optional"
-              unit="years"
-              value={ageText}
-            />
-            <InputComboUnit
-              autoCapitalize="none"
-              leadingLabel="name :"
-              onBlur={persistName}
-              onChangeText={(value) => setNameText(sanitizeName(value))}
-              placeholder="optional"
-              unit=""
-              value={nameText}
-            />
-          </View>
+        <SectionDivider label="profile" />
+        <View style={styles.stackGap8}>
+          <InputComboUnit
+            keyboardType="decimal-pad"
+            leadingLabel="body weight :"
+            onBlur={persistBodyweight}
+            onChangeText={handleBodyweightChange}
+            unit={getUnitLabel(units)}
+            value={bodyweightText}
+          />
+          <InputHeightField
+            leadingLabel="height :"
+            onBlur={persistHeight}
+            onChangeText={handleHeightChange}
+            placeholder=""
+            value={heightText}
+          />
+          <InputComboUnit
+            keyboardType="number-pad"
+            leadingLabel="age :"
+            onBlur={persistAge}
+            onChangeText={handleAgeChange}
+            unit="years"
+            value={ageText}
+          />
         </View>
 
-        <View style={styles.section}>
-          <SectionDivider label="exercises" />
-          <View style={styles.stackGap5}>
-            {planExercises.map((exercise) => {
-              const expanded = expandedExerciseId === exercise.id;
-              const override = perExerciseOverrides[exercise.id];
+        <SectionDivider label="exercises" />
+        <View style={styles.stackGap5}>
+          {planExercises.map((exercise) => {
+            const expanded = expandedExerciseId === exercise.id;
+            const override = perExerciseOverrides[exercise.id];
 
-              return (
-                <View key={exercise.id} style={styles.exerciseBlock}>
-                  <InputTag
-                    label={exercise.name}
-                    onPress={() =>
-                      setExpandedExerciseId(expanded ? null : exercise.id)
+            return (
+              <View key={exercise.id} style={styles.exerciseBlock}>
+                <InputTag
+                  label={exercise.name}
+                  onPress={() =>
+                    setExpandedExerciseId(expanded ? null : exercise.id)
+                  }
+                  onRemove={() => {
+                    void handleRemove(exercise.id);
+                  }}
+                  removeDisabled={exerciseIds.length <= 1}
+                  selected={expanded}
+                />
+                {expanded ? (
+                  <ExerciseOverridePanel
+                    catalogueIncrement={exercise.increment}
+                    catalogueRange={exercise.sliderRange}
+                    globalWarmUpPercent={warmUpPercent}
+                    hideIncrement={commonIncrementEnabled}
+                    onPatch={(patch) =>
+                      handleExerciseOverridePatch(exercise.id, patch)
                     }
-                    onRemove={() => handleRemoveRequest(exercise.id)}
-                    removeDisabled={exerciseIds.length <= 1}
-                    selected={expanded}
+                    onReset={() => handleResetOverride(exercise.id)}
+                    override={override}
+                    units={units}
                   />
-                  {expanded ? (
-                    <ExerciseOverridePanel
-                      catalogueIncrement={exercise.increment}
-                      catalogueRange={exercise.sliderRange}
-                      globalWarmUpPercent={warmUpPercent}
-                      hideIncrement={commonIncrementEnabled}
-                      onPatch={(patch) =>
-                        handleExerciseOverridePatch(exercise.id, patch)
-                      }
-                      onReset={() => handleResetOverride(exercise.id)}
-                      override={override}
-                      units={units}
-                    />
-                  ) : null}
-                </View>
-              );
-            })}
-            <SecondaryButton
-              label="add exercises"
-              leadingIcon="plus"
-              onPress={() => navigation.navigate('AddExercises')}
-            />
-          </View>
+                ) : null}
+              </View>
+            );
+          })}
+          <SecondaryButton
+            label="add exercises"
+            leadingIcon="plus"
+            onPress={() => navigation.navigate('AddExercises')}
+          />
         </View>
 
-        <View style={styles.section}>
-          <SectionDivider label="warmup sets" />
+        <SectionDivider label="warmup sets" />
+        <View style={styles.stackGap11}>
           <View style={styles.stackGap8}>
             <InputToggle
               label={['automatically tag ', 'warmup sets']}
@@ -490,97 +521,87 @@ export function SettingsScreen({ navigation }: Props) {
               ]}
               title="how automatic tagging works"
             />
-            <InputSlider
-              caption={{
-                support: 'warmup weight % of',
-                emphasis: '6-rep max',
-              }}
-              captionPosition="above"
-              disabled={!warmUpAutoTagEnabled}
-              formatValue={(value) => `${value}%`}
-              maximumValue={WARM_UP_MAX_PERCENT}
-              minimumValue={WARM_UP_MIN_PERCENT}
-              onValueChange={(value) => {
-                void updateProfile(getDatabase(), { warmUpPercent: value });
-              }}
-              prefix="upto"
-              step={WARM_UP_STEP_PERCENT}
-              suffix=""
-              value={warmUpPercent}
-            />
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <SectionDivider label="weight ranges" />
-          <View style={styles.stackGap8}>
-            <UnitOptionRow
-              caption="unit of measurement"
-              onChange={(value) => {
-                void handleUnitsChange(value);
-              }}
-              options={UNIT_OPTIONS}
-              value={units}
-            />
-            <InputToggle
-              label="use common weight increment for all exercises"
-              onValueChange={(value) => {
-                void handleCommonIncrementToggle(value);
-              }}
-              value={commonIncrementEnabled}
-            />
-            <InputSlider
-              caption={{ emphasis: 'weight increment' }}
-              captionPosition="above"
-              disabled={!commonIncrementEnabled}
-              formatValue={(index) => {
-                const increment =
-                  INCREMENT_INDEX_OPTIONS[
-                    Math.min(
-                      INCREMENT_INDEX_OPTIONS.length - 1,
-                      Math.max(0, Math.round(index)),
-                    )
-                  ]!;
-                return formatWeight(increment, units);
-              }}
-              maximumValue={INCREMENT_INDEX_OPTIONS.length - 1}
-              minimumValue={0}
-              onValueChange={(index) => {
-                void handleCommonIncrementChange(Math.round(index));
-              }}
-              step={1}
-              suffix={getUnitLabel(units)}
-              value={incrementIndex}
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <SectionDivider label="rest timer" />
           <InputSlider
-            caption={{ emphasis: 'optional timer between sets' }}
-            captionPosition="above"
-            formatValue={formatRestSetting}
-            maximumValue={REST_TIMER_MAX_SECONDS}
-            minimumValue={REST_TIMER_MIN_SECONDS}
-            onValueChange={(value) => {
-              void updateProfile(getDatabase(), {
-                restTimerSeconds: clampRestTimerSeconds(value),
-              });
+            caption={{
+              support: 'warmup weight % of',
+              emphasis: '6-rep max',
             }}
-            step={1}
-            suffix={restSettingSuffix(restTimerSeconds)}
-            value={restTimerSeconds}
+            captionPosition="above"
+            disabled={!warmUpAutoTagEnabled}
+            formatValue={(value) => `${value}%`}
+            maximumValue={WARM_UP_MAX_PERCENT}
+            minimumValue={WARM_UP_MIN_PERCENT}
+            onValueChange={(value) => {
+              void updateProfile(getDatabase(), { warmUpPercent: value });
+            }}
+            prefix="upto"
+            step={WARM_UP_STEP_PERCENT}
+            suffix=""
+            value={warmUpPercent}
           />
         </View>
-      </ScrollFadeView>
 
-      <RemoveExerciseSheet
-        ref={removeSheetRef}
-        onConfirm={(id) => {
-          void handleRemoveConfirm(id);
-        }}
-      />
+        <SectionDivider label="weight ranges" />
+        <View style={styles.stackGap11}>
+          <UnitOptionRow
+            caption="unit of measurement"
+            onChange={(value) => {
+              void handleUnitsChange(value);
+            }}
+            options={UNIT_OPTIONS}
+            value={units}
+          />
+          <InputToggle
+            label="use common weight increment for all exercises"
+            onValueChange={(value) => {
+              void handleCommonIncrementToggle(value);
+            }}
+            value={commonIncrementEnabled}
+          />
+          <InputSlider
+            caption={{ emphasis: 'weight increment' }}
+            captionPosition="above"
+            disabled={!commonIncrementEnabled}
+            formatValue={(index) => {
+              const increment =
+                INCREMENT_INDEX_OPTIONS[
+                  Math.min(
+                    INCREMENT_INDEX_OPTIONS.length - 1,
+                    Math.max(0, Math.round(index)),
+                  )
+                ]!;
+              return formatWeight(increment, units);
+            }}
+            maximumValue={INCREMENT_INDEX_OPTIONS.length - 1}
+            minimumValue={0}
+            onValueChange={(index) => {
+              void handleCommonIncrementChange(Math.round(index));
+            }}
+            step={1}
+            suffix={getUnitLabel(units)}
+            value={incrementIndex}
+          />
+        </View>
+
+        <SectionDivider label="rest timer" />
+        <InputSlider
+          caption={{ emphasis: 'optional timer between sets' }}
+          captionPosition="above"
+          formatValue={formatRestSetting}
+          maximumValue={REST_TIMER_MAX_SECONDS}
+          minimumValue={REST_TIMER_MIN_SECONDS}
+          onValueChange={(value) => {
+            void updateProfile(getDatabase(), {
+              restTimerSeconds: clampRestTimerSeconds(value),
+            });
+          }}
+          step={1}
+          suffix={restSettingSuffix(restTimerSeconds)}
+          value={restTimerSeconds}
+        />
+        </Pressable>
+      </ScrollFadeView>
     </View>
   );
 }
@@ -718,26 +739,42 @@ const styles = StyleSheet.create({
   titleBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing['s-5'],
-    minHeight: spacing['s-12'],
-    marginHorizontal: spacing['s-8'],
-    marginBottom: spacing['s-8'],
+    gap: spacing['s-8'],
+    padding: spacing['s-8'],
+    backgroundColor: colors['bg-1'],
+    borderBottomWidth: spacing['s-1'],
+    borderBottomColor: colors['border-2'],
+    zIndex: 1,
+    ...shadowBelow,
   },
   title: {
     ...typography.brand1,
     ...textCase.upper,
+  },
+  titlePress: {
     flex: 1,
   },
   content: {
     paddingHorizontal: spacing['s-8'],
-    gap: spacing['s-11'],
+    paddingTop: spacing['s-12'],
+    flexGrow: 1,
+  },
+  dismissArea: {
+    flexGrow: 1,
+    gap: spacing['s-12'],
   },
   intro: {
     gap: spacing['s-5'],
-    paddingVertical: spacing['s-8'],
+    padding: spacing['s-8'],
+    backgroundColor: colors['bg-1'],
+    borderWidth: spacing['s-1'],
+    borderColor: colors['border-2'],
+    borderStyle: 'dashed',
+    borderRadius: radii['r-h-48'],
+    overflow: 'hidden',
   },
   introTitle: {
-    ...typography.para2,
+    ...typography.para4,
     ...textCase.lower,
   },
   introRow: {
@@ -746,12 +783,12 @@ const styles = StyleSheet.create({
     gap: spacing['s-5'],
   },
   introLine: {
-    ...typography.para2,
+    ...typography.para4,
     flex: 1,
     ...textCase.lower,
   },
-  section: {
-    gap: spacing['s-8'],
+  stackGap11: {
+    gap: spacing['s-11'],
   },
   stackGap8: {
     gap: spacing['s-8'],

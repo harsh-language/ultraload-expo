@@ -14,6 +14,7 @@ Load focused references and existing rule owners. Do not restate a rule here
 | Full UI review | `interface-quality.md`, `surfaces.md`, `resilience.md` |
 | Copy-only task | `copy.md`, `surfaces.md` |
 | Learn mode | all files in `references/`, `coverage-gaps.md`, `lint-candidates.md`, `taxonomy.md` |
+| Later decision conflicts with blueprint | `product-judgment.md` (`rule/later-product-decisions-update-the-blueprint`); update `docs/blueprint.md` in the same change |
 
 ## Existing rule owners
 
