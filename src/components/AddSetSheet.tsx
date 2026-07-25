@@ -15,7 +15,6 @@ import { InputSlider } from './InputSlider';
 import { Warmup } from './Warmup';
 import { PrimaryButton } from './PrimaryButton';
 import type { DisplayUnit } from '../data/exercise-catalogue';
-import type { PerExerciseOverride } from '../db/schema';
 import { getLastSetToday } from '../domain/defaults';
 import { getExerciseById, getExerciseLabel } from '../domain/catalogue';
 import {
@@ -29,7 +28,6 @@ import {
 } from '../domain/set-labels';
 import { formatWeight, getUnitLabel } from '../domain/units';
 import {
-  getEffectiveWarmUpPercent,
   shouldAutoTagWarmUp,
   type TodayWorkoutForWarmUp,
 } from '../domain/warmup';
@@ -59,7 +57,6 @@ interface AddSetSheetProps {
   units: DisplayUnit;
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
-  perExerciseOverrides: Record<string, PerExerciseOverride>;
   todayWorkout: TodayWorkoutForWarmUp | null;
   referenceWeightByExerciseId: Record<string, number | null>;
   onRecord: (payload: {
@@ -83,7 +80,6 @@ interface AddSetSheetProps {
 interface DraftContext {
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
-  perExerciseOverrides: Record<string, PerExerciseOverride>;
   todayWorkout: TodayWorkoutForWarmUp | null;
   referenceWeightByExerciseId: Record<string, number | null>;
 }
@@ -98,14 +94,13 @@ function getWarmUpForDraft(
     return false;
   }
 
-  const override = context.perExerciseOverrides[exerciseId] ?? null;
   const referenceWeight =
     context.referenceWeightByExerciseId[exerciseId] ?? null;
 
   return shouldAutoTagWarmUp({
     weight,
     warmUpAutoTagEnabled: context.warmUpAutoTagEnabled,
-    warmUpPercent: getEffectiveWarmUpPercent(context.warmUpPercent, override),
+    warmUpPercent: context.warmUpPercent,
     referenceWeight,
   });
 }
@@ -116,8 +111,7 @@ function getExerciseDraft(exerciseId: string, context: DraftContext) {
     return null;
   }
 
-  const override = context.perExerciseOverrides[exerciseId] ?? null;
-  const sliderRange = getExerciseSliderRange(exercise, override);
+  const sliderRange = getExerciseSliderRange(exercise);
   const lastSet = getLastSetToday(context.todayWorkout, exerciseId);
   const weight = lastSet?.weight ?? sliderRange.min;
   const reps = lastSet?.reps ?? REPS_MIN;
@@ -137,7 +131,6 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
       units,
       warmUpAutoTagEnabled,
       warmUpPercent,
-      perExerciseOverrides,
       todayWorkout,
       referenceWeightByExerciseId,
       onRecord,
@@ -161,31 +154,24 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
     );
 
     const exerciseIndex = exerciseIds.indexOf(exerciseId);
-    const override = exerciseId
-      ? (perExerciseOverrides[exerciseId] ?? null)
-      : null;
 
     const sliderRange = useMemo(() => {
       if (!exercise) {
         return { min: 0, max: 100 };
       }
-      return getExerciseSliderRange(exercise, override);
-    }, [exercise, override]);
+      return getExerciseSliderRange(exercise);
+    }, [exercise]);
 
-    const increment = exercise
-      ? getExerciseIncrement(exercise, override)
-      : 1;
+    const increment = exercise ? getExerciseIncrement(exercise) : 1;
 
     const draftContext = useMemo<DraftContext>(
       () => ({
         warmUpAutoTagEnabled,
         warmUpPercent,
-        perExerciseOverrides,
         todayWorkout,
         referenceWeightByExerciseId,
       }),
       [
-        perExerciseOverrides,
         referenceWeightByExerciseId,
         todayWorkout,
         warmUpAutoTagEnabled,

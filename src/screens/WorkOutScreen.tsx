@@ -27,7 +27,6 @@ import { getUnitLabel, kgToDisplay } from '../domain/units';
 import {
   usePlanStore,
   useProfileStore,
-  useSettingsStore,
   useTodayStore,
 } from '../stores';
 import type { TodaySet } from '../stores/todaySlice';
@@ -145,9 +144,6 @@ export function WorkOutScreen() {
     (state) => state.warmUpAutoTagEnabled,
   );
   const warmUpPercent = useProfileStore((state) => state.warmUpPercent);
-  const perExerciseOverrides = useSettingsStore(
-    (state) => state.perExerciseOverrides,
-  );
   const exerciseIds = usePlanStore((state) => state.exerciseIds);
   const workout = useTodayStore((state) => state.workout);
   const recordSet = useTodayStore((state) => state.recordSet);
@@ -511,7 +507,6 @@ export function WorkOutScreen() {
         onRecord={handleRecord}
         onUpdate={handleUpdate}
         onVisibilityChange={setAddSetSheetVisible}
-        perExerciseOverrides={perExerciseOverrides}
         referenceWeightByExerciseId={referenceWeightByExerciseId}
         todayWorkout={workout}
         units={units}

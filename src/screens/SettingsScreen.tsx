@@ -14,8 +14,8 @@ import { IconButton } from '../components/IconButton';
 import { InputComboUnit } from '../components/InputComboUnit';
 import { InputHeightField } from '../components/InputHeightField';
 import { InputSlider } from '../components/InputSlider';
-import { InputTag } from '../components/InputTag';
 import { InputToggle } from '../components/InputToggle';
+import { PlanExerciseTagRow } from '../components/PlanExerciseTagRow';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { SectionDivider } from '../components/SectionDivider';
@@ -24,17 +24,8 @@ import { CircleCheckIcon } from '../components/icons/CircleCheckIcon';
 import { CircleXIcon } from '../components/icons/CircleXIcon';
 import { BackIcon } from '../components/icons/BackIcon';
 import { getDatabase } from '../db/client';
-import type { PerExerciseOverride } from '../db/schema';
 import type { DisplayUnit } from '../data/exercise-catalogue';
-import { getExerciseById, getSelectableExercises } from '../domain/catalogue';
-import {
-  OVERRIDE_INCREMENT_OPTIONS,
-  applyCommonIncrement,
-  clearExerciseOverride,
-  getCommonIncrementOverride,
-  isOverrideActive,
-  patchExerciseOverride,
-} from '../domain/exercise-overrides';
+import { getExerciseById } from '../domain/catalogue';
 import {
   formatHeightDigits,
   inchesToHeightDigits,
@@ -47,25 +38,22 @@ import {
   parseAgeForSave,
   sanitizeAge,
 } from '../domain/profile-inputs';
+import { moveItemInList } from '../domain/reorder';
 import {
   REST_TIMER_MAX_SECONDS,
   REST_TIMER_MIN_SECONDS,
+  REST_TIMER_STEP_SECONDS,
   clampRestTimerSeconds,
 } from '../domain/rest-timer';
 import {
   displayToKg,
   formatDisplayWeight,
-  formatWeight,
   getUnitLabel,
   kgToDisplay,
   sanitizeDisplayWeightInput,
 } from '../domain/units';
 import type { MainStackParamList } from '../navigation/types';
-import {
-  usePlanStore,
-  useProfileStore,
-  useSettingsStore,
-} from '../stores';
+import { usePlanStore, useProfileStore } from '../stores';
 import { shadowBelow } from '../theme/shadow';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
@@ -88,8 +76,6 @@ const UNIT_OPTIONS: { value: DisplayUnit; label: string }[] = [
   { value: 'lbs', label: 'lbs' },
   { value: 'stone', label: 'st' },
 ];
-
-const INCREMENT_INDEX_OPTIONS = OVERRIDE_INCREMENT_OPTIONS;
 
 function formatRestSetting(seconds: number): string {
   if (seconds < 60) {
@@ -144,16 +130,6 @@ export function SettingsScreen({ navigation }: Props) {
   const exerciseIds = usePlanStore((s) => s.exerciseIds);
   const updatePlan = usePlanStore((s) => s.updatePlan);
 
-  const perExerciseOverrides = useSettingsStore((s) => s.perExerciseOverrides);
-  const updateOverrides = useSettingsStore((s) => s.updateOverrides);
-
-  const selectable = useMemo(() => getSelectableExercises(), []);
-  const commonIncrement = useMemo(
-    () => getCommonIncrementOverride(perExerciseOverrides, selectable),
-    [perExerciseOverrides, selectable],
-  );
-  const commonIncrementEnabled = commonIncrement != null;
-
   const [bodyweightText, setBodyweightText] = useState(() =>
     bodyweightDisplayString(bodyweightKg, units),
   );
@@ -161,12 +137,9 @@ export function SettingsScreen({ navigation }: Props) {
     heightDisplayString(heightInches),
   );
   const [ageText, setAgeText] = useState(() => ageDisplayString(ageValue));
-  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(
-    null,
-  );
-  const [commonIncrementDraft, setCommonIncrementDraft] = useState(
-    commonIncrement ?? 2.5,
-  );
+  const [reorderingExercises, setReorderingExercises] = useState(false);
+  const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
+  const [dragHoverIndex, setDragHoverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setBodyweightText(bodyweightDisplayString(bodyweightKg, units));
@@ -180,25 +153,12 @@ export function SettingsScreen({ navigation }: Props) {
     setAgeText(ageDisplayString(ageValue));
   }, [ageValue]);
 
-  useEffect(() => {
-    if (commonIncrement != null) {
-      setCommonIncrementDraft(commonIncrement);
-    }
-  }, [commonIncrement]);
-
   const planExercises = useMemo(
     () =>
       exerciseIds
         .map((id) => getExerciseById(id))
         .filter((entry): entry is NonNullable<typeof entry> => entry != null),
     [exerciseIds],
-  );
-
-  const persistOverrides = useCallback(
-    async (next: Record<string, PerExerciseOverride>) => {
-      await updateOverrides(getDatabase(), next);
-    },
-    [updateOverrides],
   );
 
   const persistBodyweight = useCallback(async () => {
@@ -308,80 +268,36 @@ export function SettingsScreen({ navigation }: Props) {
       }
       const nextIds = exerciseIds.filter((id) => id !== exerciseId);
       await updatePlan(getDatabase(), nextIds);
-      if (expandedExerciseId === exerciseId) {
-        setExpandedExerciseId(null);
-      }
     },
-    [exerciseIds, expandedExerciseId, updatePlan],
+    [exerciseIds, updatePlan],
   );
 
-  const handleCommonIncrementToggle = useCallback(
-    async (enabled: boolean) => {
-      const next = applyCommonIncrement(
-        perExerciseOverrides,
-        selectable,
-        enabled ? commonIncrementDraft : null,
-      );
-      await persistOverrides(next);
+  const handleExerciseDragStart = useCallback((index: number) => {
+    setReorderingExercises(true);
+    setDragFromIndex(index);
+    setDragHoverIndex(index);
+  }, []);
+
+  const handleExerciseDragMove = useCallback(
+    (_fromIndex: number, toIndex: number) => {
+      setDragHoverIndex(toIndex);
     },
-    [
-      commonIncrementDraft,
-      perExerciseOverrides,
-      persistOverrides,
-      selectable,
-    ],
+    [],
   );
 
-  const handleCommonIncrementChange = useCallback(
-    async (index: number) => {
-      const increment =
-        INCREMENT_INDEX_OPTIONS[
-          Math.min(INCREMENT_INDEX_OPTIONS.length - 1, Math.max(0, index))
-        ]!;
-      setCommonIncrementDraft(increment);
-      if (!commonIncrementEnabled) {
+  const handleExerciseDragEnd = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setReorderingExercises(false);
+      setDragFromIndex(null);
+      setDragHoverIndex(null);
+      if (fromIndex === toIndex) {
         return;
       }
-      const next = applyCommonIncrement(
-        perExerciseOverrides,
-        selectable,
-        increment,
-      );
-      await persistOverrides(next);
+      const nextIds = moveItemInList(exerciseIds, fromIndex, toIndex);
+      void updatePlan(getDatabase(), nextIds);
     },
-    [
-      commonIncrementEnabled,
-      perExerciseOverrides,
-      persistOverrides,
-      selectable,
-    ],
+    [exerciseIds, updatePlan],
   );
-
-  const handleExerciseOverridePatch = useCallback(
-    async (exerciseId: string, patch: Partial<PerExerciseOverride>) => {
-      const next = patchExerciseOverride(
-        perExerciseOverrides,
-        exerciseId,
-        patch,
-      );
-      await persistOverrides(next);
-    },
-    [perExerciseOverrides, persistOverrides],
-  );
-
-  const handleResetOverride = useCallback(
-    async (exerciseId: string) => {
-      const next = clearExerciseOverride(perExerciseOverrides, exerciseId);
-      await persistOverrides(next);
-    },
-    [perExerciseOverrides, persistOverrides],
-  );
-
-  const incrementSliderIndex = INCREMENT_INDEX_OPTIONS.indexOf(
-    commonIncrementDraft as (typeof INCREMENT_INDEX_OPTIONS)[number],
-  );
-  const incrementIndex =
-    incrementSliderIndex >= 0 ? incrementSliderIndex : 1;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -396,6 +312,7 @@ export function SettingsScreen({ navigation }: Props) {
         <IconButton
           accessibilityLabel="back"
           onPress={() => navigation.goBack()}
+          size="small"
         >
           <BackIcon />
         </IconButton>
@@ -414,6 +331,7 @@ export function SettingsScreen({ navigation }: Props) {
         ]}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={!reorderingExercises}
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
         topFadeEnabled={false}
@@ -422,11 +340,11 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.intro}>
           <Text style={styles.introTitle}>any updates made here will</Text>
           <View style={styles.introRow}>
-            <CircleXIcon color={colors['content-2']} />
-            <Text style={styles.introLine}>not affect past sessions</Text>
+            <CircleXIcon color={colors['content-1']} />
+            <Text style={styles.introLine}>not affect saved past sessions</Text>
           </View>
           <View style={styles.introRow}>
-            <CircleCheckIcon color={colors['content-2']} />
+            <CircleCheckIcon color={colors['content-1']} />
             <Text style={styles.introLine}>only affect future sessions</Text>
           </View>
         </View>
@@ -460,40 +378,23 @@ export function SettingsScreen({ navigation }: Props) {
 
         <SectionDivider label="exercises" />
         <View style={styles.stackGap5}>
-          {planExercises.map((exercise) => {
-            const expanded = expandedExerciseId === exercise.id;
-            const override = perExerciseOverrides[exercise.id];
-
-            return (
-              <View key={exercise.id} style={styles.exerciseBlock}>
-                <InputTag
-                  label={exercise.name}
-                  onPress={() =>
-                    setExpandedExerciseId(expanded ? null : exercise.id)
-                  }
-                  onRemove={() => {
-                    void handleRemove(exercise.id);
-                  }}
-                  removeDisabled={exerciseIds.length <= 1}
-                  selected={expanded}
-                />
-                {expanded ? (
-                  <ExerciseOverridePanel
-                    catalogueIncrement={exercise.increment}
-                    catalogueRange={exercise.sliderRange}
-                    globalWarmUpPercent={warmUpPercent}
-                    hideIncrement={commonIncrementEnabled}
-                    onPatch={(patch) =>
-                      handleExerciseOverridePatch(exercise.id, patch)
-                    }
-                    onReset={() => handleResetOverride(exercise.id)}
-                    override={override}
-                    units={units}
-                  />
-                ) : null}
-              </View>
-            );
-          })}
+          {planExercises.map((exercise, index) => (
+            <PlanExerciseTagRow
+              key={exercise.id}
+              count={planExercises.length}
+              dragFromIndex={dragFromIndex}
+              dragHoverIndex={dragHoverIndex}
+              index={index}
+              label={exercise.name}
+              onDragEnd={handleExerciseDragEnd}
+              onDragMove={handleExerciseDragMove}
+              onDragStart={handleExerciseDragStart}
+              onRemove={() => {
+                void handleRemove(exercise.id);
+              }}
+              removeDisabled={exerciseIds.length <= 1}
+            />
+          ))}
           <SecondaryButton
             label="add exercises"
             leadingIcon="plus"
@@ -543,46 +444,14 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         <SectionDivider label="weight ranges" />
-        <View style={styles.stackGap11}>
-          <UnitOptionRow
-            caption="unit of measurement"
-            onChange={(value) => {
-              void handleUnitsChange(value);
-            }}
-            options={UNIT_OPTIONS}
-            value={units}
-          />
-          <InputToggle
-            label="use common weight increment for all exercises"
-            onValueChange={(value) => {
-              void handleCommonIncrementToggle(value);
-            }}
-            value={commonIncrementEnabled}
-          />
-          <InputSlider
-            caption={{ emphasis: 'weight increment' }}
-            captionPosition="above"
-            disabled={!commonIncrementEnabled}
-            formatValue={(index) => {
-              const increment =
-                INCREMENT_INDEX_OPTIONS[
-                  Math.min(
-                    INCREMENT_INDEX_OPTIONS.length - 1,
-                    Math.max(0, Math.round(index)),
-                  )
-                ]!;
-              return formatWeight(increment, units);
-            }}
-            maximumValue={INCREMENT_INDEX_OPTIONS.length - 1}
-            minimumValue={0}
-            onValueChange={(index) => {
-              void handleCommonIncrementChange(Math.round(index));
-            }}
-            step={1}
-            suffix={getUnitLabel(units)}
-            value={incrementIndex}
-          />
-        </View>
+        <UnitOptionRow
+          caption="unit of measurement"
+          onChange={(value) => {
+            void handleUnitsChange(value);
+          }}
+          options={UNIT_OPTIONS}
+          value={units}
+        />
 
         <SectionDivider label="rest timer" />
         <InputSlider
@@ -596,134 +465,12 @@ export function SettingsScreen({ navigation }: Props) {
               restTimerSeconds: clampRestTimerSeconds(value),
             });
           }}
-          step={1}
+          step={REST_TIMER_STEP_SECONDS}
           suffix={restSettingSuffix(restTimerSeconds)}
           value={restTimerSeconds}
         />
         </Pressable>
       </ScrollFadeView>
-    </View>
-  );
-}
-
-interface ExerciseOverridePanelProps {
-  override: PerExerciseOverride | undefined;
-  catalogueRange: { min: number; max: number };
-  catalogueIncrement: number;
-  globalWarmUpPercent: number;
-  units: DisplayUnit;
-  hideIncrement?: boolean;
-  onPatch: (patch: Partial<PerExerciseOverride>) => void;
-  onReset: () => void;
-}
-
-function ExerciseOverridePanel({
-  override,
-  catalogueRange,
-  catalogueIncrement,
-  globalWarmUpPercent,
-  units,
-  hideIncrement = false,
-  onPatch,
-  onReset,
-}: ExerciseOverridePanelProps) {
-  const warmUp =
-    override?.warmUpPercent ?? globalWarmUpPercent;
-  const range = override?.sliderRange ?? catalogueRange;
-  const increment = override?.increment ?? catalogueIncrement;
-  const unitLabel = getUnitLabel(units);
-
-  const [minText, setMinText] = useState(() =>
-    formatDisplayWeight(kgToDisplay(range.min, units)),
-  );
-  const [maxText, setMaxText] = useState(() =>
-    formatDisplayWeight(kgToDisplay(range.max, units)),
-  );
-
-  useEffect(() => {
-    setMinText(formatDisplayWeight(kgToDisplay(range.min, units)));
-    setMaxText(formatDisplayWeight(kgToDisplay(range.max, units)));
-  }, [range.max, range.min, units]);
-
-  const persistRange = useCallback(() => {
-    const minDisplay = Number.parseFloat(minText);
-    const maxDisplay = Number.parseFloat(maxText);
-    if (!Number.isFinite(minDisplay) || !Number.isFinite(maxDisplay)) {
-      setMinText(formatDisplayWeight(kgToDisplay(range.min, units)));
-      setMaxText(formatDisplayWeight(kgToDisplay(range.max, units)));
-      return;
-    }
-    const minKg = displayToKg(minDisplay, units);
-    const maxKg = displayToKg(maxDisplay, units);
-    if (minKg >= maxKg) {
-      setMinText(formatDisplayWeight(kgToDisplay(range.min, units)));
-      setMaxText(formatDisplayWeight(kgToDisplay(range.max, units)));
-      return;
-    }
-    onPatch({ sliderRange: { min: minKg, max: maxKg } });
-  }, [maxText, minText, onPatch, range.max, range.min, units]);
-
-  const hasCustom = isOverrideActive(override);
-
-  return (
-    <View style={styles.overridePanel}>
-      <InputSlider
-        caption={{ support: 'warmup', emphasis: 'override %' }}
-        captionPosition="above"
-        formatValue={(value) => `${value}%`}
-        maximumValue={WARM_UP_MAX_PERCENT}
-        minimumValue={WARM_UP_MIN_PERCENT}
-        onValueChange={(value) => onPatch({ warmUpPercent: value })}
-        prefix="upto"
-        step={WARM_UP_STEP_PERCENT}
-        suffix=""
-        value={warmUp}
-      />
-      <View style={styles.rangeRow}>
-        <InputComboUnit
-          keyboardType="decimal-pad"
-          leadingLabel="min :"
-          onBlur={persistRange}
-          onChangeText={(value) =>
-            setMinText(sanitizeDisplayWeightInput(value))
-          }
-          unit={unitLabel}
-          value={minText}
-        />
-        <InputComboUnit
-          keyboardType="decimal-pad"
-          leadingLabel="max :"
-          onBlur={persistRange}
-          onChangeText={(value) =>
-            setMaxText(sanitizeDisplayWeightInput(value))
-          }
-          unit={unitLabel}
-          value={maxText}
-        />
-      </View>
-      {hideIncrement ? null : (
-        <UnitOptionRow
-          caption="increment"
-          onChange={(value) => onPatch({ increment: Number.parseFloat(value) })}
-          options={OVERRIDE_INCREMENT_OPTIONS.map((option) => ({
-            value: String(option),
-          label: formatWeight(option, units),
-          }))}
-          value={String(increment)}
-        />
-      )}
-      {hasCustom ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={onReset}
-          style={({ pressed }) => [
-            styles.resetRow,
-            pressed && styles.resetPressed,
-          ]}
-        >
-          <Text style={styles.resetLabel}>reset to defaults</Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 }
@@ -766,7 +513,7 @@ const styles = StyleSheet.create({
   intro: {
     gap: spacing['s-5'],
     padding: spacing['s-8'],
-    backgroundColor: colors['bg-1'],
+    backgroundColor: colors['bg-2'],
     borderWidth: spacing['s-1'],
     borderColor: colors['border-2'],
     borderStyle: 'dashed',
@@ -775,15 +522,17 @@ const styles = StyleSheet.create({
   },
   introTitle: {
     ...typography.para4,
+    color: colors['content-1'],
     ...textCase.lower,
   },
   introRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing['s-5'],
   },
   introLine: {
     ...typography.para4,
+    color: colors['content-1'],
     flex: 1,
     ...textCase.lower,
   },
@@ -795,29 +544,5 @@ const styles = StyleSheet.create({
   },
   stackGap5: {
     gap: spacing['s-5'],
-  },
-  exerciseBlock: {
-    gap: spacing['s-5'],
-  },
-  overridePanel: {
-    gap: spacing['s-5'],
-    paddingLeft: spacing['s-5'],
-    borderLeftWidth: spacing['s-1'],
-    borderLeftColor: colors['border-2'],
-  },
-  rangeRow: {
-    gap: spacing['s-5'],
-  },
-  resetRow: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing['s-4'],
-  },
-  resetPressed: {
-    opacity: 0.7,
-  },
-  resetLabel: {
-    ...typography.para3,
-    color: colors['content-2'],
-    ...textCase.lower,
   },
 });

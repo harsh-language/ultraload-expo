@@ -94,6 +94,8 @@ interface ExercisePickerProps {
   /** Override scroll bottom inset (defaults to onboarding footer clearance). */
   contentBottomInset?: number;
   showHeader?: boolean;
+  /** When false, omit top fade (e.g. sticky title bar). Default true. */
+  topFadeEnabled?: boolean;
 }
 
 export function ExercisePicker({
@@ -104,6 +106,7 @@ export function ExercisePicker({
   exercises = getSelectableExercises(),
   contentBottomInset,
   showHeader = true,
+  topFadeEnabled = true,
 }: ExercisePickerProps) {
   const insets = useSafeAreaInsets();
   const scrollBottomInset =
@@ -118,6 +121,7 @@ export function ExercisePicker({
       ]}
       showsVerticalScrollIndicator={false}
       style={styles.scroll}
+      topFadeEnabled={topFadeEnabled}
     >
       {showHeader ? (
         <>

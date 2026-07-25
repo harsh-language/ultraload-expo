@@ -13,7 +13,7 @@ React Native (Expo 56), iOS + Android, 100% offline, dark mode only. No splits, 
 | App shell, splash, onboarding | Built |
 | Work Out — log today’s sets | Built |
 | Rest timer | Built |
-| Settings — profile, plan, units, presets, overrides | Built (U3) |
+| Settings — profile, plan, units, presets | Built (U3) |
 | History list / chart / session detail | Not built (U4–U5) |
 | Export / import / reset | Not built (U6) |
 | App Store release | Not built (U7) |

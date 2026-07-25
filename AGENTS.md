@@ -8,7 +8,7 @@ UI spacing, radius, borders, and colors come from Figma variables in [`src/theme
 
 ## Motion
 
-Panel open / close / move (sheets, menus, dropdowns, accordions): `PANEL_TRANSITION_MS` / `panelTransitionTiming` in [`src/theme/motion.ts`](src/theme/motion.ts) — **100ms**. See [`.cursor/rules/panel-motion.mdc`](.cursor/rules/panel-motion.mdc).
+Panel open / close / move (sheets, menus, dropdowns, accordions): `PANEL_TRANSITION_MS` / `panelTransitionTiming` in [`src/theme/motion.ts`](src/theme/motion.ts) — **150ms**. See [`.cursor/rules/panel-motion.mdc`](.cursor/rules/panel-motion.mdc).
 
 ## Dependencies
 
@@ -52,7 +52,7 @@ intent (`rule/later-product-decisions-update-the-blueprint`).
 
 ## Build stage
 
-U3 complete — Settings supports profile, plan editing, units, presets, and per-exercise overrides.
+U3 complete — Settings supports profile, plan editing, units, and presets. Per-exercise override UI is out of scope for this version (catalogue per-exercise ranges/increments still drive Add Set).
 
 Next is U4 — History list and session detail.
 

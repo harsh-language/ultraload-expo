@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { radii, spacing } from '../theme/tokens';
-import { shadowAbove } from '../theme/shadow';
 
 export interface ButtonShellVariantStyles {
   base: ViewStyle;
@@ -50,6 +49,5 @@ const styles = StyleSheet.create({
     minHeight: spacing['s-12'],
     borderRadius: radii['r-pill'],
     paddingHorizontal: spacing['s-8'],
-    ...shadowAbove,
   },
 });

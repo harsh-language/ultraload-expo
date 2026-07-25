@@ -200,7 +200,7 @@ wiring) and displays blank. Incomplete height (feet only) is not saved; blur
 reverts to the last saved value. Tap outside / drag dismisses the keyboard.
 Why: Leaving Settings via back should keep what the user already typed when it
 was valid, without a separate save control.
-Exceptions: Per-exercise range min/max still persist on blur only.
+Exceptions: none.
 Source: `src/screens/SettingsScreen.tsx`, `parseAgeForSave`, `parseHeightForSave`
 Bad example: Saving profile fields only on blur so a back press drops a valid
 draft, or forbidding empty height/age.
@@ -213,14 +213,53 @@ Scope: Settings exercise tags and Add Exercises toggles
 Rule: Removing an exercise from the workout plan only updates the plan list.
 Logged sets are never deleted. The exercise disappears from pickers and from
 today’s / history visibility filters until re-added; re-adding restores those
-records. Do not show a confirmation sheet — removal is instant and reversible.
-Keep the last-plan-exercise guard (cannot remove the final exercise).
+records. Do not show a confirmation sheet — removal is reversible. Settings
+exercise-tag removals persist immediately. Add Exercises stages all additions
+and removals in one draft: close discards the draft; check saves the complete
+draft. Keep the last-plan-exercise guard (cannot remove the final exercise).
 Why: The consequence is temporary hide, not permanent data loss, so a confirm
 step adds ceremony without protecting anything.
 Exceptions: True destructive data wipe (dev reset / future export-delete) stays
 behind its own confirmations.
-Source: `docs/blueprint.md` FL8/BR3 (updated 2026-07-22),
+Source: `docs/blueprint.md` FL8/BR3 (updated 2026-07-25),
 `src/screens/SettingsScreen.tsx`, `src/screens/AddExercisesScreen.tsx`,
 `WorkOutScreen` plan-filtered `visibleLoggedExercises`
 Bad example: Confirm bottom sheet or deleting logged rows when the plan changes.
-Good example: `handleRemove` / Add Exercises toggle-off call `updatePlan` only.
+Good example: Settings `handleRemove` persists directly; Add Exercises toggles
+local draft state and only its check action calls `updatePlan`.
+
+## rule/plan-exercise-reorder-shifts-siblings-live
+Status: proposed
+Scope: Settings plan exercise tag list reorder
+Rule: While dragging a plan exercise, crossed siblings should animate into the
+opened gap in real time. On drop, clear transforms and commit the new order in
+the same update (optimistic store write) so the list does not jump.
+Why: Drop-only reordering makes the release feel broken even when the final
+order is correct; live displacement matches the user’s spatial expectation.
+Exceptions: none — plan tags are reorder/remove only; no expandable override
+panels.
+Source: `src/components/PlanExerciseTagRow.tsx`, `src/domain/reorder.ts`
+(`siblingDragOffset`), `src/screens/SettingsScreen.tsx`, `src/stores/planSlice.ts`
+Bad example: Only moving the grabbed row during drag, then teleporting every
+row on release.
+Good example: `dragHoverIndex` drives sibling offsets with `PANEL_TRANSITION_MS`
+during drag; drop resets offsets instantly and `updatePlan` sets Zustand before
+awaiting SQLite.
+
+## rule/no-per-exercise-override-ui-this-version
+Status: proposed
+Scope: Settings and any surface that might expose catalogue per-exercise knobs
+Rule: Do not ship UI for per-exercise warm-up %, slider range, or increment
+overrides in this version. Catalogue per-exercise fields (`sliderRange`,
+`increment`, `muscleMultipliers`, and related weight math) remain in data and
+domain code for Add Set, progress calculations, and future versions.
+Why: Override editing was removed from the design as overkill; keeping the
+underlying per-exercise knowledge preserves logging quality without extra
+Settings complexity.
+Exceptions: Global warm-up % / auto-tag and per-set warm-up toggle (BR5) stay.
+Source: `docs/blueprint.md` F10/BR16/stage 3, `src/domain/ranges.ts`,
+`src/data/exercise-catalogue.ts`
+Bad example: Expandable Settings panels or a common-increment toggle that writes
+per-exercise overrides.
+Good example: Settings plan tags are reorder/remove only; Add Set reads catalogue
+range and increment directly.

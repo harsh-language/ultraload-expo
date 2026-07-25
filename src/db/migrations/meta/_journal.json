@@ -8,6 +8,13 @@
       "when": 1782163221346,
       "tag": "0000_famous_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1785024000000,
+      "tag": "0001_drop_settings",
+      "breakpoints": true
     }
   ]
 }

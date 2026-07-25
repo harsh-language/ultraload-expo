@@ -1,13 +1,15 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { InputSlider } from '../../components/InputSlider';
 import { WARMUP_RANGE_CAPTION } from '../../components/InputSliderCaption';
+import {
+  clampRestTimerSeconds,
+  REST_TIMER_MAX_SECONDS,
+  REST_TIMER_MIN_SECONDS,
+  REST_TIMER_STEP_SECONDS,
+} from '../../domain/rest-timer';
 import { typography } from '../../theme/typography';
 import { textCase } from '../../theme/textCase';
 import { OnboardingLayout } from './OnboardingLayout';
-
-const REST_MIN_SECONDS = 30;
-const REST_MAX_SECONDS = 300;
-const REST_STEP_SECONDS = 30;
 
 function formatRestTimerMinutes(seconds: number): string {
   const minutes = seconds / 60;
@@ -41,10 +43,12 @@ export function RestTimerStep({
           caption={WARMUP_RANGE_CAPTION}
           captionHidden
           formatValue={formatRestTimerMinutes}
-          maximumValue={REST_MAX_SECONDS}
-          minimumValue={REST_MIN_SECONDS}
-          onValueChange={onRestTimerChange}
-          step={REST_STEP_SECONDS}
+          maximumValue={REST_TIMER_MAX_SECONDS}
+          minimumValue={REST_TIMER_MIN_SECONDS}
+          onValueChange={(value) =>
+            onRestTimerChange(clampRestTimerSeconds(value))
+          }
+          step={REST_TIMER_STEP_SECONDS}
           suffix="min"
           value={restTimerSeconds}
         />

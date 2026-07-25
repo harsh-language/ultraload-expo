@@ -55,14 +55,14 @@ UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sess
 |----|---------|---------|
 | F1 | Notepad set logging | Add/edit/delete sets via a bottom sheet; sets group under their exercise automatically. No "start workout" — first set of the day creates the record (BR1). |
 | F2 | First-launch onboarding | Splash → bodyweight (required) → exercise picker (≥1) → rest timer preset → warm-up preset → Work Out. Replayed on reset. |
-| F3 | Catalogue + workout plan | 22 built-in exercises (E3); flat ordered plan chosen at onboarding, editable in Settings. Only plan exercises are visible (BR2); removal hides history until re-enabled (BR3) — instant, no confirmation (FL8). |
+| F3 | Catalogue + workout plan | 22 built-in exercises (E3); flat ordered plan chosen at onboarding, editable in Settings. Only plan exercises are visible (BR2); removal hides history until re-enabled (BR3). Settings-tag removals persist immediately; the add-exercises sub-screen stages changes until Save (FL8). No confirmation sheet. |
 | F4 | Warm-up auto-tag + override | Sets at weight ≤ history-derived threshold auto-tag as warm-up (BR4, BR15); toggle always visible; manual override applies to one set only (BR5). |
-| F5 | Rest timer | Optional, user-triggered, global range 3 s – 5 min (BR20); background notification when app is backgrounded. |
+| F5 | Rest timer | Optional, user-triggered, global range 15 s – 5 min in 15 s steps (BR20); background notification when app is backgrounded. |
 | F6 | History list | Per-day rows: day total weight + day % change, or "—" when no comparison (BR7, BR9, BR10). |
 | F7 | Session detail | Read-only by default; top-right edit enters editable mode reusing the logging bottom sheet; edits recalc downstream (BR12). |
 | F8 | History chart | Y = session/exercise/muscle-group total; X = date; exercise + muscle-group filters; ranges month/year/all-time; 10 latest visible, horizontal scroll. |
 | F9 | Progress measurement | Total weight moved, % change, day averaging, muscle-group weighting (BR6–BR13). |
-| F10 | Settings hub | Bodyweight (profile), plan editing, warm-up %, per-exercise range/increment/warm-up %, rest preset, units, export, reset. |
+| F10 | Settings hub | Bodyweight (profile), plan editing, global warm-up %, rest preset, units, export, reset. Catalogue per-exercise range/increment/warm-up metadata still exists for logging and future versions; **no per-exercise override UI in this version**. |
 | F11 | Unit system | Display in kg/lbs/stone uniformly; storage always kg; convert rounded to 0.5 (BR17). |
 | F12 | Export data | JSON snapshot via share sheet. |
 | F13 | Import data | JSON via document picker from Settings (UI finalized during build). |
@@ -107,7 +107,7 @@ flowchart TD
 **Work Out (SCR6):** tap a logged set row → SCR7 opens in **edit mode** with that set's values (per Figma "edit a set"). **History (SCR12/SCR13):** same bottom sheet in edit mode. Change values → Record, or Delete (confirmation overlay per Figma). Editing recalculates affected totals/% (BR12).
 
 ### FL4 — Rest timer (F5)
-User taps the timer on the Work Out main page → timer runs (range 3 s–5 min). Backgrounding the app fires a notification alert. Never auto-starts after recording a set.
+User taps the timer on the Work Out main page → timer runs (range 15 s–5 min, 15 s steps). Backgrounding the app fires a notification alert. Never auto-starts after recording a set.
 
 ### FL5 — View history list (F6, F9)
 Work Out home → options menu → History → List view → rows per day with day total + day % change (or "—"). Empty state shown when no data (shared list/chart empty state per Figma).
@@ -119,7 +119,7 @@ Tap a day → session detail (read-only, grouped exercise → sets) → top-righ
 Work Out home → options menu → History → Chart view → default Y = session total, 10 latest visible. Filter by exercise (Y switches to that exercise) or by muscle group (weighted calc, BR13). Time range month/year/all-time; horizontal scroll along timeline.
 
 ### FL8 — Edit workout plan (F3)
-Settings → Edit workout plan → add-exercises sub-screen (or Settings exercise tags) → toggle exercise **off** / remove → **instant** hide from pickers, Work Out, and History (BR3). Past sets stay in SQLite; re-adding the exercise restores visibility. No confirmation sheet — removal is reversible hide, not data loss. Cannot remove the last remaining plan exercise. Toggle **on** / add re-enables immediately.
+Settings → Edit workout plan → add-exercises sub-screen → toggle any combination of exercises on or off in a local draft. Tap the rightmost check action to save the complete draft; tap the close action to discard every addition and removal made since opening the screen. After save, removed exercises hide from pickers, Work Out, and History (BR3); re-added exercises become visible again. Settings exercise-tag removals remain immediate. Past sets stay in SQLite. No confirmation sheet — removal is reversible hide, not data loss. The draft cannot remove the last remaining plan exercise.
 
 ### FL9 — Export data (F12)
 Settings → Export → overlay alert → JSON snapshot to share sheet (Save to Files, AirDrop, etc.).
@@ -225,10 +225,10 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | BR13 | Muscle-group chart value = Σ over exercises of (total weight moved × that muscle's multiplier); exercises with no multiplier for the group are skipped. |
 | BR14 | Slider range = Beginner rounded down to nearest 10 → Elite rounded up to nearest 10 (from 75 kg reference standards). |
 | BR15 | Warm-up threshold = `warmUpPercent / 100 × referenceWeight`, where `referenceWeight` is the heaviest **standard** (non-warm-up) set weight logged for that exercise at the best available rep count: prefer **6 reps**, else **7**, **8**, **9**, … Warm-up sets are never used when finding the reference. Default `warmUpPercent` = 50; adjustable 10–70% in onboarding/Settings. **No strength standards or catalogue thresholds.** If no qualifying history exists, no auto-tag (manual toggle still available). |
-| BR16 | Increments by equipment: barbell 5 kg, dumbbell 2.5 kg, cable/machine 1 kg; overridable per exercise to 1 / 2.5 / 5 kg. |
+| BR16 | Increments by equipment: barbell 5 kg, dumbbell 2.5 kg, cable/machine 1 kg (catalogue per-exercise `increment`). Per-exercise values remain in the catalogue for Add Set and future versions; **this version does not ship a Settings UI to override them**. |
 | BR17 | All weights stored in kg; display in kg/lbs/stone uniformly; unit conversion rounded to nearest 0.5. |
 | BR19 | Crossover slider min = 10 kg (not 0). |
-| BR20 | Rest timer is global, range 3 s – 5 min, no per-exercise overrides; never auto-starts. |
+| BR20 | Rest timer is global, range 15 s – 5 min in 15 s steps; never auto-starts. (No per-exercise rest timers — out of scope; not planned for this version.) |
 | BR21 | Default reps/weight = last set's values for the same exercise today, else slider minimum. |
 | BR22 | Reps and weight input via sliders only — no steppers, number pads, or preset chips. |
 | BR23 | Chart muscle-group filters limited to Chest, Shoulders, Back, Glutes, Quads (not Biceps/Triceps). |
@@ -236,7 +236,7 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | BR25 | 75 kg reference bodyweight is used only to derive catalogue slider ranges; it does not scale with the user's actual bodyweight over time. |
 | BR27 | **Global warm-up auto-tag** (`warmUpAutoTagEnabled`, default on): when **on**, BR4 auto-tagging applies. When **off**, no set is auto-tagged; the warm-up toggle remains visible on every set and the user may still mark a set warm-up manually (manual warm-up sets remain excluded from progress per BR6). Per-set override (BR5) applies only when auto-tag is on. |
 | BR28 | **Catalogue is editable seed data**, not scattered constants. The built-in exercise list and muscle-group multipliers live in **one dedicated data module** (e.g. `src/data/exercise-catalogue.ts`). The app reads catalogue fields to decide which exercises appear in pickers, which sliders/toggles to show, default ranges, increments, and chart muscle-group math. Warm-up thresholds are derived at runtime from history (BR15), not catalogue fields. **No exercise names, ranges, or multipliers hardcoded in UI components.** The table in this blueprint is the v1 starting point; Pablo may refine it after further research. |
-| BR29 | **Catalogue edit rules (id vs metadata).** Each exercise has an immutable `id` slug (e.g. `bench-press`). Workouts, the plan, settings overrides, and export JSON all reference exercises **by id only** — never by display name. **Safe to edit in the seed file (no UI code changes):** display `name`, `primaryMuscle`, ranges, increments, `muscleMultipliers`, and other metadata fields. **Safe to add:** new exercises with new unique ids. **Never rename or delete an `id`** that existing workout history may reference — v1 has no id-migration tooling. To retire an exercise from future use, set `deprecated: true` in the catalogue (BR30). **Plan removal (BR3)** is separate: toggling off in Settings hides an exercise from the app; the catalogue row remains. |
+| BR29 | **Catalogue edit rules (id vs metadata).** Each exercise has an immutable `id` slug (e.g. `bench-press`). Workouts, the plan, and export JSON all reference exercises **by id only** — never by display name. **Safe to edit in the seed file (no UI code changes):** display `name`, `primaryMuscle`, ranges, increments, `muscleMultipliers`, and other metadata fields. **Safe to add:** new exercises with new unique ids. **Never rename or delete an `id`** that existing workout history may reference — v1 has no id-migration tooling. To retire an exercise from future use, set `deprecated: true` in the catalogue (BR30). **Plan removal (BR3)** is separate: toggling off in Settings hides an exercise from the app; the catalogue row remains. Per-exercise catalogue fields may inform future override UI; **this version does not create that interface**. |
 | BR30 | **Deprecated catalogue entries.** An exercise with `deprecated: true` is excluded from onboarding and the add-exercises picker; it cannot be newly added to the plan. If already in the plan or in workout history, it continues to resolve name, ranges, and multipliers from the catalogue. Deprecated entries are never hard-deleted from the seed file while history may reference them. |
 | BR31 | **Orphaned exercise ids.** If workout history references an `exerciseId` missing from the catalogue (e.g. seed row was incorrectly deleted), the app must not crash. History and session detail show those sets grouped under a fallback label (the raw id, or "Unknown exercise"); sets remain read-only. The id cannot be selected for new logging; it is excluded from chart filters and progress comparisons involving catalogue metadata. |
 
@@ -315,7 +315,6 @@ Warm-up thresholds are computed at runtime from logged history + `warmUpPercent`
 | `profileSlice` | bodyweight, optional name/height/age, units, warm-up %, warmUpAutoTagEnabled, rest preset | SQLite (write-through) |
 | `planSlice` | active ordered workout plan (exercise ids) | SQLite (write-through) |
 | `todaySlice` | today's workout (logged exercises + sets) | SQLite (write-through) |
-| `settingsSlice` | per-exercise overrides (range/increment/warm-up %); global warm-up on/off | SQLite (write-through) |
 | `timerSlice` | running rest-timer countdown | **Transient** (memory only) |
 
 **Transient (never persisted):** the rest-timer countdown, the open bottom-sheet draft (in-progress set — Cancel discards, Record commits via write-through, creating the day's workout if first set, BR1), and the current History filter/range selection.
@@ -327,7 +326,7 @@ Warm-up thresholds are computed at runtime from logged history + `warmUpPercent`
 
 - Single offline React Native (Expo) app; no backend, no network calls.
 - Layers: **UI (screens + shared components)** → **domain/logic (progress math, warm-up tagging, unit conversion, range derivation)** → **persistence (SQLite via Drizzle ORM)**.
-- **Catalogue layer (BR28–BR31):** one editable seed-data file drives exercise pickers, slider bounds, warm-up behaviour, Settings overrides, and muscle-group chart filters. UI and domain logic consume catalogue by `exerciseId` — never duplicate exercise metadata in components. Ids are immutable; deprecated entries stay in the file for history resolution.
+- **Catalogue layer (BR28–BR31):** one editable seed-data file drives exercise pickers, slider bounds, warm-up behaviour (via history + global %), and muscle-group chart filters. UI and domain logic consume catalogue by `exerciseId` — never duplicate exercise metadata in components. Ids are immutable; deprecated entries stay in the file for history resolution. Per-exercise catalogue ranges/increments remain; **no Settings per-exercise override UI in this version**.
 - Built in **layers + vertical slices**, not tab-by-tab: shared UI (bottom sheet, sliders, log rows) built once and reused across Work Out and History; exercise picker shared by onboarding and Settings (see §18).
 - Export/import is a JSON snapshot for manual transport between devices/versions.
 
@@ -407,9 +406,9 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 - **Add/record set:** Add Set → bottom sheet → reps slider, weight slider, warm-up toggle → Record (commits) / Cancel (discards).
 - **Edit/delete set:** tap a logged set row on Work Out (or from History session detail) → SCR7 in edit mode → change values → Record / Delete (confirmation overlay).
 - **Warm-up tagging:** auto per BR4/BR15 (weight ≤ history-derived threshold); manual override one set only.
-- **Rest timer:** user-triggered only; range 3 s–5 min; background → notification (iOS Live Activity-style; Android equivalent if available).
+- **Rest timer:** user-triggered only; range 15 s–5 min in 15 s steps; background → notification (iOS Live Activity-style; Android equivalent if available).
 - **Chart:** filter by exercise / muscle group; switch time range; horizontal scroll along timeline.
-- **Remove exercise from plan:** toggle off on add-exercises (or remove on Settings) → instant hide; sets kept; re-add restores visibility (FL8, BR3). No confirmation.
+- **Remove exercise from plan:** toggle off on add-exercises → stage the removal until the title-bar check saves it; close discards the draft. Removing from Settings persists immediately. After persistence, the exercise hides instantly; sets are kept and re-adding restores visibility (FL8, BR3). No confirmation.
 - **Android:** match Figma on both platforms; no long-press or custom gestures in v1.
 
 ## 14. Edge Cases & Failure States
@@ -472,13 +471,13 @@ Automated **unit tests** for progress math (the core domain logic):
 | T13 | Day-total aggregation | Day total = sum of per-exercise total weight moved (standard sets only) | BR7; FL5 |
 | T14 | Range derivation | Catalogue ranges derive from 75 kg standards (Beginner↓10 → Elite↑10), crossover min = 10, and do not shift with user bodyweight | BR14, BR19, BR25; FL2 |
 | T15 | Warm-up % default + bounds | Default `warmUpPercent` = 50; adjustable only within 10–70%; threshold = percent × history-derived reference weight (6-rep max cascade, standard sets only) | BR15; FL1 |
-| T16 | Increment defaults + override | Equipment-based increments (5 / 2.5 / 1 kg) apply; per-exercise override limited to 1 / 2.5 / 5 kg | BR16; FL8 |
-| T17 | Rest timer bounds | Rest timer is global, clamped to 3 s–5 min, and never auto-starts | BR20; FL4 |
+| T16 | Increment defaults | Equipment-based catalogue increments (5 / 2.5 / 1 kg) apply in Add Set; no user override UI in this version | BR16; FL8 |
+| T17 | Rest timer bounds | Rest timer is global, clamped to 15 s–5 min in 15 s steps, and never auto-starts | BR20; FL4 |
 | T18 | Default reps/weight | Defaults to last set's values for the same exercise today, else slider minimum | BR21; FL2 |
 | T19 | Slider-only input | Reps/weight accept slider input only; no out-of-range or free-text values possible | BR22; FL2 |
 | T20 | Chart filter set | Muscle-group chart filters limited to Chest/Shoulders/Back/Glutes/Quads (not Biceps/Triceps) | BR23; FL7 |
 | T21 | Reset wipe | Reset clears all data and replays onboarding from a clean state | BR24; FL11 |
-| T22 | Export/import round-trip | Export then import restores profile (incl. optional fields), settingsSlice, workoutPlan, workouts (incl. loggedExercise.order), and all set weights | BR17, E7; FL9, FL10 |
+| T22 | Export/import round-trip | Export then import restores profile (incl. optional fields), workoutPlan, workouts (incl. loggedExercise.order), and all set weights | BR17, E7; FL9, FL10 |
 | T23 | Global warm-up auto-tag off | When warmUpAutoTagEnabled is false, no auto-tagging; manual toggle still works and warm-up sets excluded from progress | BR27; FL2 |
 | T24 | Import validation | Malformed JSON, bad schemaVersion, or unknown exercise ids rejected without modifying existing data | FL10; §15 |
 | T25 | Deprecated catalogue entry | `deprecated: true` exercises excluded from pickers but still resolve in plan/history | BR30; FL8 |
@@ -506,7 +505,7 @@ flowchart LR
 | 0 — Foundation + design system | Expo + TS + SQLite + Drizzle; **catalogue seed module** (BR28–BR31) with v1 table + multipliers + `deprecated` support; data model + plan storage; Work Out home shell; design tokens from Figma; core reusable components (buttons, sliders, toggles, log row, bottom sheet shell, options menu) | App opens to Work Out home with core components; 3–5 core components render and match Figma spacing/type/color; catalogue + profile persist across restarts; **editing catalogue metadata changes picker/slider behaviour without UI code changes; deprecated ids stay out of pickers but resolve in history** | F3 (catalogue/plan storage), F15 |
 | 1 — Core loop slice (design checkpoint) | Full onboarding (splash→bodyweight→picker→rest→warm-up→Work Out); Work Out main page (empty state); Add Set sheet (pick exercise, reps slider, weight slider, warm-up toggle); record one set | Fresh install → onboarding → log one set → set appears under correct exercise; splash/one onboarding step/main page/sheet match Figma. Design-fidelity gate. | F2, F15, F1 (record), F4 (toggle visible) |
 | 2 — Work Out complete | Edit/delete sets (same sheet); warm-up auto-tag + per-set override; rest timer (optional, user-triggered); default reps/weight from last set today; delete confirmations | Full Work Out screen matches Figma inventory (add/edit/delete/warm-up/timer); warm-up excluded from totals shown here; rest timer works foreground; background notification validated on dev build | F1, F4, F5, BR21 |
-| 3 — Settings | Settings hub; profile bodyweight; edit plan (add-exercises sub-screen); global warm-up on/off + %; per-exercise warm-up %/range/increment; rest preset; unit toggle (kg/lbs/stone) | Add/remove exercises updates picker + lists; units apply uniformly; overrides apply on Work Out | F10, F11, F3 (plan editing) |
+| 3 — Settings | Settings hub; profile bodyweight; edit plan (add-exercises sub-screen); global warm-up on/off + %; rest preset; unit toggle (kg/lbs/stone). Catalogue per-exercise range/increment retained for Add Set; **no per-exercise override UI in this version** | Add/remove exercises updates picker + lists; units apply uniformly; Add Set uses catalogue ranges/increments | F10, F11, F3 (plan editing) |
 | 4 — History list + session detail | Progress measurement logic + unit tests (T1–T3, T5, T6); list view (day total + % change); session detail (read-only); edit session reusing sheet; downstream recalc; removed exercises hidden, re-enable restores | Log several days → list shows correct totals + % (or "—"); edit a past set → list updates; warm-up-only days + missing priors behave per rules | F6, F7, F9 (core math) |
 | 5 — History chart | Chart view; exercise + muscle-group filters; muscle-group weighting (T4); time ranges month/year/all-time; horizontal scroll; shared History empty state | Chart renders real data; exercise + muscle-group filters match hand-checked calcs; matches Figma on device | F8, F9 (weighting) |
 | 6 — Export, reset, polish | Export JSON via share sheet; import via document picker; reset with confirmation → full wipe → onboarding replay; final iOS + Android pass | Export → reset → re-import restores all workouts + settings; reset returns to onboarding; no blocking issues on target devices | F12, F13, F14 |
@@ -535,11 +534,6 @@ Covers every SQLite-persisted field in §7. Weights always in kg (external load,
     "warmUpAutoTagEnabled": true,
     "restTimerSeconds": 180
   },
-  "settings": {
-    "perExerciseOverrides": {
-      "bench-press": { "warmUpPercent": null, "sliderRange": null, "increment": null }
-    }
-  },
   "workoutPlan": ["bench-press", "overhead-press"],
   "workouts": [
     {
@@ -558,7 +552,7 @@ Covers every SQLite-persisted field in §7. Weights always in kg (external load,
 }
 ```
 
-- `settings.perExerciseOverrides`: keys are exercise ids; null fields = catalogue default.
+- Per-exercise catalogue fields (`sliderRange`, `increment`, `muscleMultipliers`) remain the source for Add Set and progress math; **this version does not export or edit per-exercise overrides**.
 - Import rejects files where `schemaVersion` ≠ 1 or any `exerciseId` is not in the built-in catalogue.
 - **Export after catalogue changes:** export always writes ids as stored in workouts. If an exercise was deprecated (BR30) or orphaned (BR31), those ids are still included — import on a device with the matching catalogue resolves them normally; import on a device missing those catalogue rows fails validation (same as any unknown id).
 
@@ -581,13 +575,13 @@ overrides applied in place when production decisions change the interaction:
 - Reps slider bounds (min/max/step) — BR22
 - Rest timer: notification vs Live Activity — §13
 - §17 test-to-stage mapping; FL6/FL4/FL7 interaction gaps
-- Per-exercise Settings navigation flow
+- Per-exercise Settings override UI — **not in this version**; catalogue per-exercise ranges/increments/multipliers retained for Add Set, progress math, and future versions
 - App Store support / privacy policy URL (if Apple requires one for a no-data-collected app) — Stage 7
 - Google Play vs APK-only on Android — decide at release
 
 ### Resolved (ce-doc-review 2026-06-22)
 
-- Export schema expanded (profile, settings, loggedExercise.order, warmUpAutoTagEnabled) + T22 round-trip
+- Export schema expanded (profile, loggedExercise.order, warmUpAutoTagEnabled) + T22 round-trip
 - BR27 global warm-up on/off + T23
 - E7 weight semantics (external load in kg)
 - FL3 Work Out edit entry (tap log row → SCR7)

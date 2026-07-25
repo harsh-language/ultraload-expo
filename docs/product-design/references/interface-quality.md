@@ -44,6 +44,24 @@ fades or scrolls away with the log.
 Good example: `WorkOutScreen` renders title/footer overlays outside
 `ScrollFadeView` and uses `topOffset` / `bottomOffset`.
 
+## rule/buttons-do-not-carry-drop-shadows
+Status: proposed
+Scope: `PrimaryButton`, `SecondaryButton`, and any shared button shell
+Rule: Do not put drop shadows on button primitives. Where sticky actions sit
+above scrollable content, use `ScrollFadeView` (and chrome-level shadows on
+sheets / sticky footers when needed) for separation — not per-button shadows.
+Why: Scroll fade already handles the sticky-over-scroll relationship. Button
+shadows were not specified on Figma button components and double up with fade
+and chrome treatments.
+Exceptions: `shadowAbove` remains valid on sheets, rest timer chrome, and
+sticky footer containers — not on the buttons themselves.
+Source: `src/components/ButtonShell.tsx`, `.cursor/rules/scroll-fade.mdc`,
+`src/theme/shadow.ts`
+Bad example: Spreading `shadowAbove` into `ButtonShell` so every CTA casts a
+shadow even mid-scroll or inside a sheet.
+Good example: Flat `ButtonShell`; `AppBottomSheet` / onboarding footer keep
+chrome-level `shadowAbove` where the whole overlay lifts.
+
 ## rule/empty-vs-logged-layout-follows-job
 Status: accepted
 Scope: Work Out home

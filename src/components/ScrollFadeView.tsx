@@ -7,7 +7,8 @@ import type {
   ScrollView,
   ScrollViewProps,
 } from 'react-native';
-import { ScrollView as RNScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ScrollView as GHScrollView } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -129,7 +130,7 @@ export const ScrollFadeView = forwardRef<ScrollView, ScrollFadeViewProps>(
 
   return (
     <View style={styles.container}>
-      <RNScrollView
+      <GHScrollView
         {...scrollViewProps}
         ref={ref}
         onContentSizeChange={handleContentSizeChange}
@@ -139,7 +140,7 @@ export const ScrollFadeView = forwardRef<ScrollView, ScrollFadeViewProps>(
         style={[styles.scroll, style]}
       >
         {children}
-      </RNScrollView>
+      </GHScrollView>
       {showTopFade || showBottomFade ? (
         <>
           {showTopFade ? (

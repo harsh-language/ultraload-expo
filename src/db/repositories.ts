@@ -2,10 +2,8 @@ import { eq, ne } from 'drizzle-orm';
 import type { AppDatabase, DbOrTransaction } from './client';
 import {
   profile,
-  settings,
   workoutPlan,
   workouts,
-  type PerExerciseOverride,
   type Profile,
 } from './schema';
 import type { DisplayUnit } from '../data/exercise-catalogue';
@@ -23,10 +21,6 @@ export interface ProfileState {
   onboardingComplete: boolean;
 }
 
-export interface SettingsState {
-  perExerciseOverrides: Record<string, PerExerciseOverride>;
-}
-
 export interface PlanState {
   exerciseIds: string[];
 }
@@ -41,10 +35,6 @@ export const DEFAULT_PROFILE: ProfileState = {
   warmUpAutoTagEnabled: true,
   restTimerSeconds: 180,
   onboardingComplete: false,
-};
-
-export const DEFAULT_SETTINGS: SettingsState = {
-  perExerciseOverrides: {},
 };
 
 export const DEFAULT_PLAN: PlanState = {
@@ -113,28 +103,6 @@ export async function savePlan(db: DbOrTransaction, next: PlanState): Promise<vo
     });
 }
 
-export async function loadSettings(db: AppDatabase): Promise<SettingsState> {
-  const rows = await db.select().from(settings).where(eq(settings.id, 1)).limit(1);
-  const row = rows[0];
-  if (!row) {
-    return DEFAULT_SETTINGS;
-  }
-  return { perExerciseOverrides: row.perExerciseOverrides ?? {} };
-}
-
-export async function saveSettings(
-  db: DbOrTransaction,
-  next: SettingsState,
-): Promise<void> {
-  await db
-    .insert(settings)
-    .values({ id: 1, perExerciseOverrides: next.perExerciseOverrides })
-    .onConflictDoUpdate({
-      target: settings.id,
-      set: { perExerciseOverrides: next.perExerciseOverrides },
-    });
-}
-
 function mapProfileRow(row: Profile): ProfileState {
   return {
     bodyweight: row.bodyweight,
@@ -169,16 +137,6 @@ export async function ensurePersistedRows(db: AppDatabase): Promise<void> {
   if (existingPlan.length === 0) {
     await savePlan(db, DEFAULT_PLAN);
   }
-
-  const existingSettings = await db
-    .select({ id: settings.id })
-    .from(settings)
-    .where(eq(settings.id, 1))
-    .limit(1);
-
-  if (existingSettings.length === 0) {
-    await saveSettings(db, DEFAULT_SETTINGS);
-  }
 }
 
 /** Dev-only — wipe user data; keep the fixed baseline seed day intact. */
@@ -188,6 +146,5 @@ export async function resetAllUserData(db: AppDatabase): Promise<void> {
     await tx.delete(workouts).where(ne(workouts.date, DEV_BASELINE_DATE));
     await saveProfile(tx, DEFAULT_PROFILE);
     await savePlan(tx, DEFAULT_PLAN);
-    await saveSettings(tx, DEFAULT_SETTINGS);
   });
 }

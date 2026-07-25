@@ -29,8 +29,8 @@ The blueprint is approved and complete (18/18 sections). The repo has spec artif
 | R4 | Work Out home shell; History/Settings via options menu + stack | §4, §12 |
 | R5 | Onboarding: splash → bodyweight → exercise picker → rest → warm-up → Work Out | FL1, F2 |
 | R6 | Notepad logging: Add Set sheet, record/edit/delete, warm-up rules | FL2–3, F1, F4, BR4–5, BR27 |
-| R7 | Rest timer (optional, 3s–5min, background notification on dev build) | FL4, F5, BR20 |
-| R8 | Settings hub: bodyweight, plan edit, warm-up, per-exercise overrides, units | FL8, FL12, F10–11 |
+| R7 | Rest timer (optional, 15s–5min in 15s steps, background notification on dev build) | FL4, F5, BR20 |
+| R8 | Settings hub: bodyweight, plan edit, warm-up, units | FL8, FL12, F10–11 |
 | R9 | History list + session detail + edit with progress math | FL5–6, F6–7, F9, BR6–12 |
 | R10 | History chart with exercise/muscle-group filters and time ranges | FL7, F8, BR13, BR23 |
 | R11 | Export/import JSON round-trip; reset wipes and replays onboarding | FL9–11, F12–14, T22–T24 |
@@ -114,7 +114,6 @@ ultraload/
 │   │   ├── profileSlice.ts
 │   │   ├── planSlice.ts
 │   │   ├── todaySlice.ts
-│   │   ├── settingsSlice.ts
 │   │   └── timerSlice.ts
 │   ├── components/                    # mapped from Figma v1-components
 │   ├── navigation/
@@ -187,7 +186,7 @@ ultraload/
 **Approach:**
 1. `npx create-expo-app` with TypeScript template; add Drizzle, Zustand, React Navigation, expo-sqlite.
 2. Port all 22 exercises + multipliers from blueprint §6 into `exercise-catalogue.ts` with stable ids and `deprecated?: boolean`.
-3. Define Drizzle schema for Profile, WorkoutPlan, Workout, LoggedExercise, Set, Settings overrides.
+3. Define Drizzle schema for Profile, WorkoutPlan, Workout, LoggedExercise, Set.
 4. Pull Figma variables via MCP → `src/theme/tokens.ts`; load Geist font.
 5. Build 3–5 core components; render on device in a smoke screen.
 
@@ -272,7 +271,7 @@ ultraload/
 
 ### U3. Settings (Stage 3)
 
-**Goal:** Settings hub + plan editing + units + per-exercise overrides.
+**Goal:** Settings hub + plan editing + units. Catalogue per-exercise ranges/increments retained; no override UI in this version.
 
 **Requirements:** R8, R12
 
@@ -282,7 +281,7 @@ ultraload/
 - `src/screens/SettingsScreen.tsx` (SCR14)
 - `src/screens/AddExercisesScreen.tsx` (SCR15)
 - `src/domain/units.ts`
-- `src/stores/settingsSlice.ts`, `src/stores/profileSlice.ts`
+- `src/stores/profileSlice.ts`
 
 **Approach:**
 1. Settings hub sections per blueprint §4.

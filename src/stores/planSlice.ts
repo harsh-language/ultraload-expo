@@ -21,7 +21,7 @@ export const usePlanStore = create<PlanSlice>((set, get) => ({
     set({ ...planState, hydrated: true });
   },
   updatePlan: async (db, exerciseIds) => {
-    await savePlan(db, { exerciseIds });
     set({ exerciseIds, hydrated: true });
+    await savePlan(db, { exerciseIds });
   },
 }));

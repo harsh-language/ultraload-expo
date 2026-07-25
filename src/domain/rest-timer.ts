@@ -1,12 +1,17 @@
-/** BR20 — global rest timer bounds (seconds). */
-export const REST_TIMER_MIN_SECONDS = 3;
+/** BR20 — global rest timer bounds and preset step (seconds). */
+export const REST_TIMER_MIN_SECONDS = 15;
 export const REST_TIMER_MAX_SECONDS = 300;
+export const REST_TIMER_STEP_SECONDS = 15;
 
 export function clampRestTimerSeconds(seconds: number): number {
-  return Math.min(
+  const clamped = Math.min(
     REST_TIMER_MAX_SECONDS,
     Math.max(REST_TIMER_MIN_SECONDS, seconds),
   );
+  const steps = Math.round(
+    (clamped - REST_TIMER_MIN_SECONDS) / REST_TIMER_STEP_SECONDS,
+  );
+  return REST_TIMER_MIN_SECONDS + steps * REST_TIMER_STEP_SECONDS;
 }
 
 export function formatRestTimerDisplay(totalSeconds: number): string {

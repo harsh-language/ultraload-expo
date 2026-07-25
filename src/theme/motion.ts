@@ -4,7 +4,7 @@ import { Easing } from 'react-native-reanimated';
  * Open / close / move duration for sheets, menus, dropdowns, and other panels.
  * Use for every panel appear, dismiss, or reposition animation.
  */
-export const PANEL_TRANSITION_MS = 100;
+export const PANEL_TRANSITION_MS = 150;
 
 export const panelTransitionTiming = {
   duration: PANEL_TRANSITION_MS,

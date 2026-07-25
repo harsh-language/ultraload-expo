@@ -11,6 +11,7 @@ export { ChevronBottomIcon } from './ChevronBottomIcon';
 export { ChevronTopIcon } from './ChevronTopIcon';
 export { ClockIcon } from './ClockIcon';
 export { CloseIcon } from './CloseIcon';
+export { DragIcon } from './DragIcon';
 export { ForwardIcon } from './ForwardIcon';
 export { PauseIcon } from './PauseIcon';
 export { PlayIcon } from './PlayIcon';

@@ -1,6 +1,5 @@
 import { getExerciseById } from '../../src/domain/catalogue';
 import {
-  getEffectiveWarmUpPercent,
   getReferenceWeightFromHistory,
   getWarmUpThreshold,
   shouldAutoTagWarmUp,
@@ -84,49 +83,5 @@ describe('warmup domain', () => {
 
   it('returns null when no standard-set history exists (T15)', () => {
     expect(getReferenceWeightFromHistory([])).toBeNull();
-  });
-
-  it('resolves per-exercise warmUpPercent override', () => {
-    expect(
-      getEffectiveWarmUpPercent(50, {
-        warmUpPercent: 40,
-        sliderRange: null,
-        increment: null,
-      }),
-    ).toBe(40);
-
-    expect(
-      getEffectiveWarmUpPercent(50, {
-        warmUpPercent: null,
-        sliderRange: null,
-        increment: null,
-      }),
-    ).toBe(50);
-  });
-
-  it('auto-tags using per-exercise warmUpPercent override', () => {
-    const warmUpPercent = getEffectiveWarmUpPercent(50, {
-      warmUpPercent: 40,
-      sliderRange: null,
-      increment: null,
-    });
-
-    expect(
-      shouldAutoTagWarmUp({
-        weight: 40,
-        warmUpAutoTagEnabled: true,
-        warmUpPercent,
-        referenceWeight: 100,
-      }),
-    ).toBe(true);
-
-    expect(
-      shouldAutoTagWarmUp({
-        weight: 45,
-        warmUpAutoTagEnabled: true,
-        warmUpPercent,
-        referenceWeight: 100,
-      }),
-    ).toBe(false);
   });
 });

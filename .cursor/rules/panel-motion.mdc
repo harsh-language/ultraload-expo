@@ -1,12 +1,12 @@
 ---
-description: Panel open/close/move animations use 100ms from theme/motion
+description: Panel open/close/move animations use 150ms from theme/motion
 globs: src/components/**/*.{ts,tsx},src/screens/**/*.{ts,tsx},src/navigation/**/*.{ts,tsx}
 alwaysApply: false
 ---
 
 # Panel motion
 
-Sheets, menus, dropdowns, accordions, and other panels open, close, and move in **100ms**.
+Sheets, menus, dropdowns, accordions, and other panels open, close, and move in **150ms**.
 
 ## Source of truth
 
@@ -30,7 +30,7 @@ Sheets, menus, dropdowns, accordions, and other panels open, close, and move in 
 
 ## Rules
 
-- Do not hardcode panel durations (including `100`) in components
+- Do not hardcode panel durations (including `150`) in components
 - Do not use RN `Modal` for menus/dropdowns — presentation blocks touches briefly after open; use an absolute overlay with `panelTransitionTiming`
 - Do not use RN `Modal` `animationType="fade"` / `"slide"` for panels — system timing is slower; use `animationType="none"` plus Reanimated with `panelTransitionTiming` only when a true Modal is required
 - Bottom sheets: pass `panelTransitionTiming.duration` into `useBottomSheetTimingConfigs`

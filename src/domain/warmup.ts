@@ -1,5 +1,3 @@
-import type { PerExerciseOverride } from '../db/schema';
-
 export interface TodayWorkoutForWarmUp {
   loggedExercises: {
     exerciseId: string;
@@ -12,14 +10,6 @@ export interface WarmUpTagInput {
   warmUpAutoTagEnabled: boolean;
   warmUpPercent: number;
   referenceWeight: number | null;
-}
-
-/** Effective warm-up % for auto-tag (per-exercise override when set). */
-export function getEffectiveWarmUpPercent(
-  globalWarmUpPercent: number,
-  override?: PerExerciseOverride | null,
-): number {
-  return override?.warmUpPercent ?? globalWarmUpPercent;
 }
 
 export interface StandardSetForReference {

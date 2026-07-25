@@ -18,7 +18,7 @@ export const shadowBelow: ViewStyle =
     default: {},
   }) ?? {};
 
-/** Figma effect style `above` — upward drop shadow (buttons, footer overlays). */
+/** Figma effect style `above` — upward drop shadow (sheets, sticky footers). */
 export const shadowAbove: ViewStyle =
   Platform.select({
     ios: {

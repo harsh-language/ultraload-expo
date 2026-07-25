@@ -26,20 +26,6 @@ export const workoutPlan = sqliteTable('workout_plan', {
     .default([]),
 });
 
-export interface PerExerciseOverride {
-  warmUpPercent: number | null;
-  sliderRange: { min: number; max: number } | null;
-  increment: number | null;
-}
-
-export const settings = sqliteTable('settings', {
-  id: integer('id').primaryKey().default(1),
-  perExerciseOverrides: text('per_exercise_overrides', { mode: 'json' })
-    .$type<Record<string, PerExerciseOverride>>()
-    .notNull()
-    .default({}),
-});
-
 export const workouts = sqliteTable('workouts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   date: text('date').notNull().unique(),
@@ -68,7 +54,6 @@ export const sets = sqliteTable('sets', {
 
 export type Profile = typeof profile.$inferSelect;
 export type WorkoutPlan = typeof workoutPlan.$inferSelect;
-export type Settings = typeof settings.$inferSelect;
 export type Workout = typeof workouts.$inferSelect;
 export type LoggedExercise = typeof loggedExercises.$inferSelect;
 export type Set = typeof sets.$inferSelect;

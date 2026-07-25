@@ -19,7 +19,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Options menu (history, settings, reset) | **Built** (Settings navigates; History is a stub; reset is dev-only and must be removed before U7 / App Store compile) |
 | Rest timer | **Built** (foreground countdown, pause/resume/dismiss, background notification) |
 | History (list, chart, session detail) | **Not built** (options menu entry only) |
-| Settings | **Built** (profile, plan editing, presets, units, per-exercise overrides) |
+| Settings | **Built** (profile, plan editing, presets, units) |
 | Export/import/reset | **Not built** (U6; dev reset remains in the options menu) |
 | Progress math (% change, chart weighting) | **Not built** (schema + domain helpers only) |
 | Unit tests (domain, screens, components) | **Built** — Jest via `npm test` |
@@ -40,7 +40,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | History — list | Per-day total weight + % change over time | Not built |
 | History — chart | Progress trends with exercise / muscle-group filters | Not built |
 | Session detail | Review (and edit) a past day's sets | Not built |
-| Settings | Profile, plan, presets, units, and per-exercise overrides | Built — `SettingsScreen` |
+| Settings | Profile, plan, presets, units | Built — `SettingsScreen` |
 | Add exercises | Add/remove exercises from the workout plan | Built — `AddExercisesScreen` (instant toggle; plan hide only, past sets kept) |
 
 ## Flows and actions
@@ -53,7 +53,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 - **Navigate elsewhere:** session title bar chevron → options menu (`OptionsMenuDropdown`) — Settings opens the Settings stack; History remains a stub; dev reset wipes data and replays onboarding.
 - **Edit/delete sets:** tap a logged row to edit; delete opens a confirmation sheet.
 - **Rest timer:** Work Out supports start, pause/resume, dismiss, and a background notification.
-- **Manage settings:** edit profile, warm-up/rest presets, display units, plan exercises, and per-exercise overrides; changes write through to SQLite.
+- **Manage settings:** edit profile, warm-up/rest presets, display units, and plan exercises; changes write through to SQLite. Per-exercise override UI is not in this version (catalogue per-exercise data still used for sliders).
 - **Review progress / export:** planned — History is U4/U5; export/import/reset are U6.
 
 ## Key concepts
@@ -88,13 +88,13 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 | Exercise picker chrome | `ExerciseSelectionTicker`, `OnboardingProgress`, `ExerciseDropdown` |
 | Icons (Central Icons wrappers) | `src/components/icons/` — add one file per icon as needed |
 | Exercise catalogue + plan | `src/data/exercise-catalogue.ts`, `src/domain/catalogue.ts`, `src/stores/planSlice.ts` |
-| Warm-up, slider ranges, overrides | `src/domain/warmup.ts`, `src/domain/ranges.ts`, `src/domain/exercise-overrides.ts` |
+| Warm-up, slider ranges | `src/domain/warmup.ts`, `src/domain/ranges.ts` |
 | Weight units | `src/domain/units.ts` |
 | Profile validation | `src/domain/profile-inputs.ts`, `src/domain/height-input.ts` |
 | Exercise picker layout math | `src/domain/exercise-selection-ticker.ts` |
 | Calendar day key | `src/domain/day-record.ts` |
 | Today's workout state | `src/stores/todaySlice.ts`, `src/db/workoutRepository.ts` |
-| Profile / settings / plan persistence | `src/stores/profileSlice.ts`, `settingsSlice.ts`, `src/db/repositories.ts` |
+| Profile / plan persistence | `src/stores/profileSlice.ts`, `src/db/repositories.ts` |
 | Dev app reset | `src/stores/devAppResetSlice.ts` |
 | Rest timer state | `src/stores/timerSlice.ts` |
 | SQLite schema | `src/db/schema.ts` — `profile`, `workout_plan`, `settings`, `workouts`, `logged_exercises`, `sets` |
