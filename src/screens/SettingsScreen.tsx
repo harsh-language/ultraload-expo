@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
@@ -19,6 +18,7 @@ import { PlanExerciseTagRow } from '../components/PlanExerciseTagRow';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { SectionDivider } from '../components/SectionDivider';
+import { ScreenTitleBar } from '../components/ScreenTitleBar';
 import { UnitOptionRow } from '../components/UnitOptionRow';
 import { CircleCheckIcon } from '../components/icons/CircleCheckIcon';
 import { CircleXIcon } from '../components/icons/CircleXIcon';
@@ -32,10 +32,8 @@ import {
   parseHeightForSave,
 } from '../domain/height-input';
 import {
-  BODYWEIGHT_MAX,
-  BODYWEIGHT_MIN,
-  isValidBodyweight,
   parseAgeForSave,
+  parseBodyweightForSave,
   sanitizeAge,
 } from '../domain/profile-inputs';
 import { moveItemInList } from '../domain/reorder';
@@ -46,7 +44,6 @@ import {
   clampRestTimerSeconds,
 } from '../domain/rest-timer';
 import {
-  displayToKg,
   formatDisplayWeight,
   getUnitLabel,
   kgToDisplay,
@@ -54,16 +51,9 @@ import {
 } from '../domain/units';
 import type { MainStackParamList } from '../navigation/types';
 import { usePlanStore, useProfileStore } from '../stores';
-import { shadowBelow } from '../theme/shadow';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
-
-/** Figma session-title-bar fill — vertical content-trans-light → bg-trans-1 over bg-1 */
-const TITLE_BAR_GRADIENT = [
-  colors['content-trans-light'],
-  colors['bg-trans-1'],
-] as const;
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Settings'>;
 
@@ -137,7 +127,6 @@ export function SettingsScreen({ navigation }: Props) {
     heightDisplayString(heightInches),
   );
   const [ageText, setAgeText] = useState(() => ageDisplayString(ageValue));
-  const [reorderingExercises, setReorderingExercises] = useState(false);
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [dragHoverIndex, setDragHoverIndex] = useState<number | null>(null);
 
@@ -162,17 +151,8 @@ export function SettingsScreen({ navigation }: Props) {
   );
 
   const persistBodyweight = useCallback(async () => {
-    if (!isValidBodyweight(bodyweightText)) {
-      setBodyweightText(bodyweightDisplayString(bodyweightKg, units));
-      return;
-    }
-    const displayValue = Number.parseFloat(bodyweightText);
-    const kg = displayToKg(displayValue, units);
-    if (
-      !Number.isFinite(kg) ||
-      kg < BODYWEIGHT_MIN ||
-      kg > BODYWEIGHT_MAX
-    ) {
+    const kg = parseBodyweightForSave(bodyweightText, units);
+    if (kg === undefined) {
       setBodyweightText(bodyweightDisplayString(bodyweightKg, units));
       return;
     }
@@ -188,26 +168,12 @@ export function SettingsScreen({ navigation }: Props) {
     await updateProfile(getDatabase(), { height: next });
   }, [heightInches, heightText, updateProfile]);
 
-  const persistAge = useCallback(async () => {
-    await updateProfile(getDatabase(), {
-      age: parseAgeForSave(ageText),
-    });
-  }, [ageText, updateProfile]);
-
   const handleBodyweightChange = useCallback(
     (value: string) => {
       const next = sanitizeDisplayWeightInput(value);
       setBodyweightText(next);
-      if (!isValidBodyweight(next)) {
-        return;
-      }
-      const displayValue = Number.parseFloat(next);
-      const kg = displayToKg(displayValue, units);
-      if (
-        !Number.isFinite(kg) ||
-        kg < BODYWEIGHT_MIN ||
-        kg > BODYWEIGHT_MAX
-      ) {
+      const kg = parseBodyweightForSave(next, units);
+      if (kg === undefined) {
         return;
       }
       void updateProfile(getDatabase(), { bodyweight: kg });
@@ -242,13 +208,8 @@ export function SettingsScreen({ navigation }: Props) {
         return;
       }
 
-      const displayValue = Number.parseFloat(bodyweightText);
-      const draftKg = displayToKg(displayValue, units);
-      const validDraft =
-        Number.isFinite(draftKg) &&
-        draftKg >= BODYWEIGHT_MIN &&
-        draftKg <= BODYWEIGHT_MAX;
-      const nextBodyweight = validDraft ? draftKg : bodyweightKg;
+      const draftKg = parseBodyweightForSave(bodyweightText, units);
+      const nextBodyweight = draftKg ?? bodyweightKg;
 
       if (nextBodyweight != null) {
         setBodyweightText(bodyweightDisplayString(nextBodyweight, next));
@@ -273,7 +234,6 @@ export function SettingsScreen({ navigation }: Props) {
   );
 
   const handleExerciseDragStart = useCallback((index: number) => {
-    setReorderingExercises(true);
     setDragFromIndex(index);
     setDragHoverIndex(index);
   }, []);
@@ -287,7 +247,6 @@ export function SettingsScreen({ navigation }: Props) {
 
   const handleExerciseDragEnd = useCallback(
     (fromIndex: number, toIndex: number) => {
-      setReorderingExercises(false);
       setDragFromIndex(null);
       setDragHoverIndex(null);
       if (fromIndex === toIndex) {
@@ -301,14 +260,7 @@ export function SettingsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.titleBar}>
-        <LinearGradient
-          colors={[...TITLE_BAR_GRADIENT]}
-          end={{ x: 0.5, y: 1 }}
-          pointerEvents="none"
-          start={{ x: 0.5, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
+      <ScreenTitleBar>
         <IconButton
           accessibilityLabel="back"
           onPress={() => navigation.goBack()}
@@ -319,7 +271,7 @@ export function SettingsScreen({ navigation }: Props) {
         <Pressable onPress={Keyboard.dismiss} style={styles.titlePress}>
           <Text style={styles.title}>settings</Text>
         </Pressable>
-      </View>
+      </ScreenTitleBar>
 
       <ScrollFadeView
         contentContainerStyle={[
@@ -331,7 +283,7 @@ export function SettingsScreen({ navigation }: Props) {
         ]}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
-        scrollEnabled={!reorderingExercises}
+        scrollEnabled={dragFromIndex == null}
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
         topFadeEnabled={false}
@@ -369,7 +321,6 @@ export function SettingsScreen({ navigation }: Props) {
           <InputComboUnit
             keyboardType="number-pad"
             leadingLabel="age :"
-            onBlur={persistAge}
             onChangeText={handleAgeChange}
             unit="years"
             value={ageText}
@@ -482,17 +433,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-  },
-  titleBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing['s-8'],
-    padding: spacing['s-8'],
-    backgroundColor: colors['bg-1'],
-    borderBottomWidth: spacing['s-1'],
-    borderBottomColor: colors['border-2'],
-    zIndex: 1,
-    ...shadowBelow,
   },
   title: {
     ...typography.brand1,

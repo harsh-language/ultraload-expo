@@ -1,17 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Pressable,
-  Text,
-  TextInput,
-} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
 import {
   applyHeightDigitChange,
   extractHeightDigits,
   formatHeightDigits,
 } from '../domain/height-input';
-import { inputPillStyles as styles } from './inputPillStyles';
-import { colors } from '../theme/tokens';
-import { typography } from '../theme/typography';
+import { InputPillShell } from './InputPillShell';
 
 interface InputHeightFieldProps {
   value: string;
@@ -31,11 +24,8 @@ export function InputHeightField({
   leadingLabel,
   onBlur,
 }: InputHeightFieldProps) {
-  const [focused, setFocused] = useState(false);
-  const inputRef = useRef<TextInput>(null);
   const [digits, setDigits] = useState(() => extractHeightDigits(value));
   const displayValue = formatHeightDigits(digits);
-  const hasValue = digits.length > 0;
 
   useEffect(() => {
     setDigits(extractHeightDigits(value));
@@ -51,48 +41,15 @@ export function InputHeightField({
   );
 
   return (
-    <Pressable
-      accessibilityRole="none"
-      onPress={() => {
-        inputRef.current?.focus();
-      }}
-      style={[styles.pill, focused && styles.pillFocused]}
-    >
-      {leadingLabel ? (
-        <Text pointerEvents="none" style={[typography.para2, styles.leadingLabel]}>
-          {leadingLabel}
-        </Text>
-      ) : null}
-      <TextInput
-        ref={inputRef}
-        keyboardType="number-pad"
-        onBlur={() => {
-          setFocused(false);
-          onBlur?.();
-        }}
-        onChangeText={handleChangeText}
-        onFocus={() => setFocused(true)}
-        placeholder={placeholder}
-        placeholderTextColor={colors['content-3']}
-        style={[
-          hasValue ? typography.para1 : typography.para2,
-          styles.input,
-          hasValue && styles.inputFilled,
-        ]}
-        value={displayValue}
-      />
-      {unit ? (
-        <Text
-          pointerEvents="none"
-          style={[
-            typography.para2,
-            styles.unit,
-            focused && styles.unitFocused,
-          ]}
-        >
-          {unit}
-        </Text>
-      ) : null}
-    </Pressable>
+    <InputPillShell
+      hasValue={digits.length > 0}
+      keyboardType="number-pad"
+      leadingLabel={leadingLabel}
+      onBlur={onBlur}
+      onChangeText={handleChangeText}
+      placeholder={placeholder}
+      unit={unit}
+      value={displayValue}
+    />
   );
 }

@@ -1,15 +1,14 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton } from '../components/IconButton';
+import { ScreenTitleBar } from '../components/ScreenTitleBar';
 import { CheckmarkIcon } from '../components/icons/CheckmarkIcon';
 import { CloseIcon } from '../components/icons/CloseIcon';
 import { getDatabase } from '../db/client';
 import type { MainStackParamList } from '../navigation/types';
 import { usePlanStore } from '../stores';
-import { shadowBelow } from '../theme/shadow';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -17,12 +16,6 @@ import {
   ExercisePicker,
   getAddExercisesScrollBottomInset,
 } from './onboarding/ExercisePicker';
-
-/** Figma session-title-bar fill — vertical content-trans-light → bg-trans-1 over bg-1 */
-const TITLE_BAR_GRADIENT = [
-  colors['content-trans-light'],
-  colors['bg-trans-1'],
-] as const;
 
 type Props = NativeStackScreenProps<MainStackParamList, 'AddExercises'>;
 
@@ -69,14 +62,7 @@ export function AddExercisesScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.titleBar}>
-        <LinearGradient
-          colors={[...TITLE_BAR_GRADIENT]}
-          end={{ x: 0.5, y: 1 }}
-          pointerEvents="none"
-          start={{ x: 0.5, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
+      <ScreenTitleBar>
         <Text style={styles.title}>select</Text>
         <IconButton
           accessibilityLabel="discard changes"
@@ -95,7 +81,7 @@ export function AddExercisesScreen({ navigation }: Props) {
         >
           <CheckmarkIcon />
         </IconButton>
-      </View>
+      </ScreenTitleBar>
 
       <View style={styles.body}>
         <ExercisePicker
@@ -116,17 +102,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors['bg-1'],
-  },
-  titleBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing['s-8'],
-    padding: spacing['s-8'],
-    backgroundColor: colors['bg-1'],
-    borderBottomWidth: spacing['s-1'],
-    borderBottomColor: colors['border-2'],
-    zIndex: 1,
-    ...shadowBelow,
   },
   title: {
     ...typography.brand1,

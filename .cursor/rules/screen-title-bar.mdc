@@ -1,0 +1,22 @@
+---
+description: Reuse ScreenTitleBar for Settings / Add Exercises chrome — not the workout SessionTitleBar
+globs: src/screens/**/*.{ts,tsx}, src/components/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Screen title bar
+
+Pinned screen chrome (Settings, Add Exercises): use `ScreenTitleBar` from
+`src/components/ScreenTitleBar.tsx`.
+
+Gradient stops: `titleBarGradientColors` from `src/theme/titleBar.ts`
+(`content-trans-light` → `bg-trans-1`). Do not redefine them in screens.
+
+## Do not confuse with
+
+| Component | Use |
+|-----------|-----|
+| `ScreenTitleBar` | Settings / Add Exercises — border, shadow, gradient fill; children = icons + title |
+| `SessionTitleBar` / `TodaySessionTitleBar` | Workout homepage — date + session total |
+
+Pass leading/trailing controls as children. Keep title typography at the call site.

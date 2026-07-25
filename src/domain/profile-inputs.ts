@@ -1,3 +1,6 @@
+import type { DisplayUnit } from '../data/exercise-catalogue';
+import { displayToKg } from './units';
+
 export const BODYWEIGHT_MIN = 0;
 export const BODYWEIGHT_MAX = 200;
 export const AGE_MIN = 0;
@@ -14,6 +17,29 @@ export function isValidBodyweight(value: string): boolean {
     parsed >= BODYWEIGHT_MIN &&
     parsed <= BODYWEIGHT_MAX
   );
+}
+
+/**
+ * Settings body weight for persistence (kg).
+ * Returns `undefined` when the display text is empty, invalid, or out of range.
+ */
+export function parseBodyweightForSave(
+  value: string,
+  units: DisplayUnit,
+): number | undefined {
+  if (!isValidBodyweight(value)) {
+    return undefined;
+  }
+  const displayValue = Number.parseFloat(value);
+  const kg = displayToKg(displayValue, units);
+  if (
+    !Number.isFinite(kg) ||
+    kg < BODYWEIGHT_MIN ||
+    kg > BODYWEIGHT_MAX
+  ) {
+    return undefined;
+  }
+  return kg;
 }
 
 export function sanitizeBodyweight(raw: string): string {

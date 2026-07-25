@@ -4,11 +4,13 @@ import {
   isValidAgeInput,
   isValidBodyweight,
   parseAgeForSave,
+  parseBodyweightForSave,
   parseOptionalInt,
   sanitizeAge,
   sanitizeBodyweight,
   sanitizeName,
 } from '../../src/domain/profile-inputs';
+import { KG_PER_LB } from '../../src/domain/units';
 import {
   applyHeightDigitChange,
   formatHeightDigits,
@@ -49,6 +51,18 @@ describe('profile-inputs', () => {
       expect(isValidBodyweight('')).toBe(false);
       expect(isValidBodyweight('201')).toBe(false);
       expect(isValidBodyweight('-1')).toBe(false);
+    });
+  });
+
+  describe('parseBodyweightForSave', () => {
+    it('returns kg for valid display values', () => {
+      expect(parseBodyweightForSave('65', 'kg')).toBe(65);
+      expect(parseBodyweightForSave('100', 'lbs')).toBe(100 * KG_PER_LB);
+    });
+
+    it('returns undefined for empty or out-of-range display values', () => {
+      expect(parseBodyweightForSave('', 'kg')).toBeUndefined();
+      expect(parseBodyweightForSave('201', 'kg')).toBeUndefined();
     });
   });
 
