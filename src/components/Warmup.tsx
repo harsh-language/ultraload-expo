@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
+import { ScaledPressable } from './ScaledPressable';
 
 interface WarmupProps {
   value: boolean;
@@ -10,7 +11,7 @@ interface WarmupProps {
 /** Figma `input-option-unit` — off (border-2 / content-2) ↔ on (border-1 / content-1). */
 export function Warmup({ value, onValueChange }: WarmupProps) {
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityLabel="warmup"
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
@@ -29,7 +30,7 @@ export function Warmup({ value, onValueChange }: WarmupProps) {
       >
         W
       </Text>
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

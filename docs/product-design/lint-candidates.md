@@ -34,7 +34,7 @@ the violation have a concrete fix?
 - Likely false positives: low
 - Concrete fix: yes
 - Candidate: flag hardcoded panel durations and require
-  `PANEL_TRANSITION_MS` / `panelTransitionTiming` for sheets, menus, dropdowns,
+  `panelSpringConfig` for sheets, menus, dropdowns,
   and accordions
 - Evidence: `.cursor/rules/panel-motion.mdc`, `src/theme/motion.ts`
 

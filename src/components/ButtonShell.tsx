@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { radii, spacing } from '../theme/tokens';
+import { ScaledPressable } from './ScaledPressable';
 
 export interface ButtonShellVariantStyles {
   base: ViewStyle;
@@ -24,7 +25,7 @@ export function ButtonShell({
   children,
 }: ButtonShellProps) {
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
@@ -39,7 +40,7 @@ export function ButtonShell({
       {typeof children === 'function'
         ? ({ pressed }) => children(pressed)
         : children}
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

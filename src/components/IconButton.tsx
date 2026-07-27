@@ -1,11 +1,12 @@
 import { type ReactElement } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { AppIconProps } from './icons/createIcon';
 import {
   cloneIconWithColor,
   pressedIconColor,
 } from './icons/pressedIconColor';
+import { ScaledPressable } from './ScaledPressable';
 
 /** Figma `button-icon-2` (default) / `button-icon-1` (primary). */
 export type IconButtonVariant = 'default' | 'primary';
@@ -32,7 +33,7 @@ export function IconButton({
   const isPrimary = variant === 'primary';
 
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       accessibilityState={{ expanded: pressedActive }}
@@ -53,7 +54,7 @@ export function IconButton({
             : pressedIconColor(pressed || pressedActive),
         )
       }
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

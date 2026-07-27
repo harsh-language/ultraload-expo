@@ -12,6 +12,7 @@
     "drizzle-orm": "^0.45.2",
     "expo": "~56.0.12",
     "expo-font": "~56.0.7",
+    "expo-haptics": "~56.0.3",
     "expo-linear-gradient": "~56.0.4",
     "expo-notifications": "~56.0.0",
     "expo-sqlite": "~56.0.5",

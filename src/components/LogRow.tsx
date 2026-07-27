@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { formatSetIndex } from '../domain/set-labels';
 import { formatDisplayWeight } from '../domain/units';
 import { colors, spacing } from '../theme/tokens';
@@ -7,6 +7,7 @@ import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 import { CloseIcon, IconLink, PencilIcon } from './icons';
 import { logSetTextStyles } from './logSetTextStyles';
+import { ScaledPressable } from './ScaledPressable';
 
 export type LogStatDirection = 'up' | 'down' | 'flat';
 
@@ -82,7 +83,7 @@ function RowPressable({
   children: ReactNode;
 }) {
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityRole={onPress ? 'button' : undefined}
       disabled={!onPress}
       onPress={onPress}
@@ -93,7 +94,7 @@ function RowPressable({
       ]}
     >
       {children}
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

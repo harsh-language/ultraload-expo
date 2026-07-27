@@ -2,9 +2,11 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
+import { rubberband } from '../theme/motion';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { commitHaptic } from './commitHaptic';
 
 const KNOB_WIDTH = spacing['s-5'];
 /** Figma disabled input-slider — `opacity-40` on the whole control. */
@@ -109,6 +111,22 @@ function xToNearestIndex(
   return clamp(index, 0, positionCount - 1);
 }
 
+/** Map finger X through rubber-band past track ends (visual only). */
+export function rubberbandTrackX(x: number, trackWidth: number): number {
+  if (trackWidth <= 0) {
+    return x;
+  }
+  const minCenter = KNOB_WIDTH / 2;
+  const maxCenter = trackWidth - KNOB_WIDTH / 2;
+  if (x < minCenter) {
+    return minCenter - rubberband(minCenter - x, trackWidth);
+  }
+  if (x > maxCenter) {
+    return maxCenter + rubberband(x - maxCenter, trackWidth);
+  }
+  return x;
+}
+
 export function InputSlider({
   value,
   minimumValue,
@@ -125,6 +143,7 @@ export function InputSlider({
 }: InputSliderProps) {
   const [pressed, setPressed] = useState(false);
   const [trackWidth, setTrackWidth] = useState(0);
+  const [dragCenterX, setDragCenterX] = useState<number | null>(null);
   const valueRef = useRef(value);
   valueRef.current = value;
 
@@ -138,11 +157,13 @@ export function InputSlider({
     [value, minimumValue, step, positionCount],
   );
 
-  const knobCenterX = useMemo(
+  const restingCenterX = useMemo(
     () => positionCenterX(activeIndex, trackWidth, positionCount),
     [activeIndex, trackWidth, positionCount],
   );
 
+  const knobCenterX =
+    pressed && dragCenterX != null ? dragCenterX : restingCenterX;
   const knobLeft = knobCenterX - KNOB_WIDTH / 2;
   const fillWidth = knobCenterX + KNOB_WIDTH / 2;
 
@@ -155,6 +176,7 @@ export function InputSlider({
       if (trackWidth <= 0) {
         return;
       }
+      setDragCenterX(rubberbandTrackX(x, trackWidth));
       const index = xToNearestIndex(x, trackWidth, positionCount);
       const next = indexToValue(index, minimumValue, step);
       if (next !== valueRef.current) {
@@ -165,7 +187,11 @@ export function InputSlider({
   );
 
   const setPressedTrue = useCallback(() => setPressed(true), []);
-  const setPressedFalse = useCallback(() => setPressed(false), []);
+  const endPress = useCallback(() => {
+    setPressed(false);
+    setDragCenterX(null);
+    commitHaptic();
+  }, []);
 
   const gesture = useMemo(
     () =>
@@ -180,9 +206,9 @@ export function InputSlider({
           runOnJS(updateFromX)(event.x);
         })
         .onFinalize(() => {
-          runOnJS(setPressedFalse)();
+          runOnJS(endPress)();
         }),
-    [disabled, setPressedTrue, setPressedFalse, updateFromX],
+    [disabled, setPressedTrue, endPress, updateFromX],
   );
 
   const displayValue = formatValue(value);

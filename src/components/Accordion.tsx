@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
-  withTiming,
 } from 'react-native-reanimated';
-import { panelTransitionTiming } from '../theme/motion';
+import { animateWithMotionPreference } from '../theme/animateWithMotionPreference';
+import {
+  panelExitSpringConfig,
+  panelSpringConfig,
+} from '../theme/motion';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -16,6 +20,7 @@ import {
 } from './AccordionTimelineGutter';
 import { ChevronBottomIcon } from './icons/ChevronBottomIcon';
 import { ChevronTopIcon } from './icons/ChevronTopIcon';
+import { ScaledPressable } from './ScaledPressable';
 
 const ITEM_LINE_HEIGHT = typography.para4.lineHeight ?? spacing['s-7'];
 
@@ -48,6 +53,7 @@ export function Accordion({ title, items }: AccordionProps) {
   const [measuredBodyHeight, setMeasuredBodyHeight] = useState(0);
   const expandedProgress = useSharedValue(0);
   const bodyHeight = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (measuredBodyHeight > 0) {
@@ -60,11 +66,18 @@ export function Accordion({ title, items }: AccordionProps) {
   }, []);
 
   useEffect(() => {
-    expandedProgress.value = withTiming(
-      expanded ? 1 : 0,
-      panelTransitionTiming,
+    const target = expanded ? 1 : 0;
+    // Skip no-op springs (e.g. mount at 0→0) — duration-based withSpring
+    // divides by zero energy when already at rest.
+    if (expandedProgress.value === target) {
+      return;
+    }
+    expandedProgress.value = animateWithMotionPreference(
+      target,
+      reduceMotion === true,
+      expanded ? panelSpringConfig : panelExitSpringConfig,
     );
-  }, [expanded, expandedProgress]);
+  }, [expanded, expandedProgress, reduceMotion]);
 
   const handleBodyLayout = useCallback((event: LayoutChangeEvent) => {
     const nextHeight = event.nativeEvent.layout.height;
@@ -99,7 +112,7 @@ export function Accordion({ title, items }: AccordionProps) {
 
   return (
     <View style={styles.container}>
-      <Pressable
+      <ScaledPressable
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         onPress={handleToggle}
@@ -129,7 +142,7 @@ export function Accordion({ title, items }: AccordionProps) {
             </>
           );
         }}
-      </Pressable>
+      </ScaledPressable>
 
       <Animated.View
         pointerEvents={expanded ? 'auto' : 'none'}

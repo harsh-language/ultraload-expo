@@ -11,11 +11,12 @@ import {
 import Animated, {
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
-  withTiming,
 } from 'react-native-reanimated';
+import { animateWithMotionPreference } from '../theme/animateWithMotionPreference';
 import { interactiveContentColor } from '../theme/interactiveContentColor';
-import { panelTransitionTiming } from '../theme/motion';
+import { INTERACTIVE_SCALE, menuSpringConfig } from '../theme/motion';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -26,6 +27,7 @@ import {
   SettingsGearIcon,
   type AppIconProps,
 } from './icons';
+import { ScaledPressable } from './ScaledPressable';
 
 export type OptionsMenuKey = 'history' | 'settings' | 'reset';
 
@@ -55,31 +57,56 @@ export function OptionsMenuDropdown({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [mounted, setMounted] = useState(false);
   const wasVisibleRef = useRef(false);
+  const reduceMotion = useReducedMotion();
   const opacity = useSharedValue(0);
+  const scale = useSharedValue(INTERACTIVE_SCALE);
 
   useEffect(() => {
     const wasVisible = wasVisibleRef.current;
     const shouldShow = visible && anchorLayout != null;
     wasVisibleRef.current = shouldShow;
+    const reduced = reduceMotion === true;
 
     if (shouldShow && !wasVisible) {
       setMounted(true);
       opacity.value = 0;
-      opacity.value = withTiming(1, panelTransitionTiming);
+      scale.value = reduced ? 1 : INTERACTIVE_SCALE;
+      opacity.value = animateWithMotionPreference(
+        1,
+        reduced,
+        menuSpringConfig,
+      );
+      if (!reduced) {
+        scale.value = animateWithMotionPreference(1, false, menuSpringConfig);
+      }
       return;
     }
 
     if (!shouldShow && wasVisible) {
-      opacity.value = withTiming(0, panelTransitionTiming, (finished) => {
-        if (finished) {
-          runOnJS(setMounted)(false);
-        }
-      });
+      opacity.value = animateWithMotionPreference(
+        0,
+        reduced,
+        menuSpringConfig,
+        (finished) => {
+          'worklet';
+          if (finished) {
+            runOnJS(setMounted)(false);
+          }
+        },
+      );
+      if (!reduced) {
+        scale.value = animateWithMotionPreference(
+          INTERACTIVE_SCALE,
+          false,
+          menuSpringConfig,
+        );
+      }
     }
-  }, [anchorLayout, opacity, visible]);
+  }, [anchorLayout, opacity, reduceMotion, scale, visible]);
 
   const menuStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
+    transform: [{ scale: scale.value }],
   }));
 
   if (!mounted || anchorLayout == null) {
@@ -119,7 +146,7 @@ export function OptionsMenuDropdown({
           const Icon = item.icon;
 
           return (
-            <Pressable
+            <ScaledPressable
               key={item.key}
               accessibilityRole="button"
               onPress={() => {
@@ -146,7 +173,7 @@ export function OptionsMenuDropdown({
                   </>
                 );
               }}
-            </Pressable>
+            </ScaledPressable>
           );
         })}
       </Animated.View>
@@ -176,6 +203,8 @@ const styles = StyleSheet.create({
     borderRadius: radii['r-h-60'],
     padding: spacing['s-4'],
     gap: spacing['s-4'],
+    // Grow from the top-trailing trigger (gear).
+    transformOrigin: 'top right',
     ...shadowBelow,
   },
   item: {

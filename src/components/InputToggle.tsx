@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 import { CheckmarkIcon } from './icons';
+import { ScaledPressable } from './ScaledPressable';
 
 type TogglePosition = 'left' | 'right';
 
@@ -91,7 +92,7 @@ export function InputToggle({
   const lines = normalizeLabel(label);
 
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       onPress={() => onValueChange(!value)}
@@ -113,7 +114,7 @@ export function InputToggle({
           </>
         );
       }}
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

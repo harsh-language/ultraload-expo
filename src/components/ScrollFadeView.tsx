@@ -20,7 +20,7 @@ import {
   scrollFadeGradients,
 } from '../theme/scrollFade';
 
-const FADE_TRANSITION_MS = 250;
+const FADE_TRANSITION_MS = 150;
 
 export interface ScrollFadeViewProps extends ScrollViewProps {
   /** Default height for both fades when top/bottom heights are omitted */

@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import {
   formatRestTimerDisplay,
   getRestTimerProgress,
@@ -11,6 +11,7 @@ import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 
 import { CloseIcon, PauseIcon, PlayIcon } from './icons';
+import { ScaledPressable } from './ScaledPressable';
 
 interface RestTimerProps {
   remainingSeconds: number;
@@ -58,7 +59,7 @@ export function RestTimer({
       </View>
 
       <View style={styles.actionCombo}>
-        <Pressable
+        <ScaledPressable
           accessibilityLabel={isRunning ? 'pause rest timer' : 'resume rest timer'}
           accessibilityRole="button"
           onPress={onToggle}
@@ -69,8 +70,8 @@ export function RestTimer({
           ]}
         >
           {isRunning ? <PauseIcon /> : <PlayIcon />}
-        </Pressable>
-        <Pressable
+        </ScaledPressable>
+        <ScaledPressable
           accessibilityLabel="close rest timer"
           accessibilityRole="button"
           onPress={onDismiss}
@@ -81,7 +82,7 @@ export function RestTimer({
           ]}
         >
           <CloseIcon />
-        </Pressable>
+        </ScaledPressable>
       </View>
     </View>
   );

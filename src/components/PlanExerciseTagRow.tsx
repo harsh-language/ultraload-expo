@@ -4,7 +4,10 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
+  withDelay,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import {
@@ -12,8 +15,15 @@ import {
   planExerciseRowStride,
   siblingDragOffset,
 } from '../domain/reorder';
-import { PANEL_TRANSITION_MS } from '../theme/motion';
+import { animateWithMotionPreference } from '../theme/animateWithMotionPreference';
+import {
+  ENTER_STAGGER_MS,
+  panelSpringConfig,
+  projectMomentum,
+  REDUCED_MOTION_FADE_MS,
+} from '../theme/motion';
 import { spacing } from '../theme/tokens';
+import { commitHaptic } from './commitHaptic';
 import { InputTag } from './InputTag';
 
 const ROW_HEIGHT = spacing['s-12'];
@@ -28,6 +38,8 @@ interface PlanExerciseTagRowProps {
   dragHoverIndex: number | null;
   onRemove: () => void;
   removeDisabled?: boolean;
+  /** First-paint stagger delay (ms). 0 skips stagger. */
+  enterDelayMs?: number;
   onDragStart: (index: number) => void;
   onDragMove: (fromIndex: number, toIndex: number) => void;
   onDragEnd: (fromIndex: number, toIndex: number) => void;
@@ -42,6 +54,7 @@ export function PlanExerciseTagRow({
   dragHoverIndex,
   onRemove,
   removeDisabled = false,
+  enterDelayMs = 0,
   onDragStart,
   onDragMove,
   onDragEnd,
@@ -49,9 +62,12 @@ export function PlanExerciseTagRow({
 }: PlanExerciseTagRowProps) {
   const translateY = useSharedValue(0);
   const zIndex = useSharedValue(0);
+  const enterOpacity = useSharedValue(enterDelayMs > 0 ? 0 : 1);
   const indexSV = useSharedValue(index);
   const countSV = useSharedValue(count);
   const hoverIndexSV = useSharedValue(index);
+  const reduceMotion = useReducedMotion();
+  const reduceMotionSV = useSharedValue(reduceMotion === true);
   const onDragStartRef = useRef(onDragStart);
   const onDragMoveRef = useRef(onDragMove);
   const onDragEndRef = useRef(onDragEnd);
@@ -63,6 +79,28 @@ export function PlanExerciseTagRow({
     indexSV.value = index;
     countSV.value = count;
   }, [count, countSV, index, indexSV]);
+
+  useEffect(() => {
+    reduceMotionSV.value = reduceMotion === true;
+  }, [reduceMotion, reduceMotionSV]);
+
+  useEffect(() => {
+    if (enterDelayMs <= 0) {
+      enterOpacity.value = 1;
+      return;
+    }
+    if (reduceMotion === true) {
+      enterOpacity.value = withDelay(
+        enterDelayMs,
+        withTiming(1, { duration: REDUCED_MOTION_FADE_MS }),
+      );
+      return;
+    }
+    enterOpacity.value = withDelay(
+      enterDelayMs,
+      withSpring(1, panelSpringConfig),
+    );
+  }, [enterDelayMs, enterOpacity, reduceMotion]);
 
   const isDragSource = dragFromIndex === index;
   const siblingOffset =
@@ -77,15 +115,25 @@ export function PlanExerciseTagRow({
       return;
     }
     if (dragFromIndex == null) {
-      // Instant reset on commit so layout reorder and transform clear align.
       translateY.value = 0;
       zIndex.value = 0;
       return;
     }
-    translateY.value = withTiming(siblingOffset, {
-      duration: PANEL_TRANSITION_MS,
-    });
-  }, [dragFromIndex, isDragSource, siblingOffset, translateY, zIndex]);
+    if (translateY.value === siblingOffset) {
+      return;
+    }
+    translateY.value = animateWithMotionPreference(
+      siblingOffset,
+      reduceMotion === true,
+    );
+  }, [
+    dragFromIndex,
+    isDragSource,
+    reduceMotion,
+    siblingOffset,
+    translateY,
+    zIndex,
+  ]);
 
   const handleDragStart = (fromIndex: number) => {
     onDragStartRef.current(fromIndex);
@@ -95,17 +143,8 @@ export function PlanExerciseTagRow({
     onDragMoveRef.current(fromIndex, toIndex);
   };
 
-  const handleDragEnd = (
-    fromIndex: number,
-    translationY: number,
-    itemCount: number,
-  ) => {
-    const toIndex = clampDragToIndex(
-      fromIndex,
-      translationY,
-      ROW_STRIDE,
-      itemCount,
-    );
+  const finishDrag = (fromIndex: number, toIndex: number) => {
+    commitHaptic();
     onDragEndRef.current(fromIndex, toIndex);
   };
 
@@ -134,19 +173,50 @@ export function PlanExerciseTagRow({
           }
         })
         .onFinalize((event) => {
-          // Clear the drag transform before React commits the reordered layout.
-          translateY.value = 0;
-          zIndex.value = 0;
-          runOnJS(handleDragEnd)(
+          const projectedTranslation =
+            event.translationY + projectMomentum(event.velocityY);
+          const toIndex = clampDragToIndex(
             indexSV.value,
-            event.translationY,
+            projectedTranslation,
+            ROW_STRIDE,
             countSV.value,
           );
+          const targetY = (toIndex - indexSV.value) * ROW_STRIDE;
+          const fromIndex = indexSV.value;
+
+          if (reduceMotionSV.value) {
+            translateY.value = 0;
+            zIndex.value = 0;
+            runOnJS(finishDrag)(fromIndex, toIndex);
+            return;
+          }
+
+          translateY.value = withSpring(
+            targetY,
+            { ...panelSpringConfig, velocity: event.velocityY },
+            (finished) => {
+              'worklet';
+              if (!finished) {
+                return;
+              }
+              translateY.value = 0;
+              zIndex.value = 0;
+              runOnJS(finishDrag)(fromIndex, toIndex);
+            },
+          );
         }),
-    [countSV, hoverIndexSV, indexSV, translateY, zIndex],
+    [
+      countSV,
+      hoverIndexSV,
+      indexSV,
+      reduceMotionSV,
+      translateY,
+      zIndex,
+    ],
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
+    opacity: enterOpacity.value,
     transform: [{ translateY: translateY.value }],
     zIndex: zIndex.value,
     elevation: zIndex.value,

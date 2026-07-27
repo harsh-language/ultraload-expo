@@ -8,7 +8,10 @@ UI spacing, radius, borders, and colors come from Figma variables in [`src/theme
 
 ## Motion
 
-Panel open / close / move (sheets, menus, dropdowns, accordions): `PANEL_TRANSITION_MS` / `panelTransitionTiming` in [`src/theme/motion.ts`](src/theme/motion.ts) — **150ms**. See [`.cursor/rules/panel-motion.mdc`](.cursor/rules/panel-motion.mdc).
+Panel open / close / move: house spring via `panelSpringConfig` in
+[`src/theme/motion.ts`](src/theme/motion.ts) — **damping 0.9**, **response 0.15s**.
+Press scale **0.97** / **150ms** via `ScaledPressable`.
+See [`.cursor/rules/panel-motion.mdc`](.cursor/rules/panel-motion.mdc).
 
 ## Dependencies
 

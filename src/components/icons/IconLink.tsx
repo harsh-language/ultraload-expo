@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import { StyleSheet, type ViewStyle } from 'react-native';
 import { colors, spacing } from '../../theme/tokens';
+import { ScaledPressable } from '../ScaledPressable';
 import {
   cloneIconWithColor,
   pressedIconColor,
@@ -32,7 +33,7 @@ export function IconLink({
     size === 'square' ? styles.hitSquare : styles.hitNarrow;
 
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       disabled={!onPress}
@@ -47,7 +48,7 @@ export function IconLink({
             : pressedIconColor(Boolean(pressed && onPress)),
         )
       }
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

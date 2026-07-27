@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 import { CheckmarkIcon } from './icons/CheckmarkIcon';
+import { ScaledPressable } from './ScaledPressable';
 
 interface InputOptionProps {
   label: string;
@@ -12,7 +13,7 @@ interface InputOptionProps {
 
 export function InputOption({ label, selected, onPress }: InputOptionProps) {
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
@@ -34,7 +35,7 @@ export function InputOption({ label, selected, onPress }: InputOptionProps) {
       <CheckmarkIcon
         color={selected ? colors['content-1'] : colors['border-2']}
       />
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

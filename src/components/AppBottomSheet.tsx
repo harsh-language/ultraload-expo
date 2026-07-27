@@ -2,20 +2,21 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetView,
-  useBottomSheetTimingConfigs,
+  useBottomSheetSpringConfigs,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { forwardRef, useCallback, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PANEL_TRANSITION_MS } from '../theme/motion';
+import { panelSpringConfig } from '../theme/motion';
 import { colors, spacing } from '../theme/tokens';
 import { shadowAbove } from '../theme/shadow';
 import { sheetGradientColors } from '../theme/sheetGradient';
 import { resolveColorToken } from '../theme/resolveColorToken';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { commitHaptic } from './commitHaptic';
 
 interface AppBottomSheetProps {
   title: string;
@@ -52,9 +53,7 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
   ) {
     const insets = useSafeAreaInsets();
     const bottomInset = Math.max(insets.bottom, spacing['s-8']);
-    const animationConfigs = useBottomSheetTimingConfigs({
-      duration: PANEL_TRANSITION_MS,
-    });
+    const animationConfigs = useBottomSheetSpringConfigs(panelSpringConfig);
 
     const handleChange = useCallback(
       (index: number) => {
@@ -64,6 +63,7 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
     );
 
     const handleDismiss = useCallback(() => {
+      commitHaptic();
       onDismiss?.();
     }, [onDismiss]);
 

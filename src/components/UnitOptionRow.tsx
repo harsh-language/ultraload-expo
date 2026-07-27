@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
+import { ScaledPressable } from './ScaledPressable';
 
 interface InputOptionUnitProps {
   label: string;
@@ -15,7 +16,7 @@ export function InputOptionUnit({
   onPress,
 }: InputOptionUnitProps) {
   return (
-    <Pressable
+    <ScaledPressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
@@ -34,7 +35,7 @@ export function InputOptionUnit({
       >
         {label}
       </Text>
-    </Pressable>
+    </ScaledPressable>
   );
 }
 

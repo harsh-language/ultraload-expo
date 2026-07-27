@@ -37,6 +37,7 @@ import {
   sanitizeAge,
 } from '../domain/profile-inputs';
 import { moveItemInList } from '../domain/reorder';
+import { ENTER_STAGGER_MS } from '../theme/motion';
 import {
   REST_TIMER_MAX_SECONDS,
   REST_TIMER_MIN_SECONDS,
@@ -129,6 +130,7 @@ export function SettingsScreen({ navigation }: Props) {
   const [ageText, setAgeText] = useState(() => ageDisplayString(ageValue));
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [dragHoverIndex, setDragHoverIndex] = useState<number | null>(null);
+  const [allowPlanStagger, setAllowPlanStagger] = useState(true);
 
   useEffect(() => {
     setBodyweightText(bodyweightDisplayString(bodyweightKg, units));
@@ -149,6 +151,13 @@ export function SettingsScreen({ navigation }: Props) {
         .filter((entry): entry is NonNullable<typeof entry> => entry != null),
     [exerciseIds],
   );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setAllowPlanStagger(false);
+    }, planExercises.length * ENTER_STAGGER_MS + 500);
+    return () => clearTimeout(timeout);
+  }, [planExercises.length]);
 
   const persistBodyweight = useCallback(async () => {
     const kg = parseBodyweightForSave(bodyweightText, units);
@@ -335,6 +344,9 @@ export function SettingsScreen({ navigation }: Props) {
               count={planExercises.length}
               dragFromIndex={dragFromIndex}
               dragHoverIndex={dragHoverIndex}
+              enterDelayMs={
+                allowPlanStagger ? index * ENTER_STAGGER_MS : 0
+              }
               index={index}
               label={exercise.name}
               onDragEnd={handleExerciseDragEnd}

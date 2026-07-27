@@ -242,7 +242,7 @@ Source: `src/components/PlanExerciseTagRow.tsx`, `src/domain/reorder.ts`
 (`siblingDragOffset`), `src/screens/SettingsScreen.tsx`, `src/stores/planSlice.ts`
 Bad example: Only moving the grabbed row during drag, then teleporting every
 row on release.
-Good example: `dragHoverIndex` drives sibling offsets with `PANEL_TRANSITION_MS`
+Good example: `dragHoverIndex` drives sibling offsets with `panelSpringConfig`
 during drag; drop resets offsets instantly and `updatePlan` sets Zustand before
 awaiting SQLite.
 

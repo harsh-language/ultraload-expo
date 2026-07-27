@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 import { BackIcon, ForwardIcon } from './icons';
+import { ScaledPressable } from './ScaledPressable';
 
 interface ExerciseDropdownProps {
   label: string;
@@ -36,7 +37,7 @@ export function ExerciseDropdown({
 
   return (
     <View style={styles.container}>
-      <Pressable
+      <ScaledPressable
         accessibilityLabel="previous exercise"
         accessibilityRole="button"
         disabled={!previousEnabled}
@@ -53,7 +54,7 @@ export function ExerciseDropdown({
         {({ pressed }) => (
           <BackIcon color={getIconColor(previousEnabled, pressed)} />
         )}
-      </Pressable>
+      </ScaledPressable>
 
       <View style={styles.center}>
         <Text numberOfLines={1} style={[typography.para2, styles.label]}>
@@ -61,7 +62,7 @@ export function ExerciseDropdown({
         </Text>
       </View>
 
-      <Pressable
+      <ScaledPressable
         accessibilityLabel="next exercise"
         accessibilityRole="button"
         disabled={!nextEnabled}
@@ -78,7 +79,7 @@ export function ExerciseDropdown({
         {({ pressed }) => (
           <ForwardIcon color={getIconColor(nextEnabled, pressed)} />
         )}
-      </Pressable>
+      </ScaledPressable>
     </View>
   );
 }
