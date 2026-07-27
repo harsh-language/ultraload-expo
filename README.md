@@ -4,7 +4,7 @@ Personal, offline strength-training app for one experienced lifter. Log ad-hoc g
 
 React Native (Expo 56), iOS + Android, 100% offline, dark mode only. No splits, no cloud.
 
-**Last updated:** 2026-07-26
+**Last updated:** 2026-07-28
 
 ## Status (v1)
 
@@ -44,6 +44,7 @@ Agent conventions: [`AGENTS.md`](AGENTS.md)
 | Path | Purpose |
 |------|---------|
 | `src/` | App source (screens, components, domain, stores, db, theme) |
+| `src/theme/motion.ts` | House springs, press scale, reduced-motion helpers |
 | `src/data/exercise-catalogue.ts` | Built-in exercise catalogue |
 | `__tests__/` | Jest unit/contract tests (`npm test`) |
 | `assets/` | Fonts and static assets |
