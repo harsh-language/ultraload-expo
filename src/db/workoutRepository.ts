@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, max } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, max } from 'drizzle-orm';
 import type { AppDatabase } from './client';
 import { loggedExercises, sets, workouts } from './schema';
 import type {
@@ -24,6 +24,35 @@ function mapSetRow(row: typeof sets.$inferSelect): TodaySet {
     warmUp: row.warmUp,
     order: row.order,
     timestamp: row.timestamp,
+  };
+}
+
+function buildWorkoutTree(
+  workout: typeof workouts.$inferSelect,
+  loggedExerciseRows: (typeof loggedExercises.$inferSelect)[],
+  setRows: (typeof sets.$inferSelect)[],
+): TodayWorkout {
+  const setsByLoggedExerciseId = new Map<number, TodaySet[]>();
+  for (const row of setRows) {
+    const mapped = mapSetRow(row);
+    const existing = setsByLoggedExerciseId.get(row.loggedExerciseId) ?? [];
+    existing.push(mapped);
+    setsByLoggedExerciseId.set(row.loggedExerciseId, existing);
+  }
+
+  const loggedExercisesWithSets: TodayLoggedExercise[] = loggedExerciseRows.map(
+    (loggedExercise) => ({
+      id: loggedExercise.id,
+      exerciseId: loggedExercise.exerciseId,
+      order: loggedExercise.order,
+      sets: setsByLoggedExerciseId.get(loggedExercise.id) ?? [],
+    }),
+  );
+
+  return {
+    id: workout.id,
+    date: workout.date,
+    loggedExercises: loggedExercisesWithSets,
   };
 }
 
@@ -58,28 +87,63 @@ export async function loadWorkoutTree(
           .orderBy(asc(sets.loggedExerciseId), asc(sets.order))
       : [];
 
-  const setsByLoggedExerciseId = new Map<number, TodaySet[]>();
+  return buildWorkoutTree(workout, loggedExerciseRows, setRows);
+}
+
+/** All workout trees, newest date first. */
+export async function listWorkoutTrees(
+  db: AppDatabase,
+): Promise<TodayWorkout[]> {
+  const workoutRows = await db
+    .select()
+    .from(workouts)
+    .orderBy(desc(workouts.date));
+
+  if (workoutRows.length === 0) {
+    return [];
+  }
+
+  const workoutIds = workoutRows.map((row) => row.id);
+  const loggedExerciseRows = await db
+    .select()
+    .from(loggedExercises)
+    .where(inArray(loggedExercises.workoutId, workoutIds))
+    .orderBy(asc(loggedExercises.workoutId), asc(loggedExercises.order));
+
+  const loggedExerciseIds = loggedExerciseRows.map((row) => row.id);
+  const setRows =
+    loggedExerciseIds.length > 0
+      ? await db
+          .select()
+          .from(sets)
+          .where(inArray(sets.loggedExerciseId, loggedExerciseIds))
+          .orderBy(asc(sets.loggedExerciseId), asc(sets.order))
+      : [];
+
+  const loggedByWorkoutId = new Map<
+    number,
+    (typeof loggedExercises.$inferSelect)[]
+  >();
+  for (const row of loggedExerciseRows) {
+    const existing = loggedByWorkoutId.get(row.workoutId) ?? [];
+    existing.push(row);
+    loggedByWorkoutId.set(row.workoutId, existing);
+  }
+
+  const setsByLoggedExerciseId = new Map<number, (typeof sets.$inferSelect)[]>();
   for (const row of setRows) {
-    const mapped = mapSetRow(row);
     const existing = setsByLoggedExerciseId.get(row.loggedExerciseId) ?? [];
-    existing.push(mapped);
+    existing.push(row);
     setsByLoggedExerciseId.set(row.loggedExerciseId, existing);
   }
 
-  const loggedExercisesWithSets: TodayLoggedExercise[] = loggedExerciseRows.map(
-    (loggedExercise) => ({
-      id: loggedExercise.id,
-      exerciseId: loggedExercise.exerciseId,
-      order: loggedExercise.order,
-      sets: setsByLoggedExerciseId.get(loggedExercise.id) ?? [],
-    }),
-  );
-
-  return {
-    id: workout.id,
-    date: workout.date,
-    loggedExercises: loggedExercisesWithSets,
-  };
+  return workoutRows.map((workout) => {
+    const loggedForWorkout = loggedByWorkoutId.get(workout.id) ?? [];
+    const setsForWorkout = loggedForWorkout.flatMap(
+      (logged) => setsByLoggedExerciseId.get(logged.id) ?? [],
+    );
+    return buildWorkoutTree(workout, loggedForWorkout, setsForWorkout);
+  });
 }
 
 async function ensureWorkout(

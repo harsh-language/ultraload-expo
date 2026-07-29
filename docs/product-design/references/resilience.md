@@ -68,6 +68,18 @@ Source: `src/components/DeleteSetSheet.tsx`
 Bad example: A delete sheet with only a button and no set context.
 Good example: `DeleteSetPreview` plus a title such as `delete set 02`.
 
+## rule/history-empty-offers-start-workout
+Status: proposed
+Scope: History list and chart empty states
+Rule: When History has no visible sessions, show shared empty copy
+(`no exercises recorded yet.`) and a primary CTA that returns the user to Work
+Out to log.
+Why: Empty History is not a dead end — the next useful action is logging.
+Exceptions: Chart stub with existing data may show a blank shell until U5.
+Source: `src/components/HistoryEmptyState.tsx`, Figma History empty frame
+Bad example: An empty History screen with no path back to logging.
+Good example: `start workout` navigates to `WorkOut`.
+
 ## rule-stale-docs-go-to-coverage-gaps-not-silent-normalization
 Status: proposed
 Scope: learn mode and skill maintenance

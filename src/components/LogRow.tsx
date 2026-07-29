@@ -162,6 +162,7 @@ function LogExerciseRow({
             style={[
               styles.statValue,
               stat.direction === 'down' && styles.statDown,
+              stat.direction === 'flat' && styles.statFlat,
             ]}
           >
             {stat.label}
@@ -193,6 +194,7 @@ function LogSessionRow({
             style={[
               styles.statValue,
               stat.direction === 'down' && styles.statDown,
+              stat.direction === 'flat' && styles.statFlat,
             ]}
           >
             {stat.label}
@@ -263,6 +265,9 @@ const styles = StyleSheet.create({
     color: colors['content-1'],
   },
   statDown: {
+    color: colors['content-3'],
+  },
+  statFlat: {
     color: colors['content-3'],
   },
 });

@@ -30,19 +30,23 @@ Follow-up:
 
 Status: open
 Type: missing-standard
-Source: `docs/blueprint.md`, `taxonomy.md`
+Source: `docs/blueprint.md`, `taxonomy.md`, `src/screens/HistoryListScreen.tsx`
 
 Observation:
-- History list, chart, session detail, and full Settings flows are specified in
-  the blueprint but not yet implemented as stable UI surfaces in code.
+- History list + session detail are now implemented (U4); chart remains a stub.
+- Proposed History rules are in `references/surfaces.md` and `resilience.md`
+  awaiting acceptance.
+- Figma History chrome includes muscle/exercise filters and a bottom main-
+  navigation bar; U4 ships stack navigation + List/Chart tabs only (filters and
+  bottom tabs deferred / codebase-nav wins).
 
 Why it matters:
-- The skill can route to blueprint intent, but it should not invent accepted UI
-  rules for surfaces that do not yet exist in shipped code.
+- Filter and bottom-nav decisions need explicit product confirmation before
+  matching Figma 1:1.
 
 Follow-up:
-- Add these surfaces once implementation creates repeated decisions worth
-  codifying.
+- Accept or revise proposed History rules after device checkpoint.
+- U5 should decide whether list filters activate with the chart.
 
 ### rest-timer-finish-behavior-beyond-current-bar
 

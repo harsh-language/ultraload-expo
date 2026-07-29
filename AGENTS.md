@@ -55,9 +55,9 @@ intent (`rule/later-product-decisions-update-the-blueprint`).
 
 ## Build stage
 
-U3 complete — Settings supports profile, plan editing, units, and presets. Per-exercise override UI is out of scope for this version (catalogue per-exercise ranges/increments still drive Add Set).
+U4 in progress — History list + session detail + progress math. Chart remains a stub until U5.
 
-Next is U4 — History list and session detail.
+Next after U4 is U5 — History chart with filters and muscle-group weighting.
 
 ## Typography
 

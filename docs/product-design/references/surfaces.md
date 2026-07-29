@@ -263,3 +263,51 @@ Bad example: Expandable Settings panels or a common-increment toggle that writes
 per-exercise overrides.
 Good example: Settings plan tags are reorder/remove only; Add Set reads catalogue
 range and increment directly.
+
+## History
+
+Canonical homes:
+
+- `src/screens/HistoryListScreen.tsx`
+- `src/screens/SessionDetailScreen.tsx`
+- `src/screens/HistoryChartScreen.tsx`
+- `src/components/HistoryNavigation.tsx`
+- `src/components/HistoryEmptyState.tsx`
+- `src/domain/progress.ts`
+
+## rule/history-percent-is-derived-never-stored
+Status: proposed
+Scope: History list, session detail, and progress math
+Rule: Day and exercise % change are computed from workout trees on read. Do not
+persist % columns. Editing a past set updates progress by reloading trees and
+recomputing.
+Why: Downstream recalc (BR12) must stay free of cascade writes, and progress
+rules stay testable as pure functions.
+Exceptions: None.
+Source: `src/domain/progress.ts`, `src/stores/historySlice.ts`,
+`docs/blueprint.md` BR8–BR12
+Bad example: Writing day-% into SQLite on every set edit.
+Good example: `buildHistoryListRows()` over `listWorkoutTrees()` after mutate.
+
+## rule/history-hides-plan-removed-exercises
+Status: proposed
+Scope: History list and session detail
+Rule: Filter logged exercises to the active plan before totals and % (same as
+Work Out). Past sets stay in SQLite; re-enabling restores them in History.
+Why: BR3 — removal is hide, not delete.
+Exceptions: None.
+Source: `src/domain/progress.ts` `filterWorkoutByPlan`,
+`src/screens/HistoryListScreen.tsx`, `src/screens/SessionDetailScreen.tsx`
+Bad example: Showing removed-plan exercises in History day totals.
+Good example: Pass `exerciseIds` from `planSlice` into `buildHistoryListRows`.
+
+## rule/session-detail-edit-is-an-explicit-mode
+Status: proposed
+Scope: Session detail
+Rule: Session detail opens read-only. Edit is an explicit pencil toggle that
+reveals set actions and add-set. Leaving the screen can drop the mode.
+Why: Past-session review is the default job; editing is intentional.
+Exceptions: None.
+Source: `src/screens/SessionDetailScreen.tsx`, `docs/blueprint.md` FL6
+Bad example: Always showing edit/delete icons on past sets.
+Good example: `editing` gates `showActions` and the add-set footer.

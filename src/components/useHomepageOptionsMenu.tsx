@@ -49,7 +49,7 @@ export function useHomepageOptionsMenu() {
       }
 
       if (key === 'history') {
-        // U4 — History stack route
+        navigation.navigate('HistoryList');
         return;
       }
 
