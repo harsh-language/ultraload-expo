@@ -390,7 +390,9 @@ export function SessionDetailScreen({ navigation, route }: Props) {
                   type="exercise"
                 />
                 <View style={styles.logStack}>
-                  {loggedExercise.sets.map((set) => {
+                  {loggedExercise.sets.map((set, setOrdinal) => {
+                    const isLastSet =
+                      setOrdinal === loggedExercise.sets.length - 1;
                     if (set.warmUp) {
                       return (
                         <LogRow
@@ -424,6 +426,7 @@ export function SessionDetailScreen({ navigation, route }: Props) {
                           }
                           reps={set.reps}
                           showActions={editing}
+                          showBottomBorder={!isLastSet}
                           type="set"
                           unit={unitLabel}
                           warmUp
@@ -471,6 +474,7 @@ export function SessionDetailScreen({ navigation, route }: Props) {
                         reps={set.reps}
                         setIndex={setIndex}
                         showActions={editing}
+                        showBottomBorder={!isLastSet}
                         type="set"
                         unit={unitLabel}
                         weight={kgToDisplay(set.weight, units)}

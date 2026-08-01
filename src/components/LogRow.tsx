@@ -25,6 +25,11 @@ type LogSetRowBaseProps = {
   unit?: string;
   /** Figma `button/info` — edit/delete icons on Work Out; hidden on History */
   showActions?: boolean;
+  /**
+   * Bottom border between rows. Off for the last set in an exercise group —
+   * borders separate siblings, not terminate a list.
+   */
+  showBottomBorder?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
   onPress?: () => void;
@@ -50,6 +55,8 @@ interface LogSessionRowProps {
   totalLabel: string;
   /** All-time high for this day’s exercise set — Figma `bestRecord` crown. */
   isBestRecord?: boolean;
+  /** Bottom border between rows. Off for the last History list item. */
+  showBottomBorder?: boolean;
   stat?: { label: string; direction: LogStatDirection };
   showStat?: boolean;
   onPress?: () => void;
@@ -113,6 +120,7 @@ function LogSetRow(props: LogSetRowProps) {
     reps,
     unit = 'kg',
     showActions = false,
+    showBottomBorder = true,
     onEdit,
     onDelete,
     onPress,
@@ -144,11 +152,17 @@ function LogSetRow(props: LogSetRowProps) {
 
   // Figma Work Out: actions only — row itself is not a hit target
   if (showActions && !onPress) {
-    return <View style={[styles.row, styles.rowBordered]}>{content}</View>;
+    return (
+      <View
+        style={[styles.row, showBottomBorder && styles.rowBordered]}
+      >
+        {content}
+      </View>
+    );
   }
 
   return (
-    <RowPressable onPress={onPress} bordered>
+    <RowPressable bordered={showBottomBorder} onPress={onPress}>
       {content}
     </RowPressable>
   );
@@ -192,12 +206,13 @@ function LogSessionRow({
   dateLabel,
   totalLabel,
   isBestRecord = false,
+  showBottomBorder = true,
   stat,
   showStat = false,
   onPress,
 }: LogSessionRowProps) {
   return (
-    <RowPressable onPress={onPress} bordered>
+    <RowPressable bordered={showBottomBorder} onPress={onPress}>
       <View style={styles.sessionColumn}>
         <Text style={styles.sessionDate} numberOfLines={1}>
           {dateLabel}

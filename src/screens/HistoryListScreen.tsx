@@ -69,7 +69,7 @@ export function HistoryListScreen({ navigation }: Props) {
       topFadeEnabled={false}
       topFadeHeight={SCROLL_FADE_HEIGHT}
     >
-      {rows.map((row) => {
+      {rows.map((row, index) => {
         const dayPercent = row.dayPercent;
         const hasChange = dayPercent != null && dayPercent !== 0;
         const showStat = dayPercent == null || hasChange;
@@ -81,6 +81,7 @@ export function HistoryListScreen({ navigation }: Props) {
             onPress={() => {
               navigation.navigate('SessionDetail', { date: row.date });
             }}
+            showBottomBorder={index < rows.length - 1}
             showStat={showStat}
             stat={
               hasChange

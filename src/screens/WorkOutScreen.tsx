@@ -332,9 +332,8 @@ export function WorkOutScreen() {
         <ScrollFadeView
           ref={scrollRef}
           alwaysShowBottomFade
-          topFadeHeight={SCROLL_FADE_HEIGHT}
+          topFadeHeight={spacing['s-18']}
           bottomFadeHeight={spacing['s-17']}
-          topOffset={overlayInsets.titleTop.top + TITLE_BAR_HEIGHT}
           contentContainerStyle={scrollContentStyle}
           onContentSizeChange={handleScrollContentSizeChange}
           showsVerticalScrollIndicator={false}
@@ -351,7 +350,9 @@ export function WorkOutScreen() {
                     type="exercise"
                   />
                   <View style={styles.logStack}>
-                    {loggedExercise.sets.map((set) => {
+                    {loggedExercise.sets.map((set, setOrdinal) => {
+                      const isLastSet =
+                        setOrdinal === loggedExercise.sets.length - 1;
                       if (set.warmUp) {
                         return (
                           <LogRow
@@ -364,6 +365,7 @@ export function WorkOutScreen() {
                             }}
                             reps={set.reps}
                             showActions
+                            showBottomBorder={!isLastSet}
                             type="set"
                             unit={unitLabel}
                             warmUp
@@ -390,6 +392,7 @@ export function WorkOutScreen() {
                           reps={set.reps}
                           setIndex={setIndex}
                           showActions
+                          showBottomBorder={!isLastSet}
                           type="set"
                           unit={unitLabel}
                           weight={kgToDisplay(set.weight, units)}

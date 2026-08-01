@@ -51,14 +51,35 @@ Status: proposed
 Scope: Work Out logged state
 Rule: Bottom scroll fade height is `s-16` (`SCROLL_FADE_HEIGHT`) and is
 bottom-aligned to the page viewport — do not lift it with `bottomOffset` to
-the footer button row. Title fade may still use `topOffset`.
+the footer button row. Top fade is likewise page-top aligned (`topOffset` 0)
+so content under the transparent session title is masked; do not push the top
+fade below the title bar.
 Why: Anchoring the fade to the buttons paints a dark band across the CTAs and
-leaves log rows readable in the gaps between / below them.
+leaves log rows readable in the gaps between / below them. Pushing the top fade
+below a transparent title leaves scrolled sets visible through the status bar
+and date.
 Exceptions: Other screens (e.g. session detail edit footer) may still use
-`bottomOffset` when their chrome layout requires it.
+`bottomOffset` when their chrome layout requires it. Screens with opaque title
+chrome (`ScreenTitleBar`) may use `topFadeEnabled={false}` instead.
 Source: `src/screens/WorkOutScreen.tsx`, `.cursor/rules/scroll-fade.mdc`
-Bad example: `bottomOffset={FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT}` on Work Out.
-Good example: omit `bottomOffset` (defaults to 0); keep `bottomFadeHeight={SCROLL_FADE_HEIGHT}`.
+Bad example: `bottomOffset={FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT}` or
+`topOffset={titleTop + TITLE_BAR_HEIGHT}` on Work Out.
+Good example: omit both offsets (default 0); keep fade heights on the page edges.
+
+## rule/last-log-row-omits-bottom-border
+Status: proposed
+Scope: `LogRow` set and session lists (Work Out, session detail, History list)
+Rule: Bottom borders separate sibling rows. The last row in a group omits the
+bottom border — last set per exercise, and last History session row. Call sites
+pass `showBottomBorder={false}`; default remains bordered.
+Why: A trailing border under the last item is decoration without a separation
+job.
+Exceptions: Delete-set preview keeps its own top+bottom border chrome (not a
+list). Title bars and dropdown menus are unrelated surfaces.
+Source: `src/components/LogRow.tsx`, `src/screens/WorkOutScreen.tsx`,
+`src/screens/SessionDetailScreen.tsx`, `src/screens/HistoryListScreen.tsx`
+Bad example: Every set and every History row always draws `rowBordered`.
+Good example: `showBottomBorder={!isLastSet}` / `index < rows.length - 1`.
 
 ## rule/buttons-do-not-carry-drop-shadows
 Status: proposed
