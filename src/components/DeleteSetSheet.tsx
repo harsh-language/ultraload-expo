@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { DisplayUnit } from '../data/exercise-catalogue';
-import { formatSetIndex } from '../domain/set-labels';
+import { formatSetIndex, getSetSheetTitle } from '../domain/set-labels';
 import { formatWeightLabel } from '../domain/units';
 import { colors, spacing } from '../theme/tokens';
 import { AppBottomSheet } from './AppBottomSheet';
@@ -35,18 +35,6 @@ interface DeleteSetSheetProps {
   units: DisplayUnit;
   onConfirm: (setId: number) => void;
   onVisibilityChange?: (visible: boolean) => void;
-}
-
-function getDeleteSetTitle(set: DeletableSet | null): string {
-  if (set == null) {
-    return 'delete set';
-  }
-
-  if (set.warmUp) {
-    return 'delete warmup set';
-  }
-
-  return `delete set ${formatSetIndex(set.setIndex ?? 1)}`;
 }
 
 /**
@@ -131,7 +119,7 @@ export const DeleteSetSheet = forwardRef<
       onDismiss={handleDismiss}
       onVisibilityChange={onVisibilityChange}
       sectionGap={spacing['s-8']}
-      title={getDeleteSetTitle(pendingSet)}
+      title={getSetSheetTitle('delete', pendingSet)}
     >
       {pendingSet == null ? null : (
         <DeleteSetPreview set={pendingSet} units={units} />

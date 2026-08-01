@@ -219,7 +219,7 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | BR7 | Day total weight = sum of total weight moved across all exercises that day, standard sets only. |
 | BR8 | Per-exercise % change compares against the previous session that included the same exercise (standard sets); computed only when a valid prior session exists. |
 | BR9 | Day % change = **simple average** of per-exercise % changes for that day, including only exercises with a valid comparison. Each exercise counts equally (not volume-weighted); day % may diverge from day total direction — intentional. |
-| BR10 | Show "—" when there is no valid prior session / nothing valid to compare. |
+| BR10 | Show "—" when there is no valid prior session / nothing valid to compare. When % change is **0** (no change), show **no figure** (blank — not "0%" and not "—"). |
 | BR11 | Warm-up-only sessions draw no comparison; later standard sets cannot compare against prior warm-up sets. |
 | BR12 | Editing a past day recalculates all downstream % changes. |
 | BR13 | Muscle-group chart value = Σ over exercises of (total weight moved × that muscle's multiplier); exercises with no multiplier for the group are skipped. |

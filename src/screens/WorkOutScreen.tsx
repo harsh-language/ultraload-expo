@@ -48,8 +48,6 @@ const PINNED_FOOTER_HEIGHT = spacing['s-12'];
 const REST_TIMER_HEIGHT = spacing['s-1'] + spacing['s-8'] * 2 + spacing['s-12'];
 /** Figma gap between the add-set button and the started timer bar. */
 const REST_TIMER_BUTTON_GAP = spacing['s-8'];
-/** Lifts scroll bottom fade above pinned footer row. */
-const SCROLL_FADE_BOTTOM_OFFSET = FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT;
 
 function toDeletableSet(set: TodaySet, setIndex?: number): DeletableSet {
   if (set.warmUp) {
@@ -171,17 +169,21 @@ export function WorkOutScreen() {
     sheetRef.current?.present();
   }, [refreshReferenceWeights]);
 
-  const handleEditSet = useCallback((set: TodaySet, exerciseId: string) => {
-    setAddSetSheetVisible(true);
-    const editableSet: EditableSet = {
-      id: set.id,
-      exerciseId,
-      weight: set.weight,
-      reps: set.reps,
-      warmUp: set.warmUp,
-    };
-    sheetRef.current?.presentForEdit(editableSet);
-  }, []);
+  const handleEditSet = useCallback(
+    (set: TodaySet, exerciseId: string, setIndex?: number) => {
+      setAddSetSheetVisible(true);
+      const editableSet: EditableSet = {
+        id: set.id,
+        exerciseId,
+        weight: set.weight,
+        reps: set.reps,
+        warmUp: set.warmUp,
+        setIndex,
+      };
+      sheetRef.current?.presentForEdit(editableSet);
+    },
+    [],
+  );
 
   const handleRecord = useCallback(
     async (payload: {
@@ -331,9 +333,8 @@ export function WorkOutScreen() {
           ref={scrollRef}
           alwaysShowBottomFade
           topFadeHeight={SCROLL_FADE_HEIGHT}
-          bottomFadeHeight={SCROLL_FADE_HEIGHT}
+          bottomFadeHeight={spacing['s-17']}
           topOffset={overlayInsets.titleTop.top + TITLE_BAR_HEIGHT}
-          bottomOffset={SCROLL_FADE_BOTTOM_OFFSET}
           contentContainerStyle={scrollContentStyle}
           onContentSizeChange={handleScrollContentSizeChange}
           showsVerticalScrollIndicator={false}
@@ -380,7 +381,11 @@ export function WorkOutScreen() {
                             handleRequestDelete(toDeletableSet(set, setIndex));
                           }}
                           onEdit={() => {
-                            void handleEditSet(set, loggedExercise.exerciseId);
+                            void handleEditSet(
+                              set,
+                              loggedExercise.exerciseId,
+                              setIndex,
+                            );
                           }}
                           reps={set.reps}
                           setIndex={setIndex}

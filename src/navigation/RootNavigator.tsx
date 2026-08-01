@@ -10,7 +10,6 @@ import { WorkOutScreen } from '../screens/WorkOutScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { AddExercisesScreen } from '../screens/AddExercisesScreen';
 import { HistoryListScreen } from '../screens/HistoryListScreen';
-import { HistoryChartScreen } from '../screens/HistoryChartScreen';
 import { SessionDetailScreen } from '../screens/SessionDetailScreen';
 import { colors } from '../theme/tokens';
 import type { MainStackParamList } from './types';
@@ -45,7 +44,6 @@ function MainStackNavigator() {
       <MainStack.Screen component={SettingsScreen} name="Settings" />
       <MainStack.Screen component={AddExercisesScreen} name="AddExercises" />
       <MainStack.Screen component={HistoryListScreen} name="HistoryList" />
-      <MainStack.Screen component={HistoryChartScreen} name="HistoryChart" />
       <MainStack.Screen component={SessionDetailScreen} name="SessionDetail" />
     </MainStack.Navigator>
   );

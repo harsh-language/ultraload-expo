@@ -27,6 +27,12 @@ export interface HistoryListRow {
   totalKg: number;
   /** Null when there is no valid day comparison (BR10 / BR11). */
   dayPercent: number | null;
+  /**
+   * True when this day’s standard-set total for its exercises is the all-time
+   * high vs any other session that includes those same exercises. False for the
+   * first session with that exercise set (no comparable prior).
+   */
+  isBestRecord: boolean;
 }
 
 export interface SessionExerciseStat {
@@ -51,6 +57,93 @@ export function getExerciseTotalWeightMoved(
 
 function hasStandardSetsForExercise(sets: ProgressSet[]): boolean {
   return sets.some((set) => !set.warmUp);
+}
+
+/** Exercise ids on a workout that have at least one standard set. */
+export function getStandardExerciseIds(
+  workout: ProgressWorkout,
+): string[] {
+  const ids: string[] = [];
+  for (const logged of workout.loggedExercises) {
+    if (hasStandardSetsForExercise(logged.sets)) {
+      ids.push(logged.exerciseId);
+    }
+  }
+  return ids;
+}
+
+/**
+ * Total weight moved for a specific set of exercises on one workout
+ * (standard sets only). Missing exercises contribute 0.
+ */
+export function getExercisesTotalWeightMoved(
+  workout: ProgressWorkout,
+  exerciseIds: readonly string[],
+): number {
+  let total = 0;
+  for (const exerciseId of exerciseIds) {
+    const logged = workout.loggedExercises.find(
+      (entry) => entry.exerciseId === exerciseId,
+    );
+    if (!logged) {
+      continue;
+    }
+    total += getExerciseTotalWeightMoved(logged.sets);
+  }
+  return total;
+}
+
+/**
+ * All-time best for this day’s exercise set: current total beats (or ties the
+ * max of) every other session that includes those same exercises. Requires at
+ * least one comparable other session — first outing with those exercises is
+ * never a best record.
+ */
+export function isSessionBestRecord(
+  workouts: ProgressWorkout[],
+  sessionDate: string,
+): boolean {
+  const session = workouts.find((workout) => workout.date === sessionDate);
+  if (!session) {
+    return false;
+  }
+
+  const exerciseIds = getStandardExerciseIds(session);
+  if (exerciseIds.length === 0) {
+    return false;
+  }
+
+  const current = getExercisesTotalWeightMoved(session, exerciseIds);
+  if (current <= 0) {
+    return false;
+  }
+
+  let hasComparable = false;
+  let maxOther = 0;
+
+  for (const workout of workouts) {
+    if (workout.date === sessionDate) {
+      continue;
+    }
+
+    const otherIds = new Set(getStandardExerciseIds(workout));
+    const includesAll = exerciseIds.every((id) => otherIds.has(id));
+    if (!includesAll) {
+      continue;
+    }
+
+    hasComparable = true;
+    const otherTotal = getExercisesTotalWeightMoved(workout, exerciseIds);
+    if (otherTotal > maxOther) {
+      maxOther = otherTotal;
+    }
+  }
+
+  if (!hasComparable) {
+    return false;
+  }
+
+  return current >= maxOther;
 }
 
 /**
@@ -196,7 +289,7 @@ export function buildSessionExerciseStats(
 }
 
 /**
- * History list rows newest-first: day total + day % (or null → "—").
+ * History list rows newest-first: day total + day % (or null/0 → "–").
  * BR7, BR9, BR10, BR11. Plan filter applied (BR3).
  */
 export function buildHistoryListRows(
@@ -236,6 +329,7 @@ export function buildHistoryListRows(
       date: workout.date,
       totalKg: getSessionTotalWeightMoved(workout),
       dayPercent: getDayPercentChange(exercisePercents),
+      isBestRecord: isSessionBestRecord(oldestFirst, workout.date),
     });
   }
 

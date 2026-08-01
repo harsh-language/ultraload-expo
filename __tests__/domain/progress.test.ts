@@ -81,7 +81,12 @@ describe('progress domain', () => {
 
       const rows = buildHistoryListRows(workouts, ['bench']);
       expect(rows).toEqual([
-        { date: '2026-01-01', totalKg: 500, dayPercent: null },
+        {
+          date: '2026-01-01',
+          totalKg: 500,
+          dayPercent: null,
+          isBestRecord: false,
+        },
       ]);
 
       expect(getExercisePercentChange(500, 0)).toBeNull();
@@ -285,6 +290,118 @@ describe('progress domain', () => {
           percentChange: getExercisePercentChange(550, 500),
         },
       ]);
+    });
+  });
+
+  describe('isBestRecord (all-time high for same exercises)', () => {
+    it('hides crown on the first session with those exercises', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [
+              { weight: 40, reps: 10, warmUp: true },
+              { weight: 100, reps: 5, warmUp: false },
+            ],
+          },
+        ]),
+      ];
+
+      const rows = buildHistoryListRows(workouts, ['bench']);
+      expect(rows[0]?.isBestRecord).toBe(false);
+    });
+
+    it('marks the highest total among sessions that share the same exercises', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 100, reps: 5, warmUp: false }],
+          },
+        ]),
+        workout('2026-01-02', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 120, reps: 5, warmUp: false }],
+          },
+        ]),
+        workout('2026-01-03', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 110, reps: 5, warmUp: false }],
+          },
+        ]),
+      ];
+
+      const rows = buildHistoryListRows(workouts, ['bench']);
+      expect(rows.find((r) => r.date === '2026-01-01')?.isBestRecord).toBe(
+        false,
+      );
+      expect(rows.find((r) => r.date === '2026-01-02')?.isBestRecord).toBe(
+        true,
+      );
+      expect(rows.find((r) => r.date === '2026-01-03')?.isBestRecord).toBe(
+        false,
+      );
+    });
+
+    it('ignores warm-up sets when deciding the best record', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 100, reps: 5, warmUp: false }],
+          },
+        ]),
+        workout('2026-01-02', [
+          {
+            exerciseId: 'bench',
+            sets: [
+              { weight: 200, reps: 10, warmUp: true },
+              { weight: 90, reps: 5, warmUp: false },
+            ],
+          },
+        ]),
+      ];
+
+      const rows = buildHistoryListRows(workouts, ['bench']);
+      expect(rows.find((r) => r.date === '2026-01-01')?.isBestRecord).toBe(
+        true,
+      );
+      expect(rows.find((r) => r.date === '2026-01-02')?.isBestRecord).toBe(
+        false,
+      );
+    });
+
+    it('does not compare against sessions missing one of the day’s exercises', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 100, reps: 5, warmUp: false }],
+          },
+          {
+            exerciseId: 'squat',
+            sets: [{ weight: 140, reps: 5, warmUp: false }],
+          },
+        ]),
+        workout('2026-01-02', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 200, reps: 5, warmUp: false }],
+          },
+        ]),
+      ];
+
+      const rows = buildHistoryListRows(workouts, ['bench', 'squat']);
+      // Jan 1 is first bench+squat session → no crown.
+      expect(rows.find((r) => r.date === '2026-01-01')?.isBestRecord).toBe(
+        false,
+      );
+      // Jan 2 is bench-only; Jan 1 includes bench so it is comparable → crown.
+      expect(rows.find((r) => r.date === '2026-01-02')?.isBestRecord).toBe(
+        true,
+      );
     });
   });
 });

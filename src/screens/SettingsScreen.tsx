@@ -375,6 +375,7 @@ export function SettingsScreen({ navigation }: Props) {
                   warmUpAutoTagEnabled: value,
                 });
               }}
+              togglePosition="left"
               value={warmUpAutoTagEnabled}
             />
             <Accordion

@@ -5,7 +5,14 @@ import { formatDisplayWeight } from '../domain/units';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
-import { CloseIcon, IconLink, PencilIcon } from './icons';
+import {
+  ArrowPathDownIcon,
+  ArrowPathUpIcon,
+  CloseIcon,
+  CrownIcon,
+  IconLink,
+  PencilIcon,
+} from './icons';
 import { logSetTextStyles } from './logSetTextStyles';
 import { ScaledPressable } from './ScaledPressable';
 
@@ -41,6 +48,8 @@ interface LogSessionRowProps {
   type: 'session';
   dateLabel: string;
   totalLabel: string;
+  /** All-time high for this day’s exercise set — Figma `bestRecord` crown. */
+  isBestRecord?: boolean;
   stat?: { label: string; direction: LogStatDirection };
   showStat?: boolean;
   onPress?: () => void;
@@ -88,12 +97,12 @@ function RowPressable({
       disabled={!onPress}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.row,
+        styles.rowPressable,
         bordered && styles.rowBordered,
         pressed && onPress && styles.pressed,
       ]}
     >
-      {children}
+      <View style={styles.row}>{children}</View>
     </ScaledPressable>
   );
 }
@@ -167,6 +176,12 @@ function LogExerciseRow({
           >
             {stat.label}
           </Text>
+          {stat.direction === 'up' ? (
+            <ArrowPathUpIcon color={colors['content-1']} />
+          ) : null}
+          {stat.direction === 'down' ? (
+            <ArrowPathDownIcon color={colors['content-3']} />
+          ) : null}
         </View>
       ) : null}
     </RowPressable>
@@ -176,29 +191,49 @@ function LogExerciseRow({
 function LogSessionRow({
   dateLabel,
   totalLabel,
+  isBestRecord = false,
   stat,
   showStat = false,
   onPress,
 }: LogSessionRowProps) {
   return (
     <RowPressable onPress={onPress} bordered>
-      <Text style={[styles.primaryLabel, styles.sessionDate]} numberOfLines={1}>
-        {dateLabel}
-      </Text>
-      <Text style={styles.sessionTotal} numberOfLines={1}>
-        {totalLabel}
-      </Text>
+      <View style={styles.sessionColumn}>
+        <Text style={styles.sessionDate} numberOfLines={1}>
+          {dateLabel}
+        </Text>
+      </View>
+      <View style={[styles.sessionColumn, styles.sessionAlignEnd]}>
+        <Text
+          style={[
+            styles.sessionTotal,
+            isBestRecord && styles.sessionTotalBest,
+          ]}
+          numberOfLines={1}
+        >
+          {totalLabel}
+        </Text>
+        {isBestRecord ? <CrownIcon color={colors['content-1']} /> : null}
+      </View>
       {showStat && stat ? (
-        <View style={[styles.statGroup, styles.sessionStat]}>
+        <View style={[styles.sessionColumn, styles.sessionAlignEnd]}>
           <Text
             style={[
               styles.statValue,
+              stat.direction === 'flat' && styles.statFlatFill,
               stat.direction === 'down' && styles.statDown,
               stat.direction === 'flat' && styles.statFlat,
             ]}
+            numberOfLines={1}
           >
             {stat.label}
           </Text>
+          {stat.direction === 'up' ? (
+            <ArrowPathUpIcon color={colors['content-1']} />
+          ) : null}
+          {stat.direction === 'down' ? (
+            <ArrowPathDownIcon color={colors['content-3']} />
+          ) : null}
         </View>
       ) : null}
     </RowPressable>
@@ -206,9 +241,13 @@ function LogSessionRow({
 }
 
 const styles = StyleSheet.create({
+  rowPressable: {
+    alignSelf: 'stretch',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '100%',
     height: spacing['s-12'],
     backgroundColor: colors['bg-1'],
     gap: spacing['s-5'],
@@ -242,18 +281,38 @@ const styles = StyleSheet.create({
     color: colors['content-1'],
     ...textCase.lower,
   },
+  /**
+   * Figma log columns — three equal `flex-[1_0_0]` slots.
+   * `width: 0` forces Yoga to ignore content intrinsic width so slots stay equal.
+   */
+  sessionColumn: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    width: 0,
+    minWidth: 0,
+  },
+  sessionAlignEnd: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing['s-4'],
+  },
   sessionDate: {
-    flex: 1,
+    ...typography.para1,
+    color: colors['content-1'],
+    ...textCase.none,
   },
   sessionTotal: {
     ...typography.para2,
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
     color: colors['content-3'],
     textAlign: 'right',
   },
-  sessionStat: {
-    flex: 1,
-    justifyContent: 'flex-end',
+  sessionTotalBest: {
+    color: colors['content-1'],
   },
   statGroup: {
     flexDirection: 'row',
@@ -264,10 +323,18 @@ const styles = StyleSheet.create({
     ...typography.para1,
     color: colors['content-1'],
   },
+  /** Figma flat dash — text itself fills the third column, right-aligned. */
+  statFlatFill: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    textAlign: 'right',
+  },
   statDown: {
     color: colors['content-3'],
   },
   statFlat: {
+    ...typography.para2,
     color: colors['content-3'],
   },
 });

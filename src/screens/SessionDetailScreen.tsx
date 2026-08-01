@@ -18,6 +18,8 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenTitleBar } from '../components/ScreenTitleBar';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { BackIcon } from '../components/icons/BackIcon';
+import { ArrowPathDownIcon } from '../components/icons/ArrowPathDownIcon';
+import { ArrowPathUpIcon } from '../components/icons/ArrowPathUpIcon';
 import { PencilIcon } from '../components/icons/PencilIcon';
 import { getDatabase } from '../db/client';
 import { loadStandardSetsForExercise } from '../db/workoutRepository';
@@ -52,6 +54,8 @@ type Props = NativeStackScreenProps<MainStackParamList, 'SessionDetail'>;
 const TITLE_TOP_GAP = spacing['s-8'];
 const FOOTER_BOTTOM_GAP = spacing['s-8'];
 const PINNED_FOOTER_HEIGHT = spacing['s-12'];
+/** Figma title-main arrow-path-up instance size. */
+const SUMMARY_STAT_ICON_SIZE = spacing['s-9'];
 
 function clampSafeInset(value: number): number {
   return Math.max(value, spacing['s-5']);
@@ -165,17 +169,21 @@ export function SessionDetailScreen({ navigation, route }: Props) {
     sheetRef.current?.present();
   }, [refreshReferenceWeights]);
 
-  const handleEditSet = useCallback((set: TodaySet, exerciseId: string) => {
-    setAddSetSheetVisible(true);
-    const editableSet: EditableSet = {
-      id: set.id,
-      exerciseId,
-      weight: set.weight,
-      reps: set.reps,
-      warmUp: set.warmUp,
-    };
-    sheetRef.current?.presentForEdit(editableSet);
-  }, []);
+  const handleEditSet = useCallback(
+    (set: TodaySet, exerciseId: string, setIndex?: number) => {
+      setAddSetSheetVisible(true);
+      const editableSet: EditableSet = {
+        id: set.id,
+        exerciseId,
+        weight: set.weight,
+        reps: set.reps,
+        warmUp: set.warmUp,
+        setIndex,
+      };
+      sheetRef.current?.presentForEdit(editableSet);
+    },
+    [],
+  );
 
   const handleRequestDelete = useCallback((set: DeletableSet) => {
     setDeleteSetSheetVisible(true);
@@ -293,21 +301,20 @@ export function SessionDetailScreen({ navigation, route }: Props) {
       <ScrollFadeView
         bottomFadeHeight={SCROLL_FADE_HEIGHT}
         bottomOffset={
-          editing
-            ? FOOTER_BOTTOM_GAP +
-              PINNED_FOOTER_HEIGHT +
-              clampSafeInset(insets.bottom)
-            : clampSafeInset(insets.bottom)
+          editing ? FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT : 0
         }
         contentContainerStyle={[
           styles.scrollContent,
           {
+            // Figma: section gap (s-8) + bottom-space (safe-area + s-8)
             paddingBottom: editing
               ? FOOTER_BOTTOM_GAP +
                 PINNED_FOOTER_HEIGHT +
                 clampSafeInset(insets.bottom) +
                 spacing['s-8']
-              : clampSafeInset(insets.bottom) + spacing['s-8'],
+              : spacing['s-8'] +
+                spacing['s-8'] +
+                clampSafeInset(insets.bottom),
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -319,32 +326,49 @@ export function SessionDetailScreen({ navigation, route }: Props) {
             <Text style={styles.summaryTotal}>
               {formatSessionTotalWeightLabel(sessionTotal, units)}
             </Text>
-            {dayPercent != null ? (
-              <Text
-                style={[
-                  styles.summaryPercent,
-                  getPercentDirection(dayPercent) === 'down' &&
-                    styles.summaryPercentDown,
-                ]}
-              >
-                {formatPercentChange(dayPercent)}
-              </Text>
-            ) : (
+            {dayPercent != null && dayPercent !== 0 ? (
+              <View style={styles.summaryStat}>
+                <Text
+                  style={[
+                    styles.summaryPercent,
+                    getPercentDirection(dayPercent) === 'down' &&
+                      styles.summaryPercentDown,
+                  ]}
+                >
+                  {formatPercentChange(dayPercent)}
+                </Text>
+                {getPercentDirection(dayPercent) === 'up' ? (
+                  <ArrowPathUpIcon
+                    color={colors['content-1']}
+                    size={SUMMARY_STAT_ICON_SIZE}
+                  />
+                ) : null}
+                {getPercentDirection(dayPercent) === 'down' ? (
+                  <ArrowPathDownIcon
+                    color={colors['content-3']}
+                    size={SUMMARY_STAT_ICON_SIZE}
+                  />
+                ) : null}
+              </View>
+            ) : dayPercent == null ? (
               <Text style={[styles.summaryPercent, styles.summaryPercentDown]}>
                 —
               </Text>
-            )}
+            ) : null}
           </View>
         ) : null}
 
         <View style={styles.session}>
-          {visibleWorkout.loggedExercises.map((loggedExercise) => {
+          {visibleWorkout.loggedExercises.map((loggedExercise, exerciseIndex) => {
             let standardSetIndex = 0;
             const exerciseStat = statsByExerciseId.get(
               loggedExercise.exerciseId,
             );
             const showExerciseStat =
-              exerciseStat?.percentChange != null;
+              exerciseStat?.percentChange != null &&
+              exerciseStat.percentChange !== 0;
+            const isLastExercise =
+              exerciseIndex === visibleWorkout.loggedExercises.length - 1;
 
             return (
               <View key={loggedExercise.id}>
@@ -428,6 +452,7 @@ export function SessionDetailScreen({ navigation, route }: Props) {
                                 void handleEditSet(
                                   set,
                                   loggedExercise.exerciseId,
+                                  setIndex,
                                 );
                               }
                             : undefined
@@ -438,6 +463,7 @@ export function SessionDetailScreen({ navigation, route }: Props) {
                                 void handleEditSet(
                                   set,
                                   loggedExercise.exerciseId,
+                                  setIndex,
                                 );
                               }
                             : undefined
@@ -452,7 +478,7 @@ export function SessionDetailScreen({ navigation, route }: Props) {
                     );
                   })}
                 </View>
-                <LogRow type="space" />
+                {isLastExercise ? null : <LogRow type="space" />}
               </View>
             );
           })}
@@ -530,13 +556,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing['s-5'],
-    minHeight: spacing['s-11'],
+    height: spacing['s-12'],
   },
   summaryTotal: {
     ...typography.brand2,
     color: colors['content-2'],
     flex: 1,
     ...textCase.none,
+  },
+  summaryStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing['s-4'],
   },
   summaryPercent: {
     ...typography.brand2,

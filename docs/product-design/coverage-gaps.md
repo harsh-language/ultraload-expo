@@ -5,6 +5,27 @@ questions. Do not silently upgrade a candidate here into an accepted rule.
 
 ## Contradictions
 
+### workout-bottom-fade-offset-vs-page-align
+
+Status: open
+Type: contradiction
+Source: `docs/product-design/references/interface-quality.md`
+(`rule/chrome-stays-pinned-scroll-underneath`), `src/screens/WorkOutScreen.tsx`
+
+Observation:
+- Accepted chrome rule previously cited Work Out `bottomOffset` above the
+  footer as the good example.
+- Shipped Work Out now page-aligns the bottom fade (`bottomOffset` 0); proposed
+  `rule/workout-bottom-fade-aligns-to-page` records the correction.
+
+Why it matters:
+- Agents following the accepted good example alone would reintroduce the CTA
+  band glitch.
+
+Follow-up:
+- Accept or revise `rule/workout-bottom-fade-aligns-to-page`, then tighten the
+  accepted chrome rule’s good example.
+
 ### taxonomy-vs-current-u2-code
 
 Status: open

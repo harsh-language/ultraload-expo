@@ -10,19 +10,18 @@ import { textCase } from '../theme/textCase';
 
 export type HistoryTab = 'list' | 'chart';
 
+export const HISTORY_TABS = ['list', 'chart'] as const satisfies readonly HistoryTab[];
+
 interface HistoryNavigationProps {
   activeTab: HistoryTab;
   onTabChange: (tab: HistoryTab) => void;
   onBack: () => void;
-  /** When false, hide the tab row (empty History state). */
-  showTabs?: boolean;
 }
 
 export function HistoryNavigation({
   activeTab,
   onTabChange,
   onBack,
-  showTabs = true,
 }: HistoryNavigationProps) {
   return (
     <View style={styles.root}>
@@ -33,7 +32,7 @@ export function HistoryNavigation({
         start={{ x: 0.5, y: 0 }}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.topRow}>
+      <View style={styles.titleRow}>
         <IconButton
           accessibilityLabel="back"
           onPress={onBack}
@@ -41,8 +40,6 @@ export function HistoryNavigation({
         >
           <BackIcon />
         </IconButton>
-      </View>
-      {showTabs ? (
         <View style={styles.tabs}>
           <TabLabel
             active={activeTab === 'list'}
@@ -59,7 +56,7 @@ export function HistoryNavigation({
             }}
           />
         </View>
-      ) : null}
+      </View>
     </View>
   );
 }
@@ -94,19 +91,21 @@ const styles = StyleSheet.create({
     paddingTop: spacing['s-8'],
     paddingHorizontal: spacing['s-8'],
     paddingBottom: spacing['s-8'],
-    gap: spacing['s-8'],
     backgroundColor: colors['bg-1'],
     zIndex: 1,
     ...shadowBelow,
   },
-  topRow: {
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing['s-8'],
   },
   tabs: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing['s-7'],
+    overflow: 'hidden',
   },
   tab: {
     height: spacing['s-11'],

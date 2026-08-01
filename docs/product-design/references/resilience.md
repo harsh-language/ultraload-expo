@@ -71,14 +71,18 @@ Good example: `DeleteSetPreview` plus a title such as `delete set 02`.
 ## rule/history-empty-offers-start-workout
 Status: proposed
 Scope: History list and chart empty states
-Rule: When History has no visible sessions, show shared empty copy
-(`no exercises recorded yet.`) and a primary CTA that returns the user to Work
-Out to log.
-Why: Empty History is not a dead end — the next useful action is logging.
+Rule: When History has no visible sessions, hide the History title bar and show
+shared empty copy (`no exercises recorded yet.`) plus a primary CTA. The CTA
+pops back to Work Out (`goBack`) so the transition matches a back gesture —
+not a forward push onto Work Out.
+Why: Empty History is not a dead end — the next useful action is logging, and
+the chrome for list/chart tabs is irrelevant with nothing to show.
 Exceptions: Chart stub with existing data may show a blank shell until U5.
-Source: `src/components/HistoryEmptyState.tsx`, Figma History empty frame
-Bad example: An empty History screen with no path back to logging.
-Good example: `start workout` navigates to `WorkOut`.
+Source: `src/components/HistoryEmptyState.tsx`, `src/screens/HistoryListScreen.tsx`,
+Figma History empty frame
+Bad example: Empty History with a title bar, or `navigate('WorkOut')` which
+pushes and slides the wrong direction.
+Good example: No `HistoryNavigation` when empty; `start workout` calls `goBack`.
 
 ## rule-stale-docs-go-to-coverage-gaps-not-silent-normalization
 Status: proposed

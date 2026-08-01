@@ -25,32 +25,29 @@ import {
   ArrowsRepeatCircleIcon,
   CalendarDaysIcon,
   SettingsGearIcon,
+  SettingsToggleIcon,
   type AppIconProps,
 } from './icons';
 import { ScaledPressable } from './ScaledPressable';
 
-export type OptionsMenuKey = 'history' | 'settings' | 'reset';
+export type OptionsMenuKey = 'history' | 'settings' | 'demoData' | 'reset';
 
 interface OptionsMenuDropdownProps {
   visible: boolean;
   anchorLayout: LayoutRectangle | null;
+  demoDataEnabled: boolean;
   onClose: () => void;
   onSelect: (key: OptionsMenuKey) => void;
 }
 
-const MENU_ITEMS: {
-  key: OptionsMenuKey;
-  label: string;
-  icon: FC<AppIconProps>;
-}[] = [
-  { key: 'history', label: 'history', icon: CalendarDaysIcon },
-  { key: 'settings', label: 'settings', icon: SettingsGearIcon },
-  { key: 'reset', label: 'reset', icon: ArrowsRepeatCircleIcon },
-];
+function demoDataLabel(enabled: boolean): string {
+  return enabled ? 'demo data : on' : 'demo data : off';
+}
 
 export function OptionsMenuDropdown({
   visible,
   anchorLayout,
+  demoDataEnabled,
   onClose,
   onSelect,
 }: OptionsMenuDropdownProps) {
@@ -60,6 +57,30 @@ export function OptionsMenuDropdown({
   const reduceMotion = useReducedMotion();
   const opacity = useSharedValue(0);
   const scale = useSharedValue(INTERACTIVE_SCALE);
+
+  // Demo-data toggle + reset are DEV/simulator only — hidden in release (U7).
+  const menuItems: {
+    key: OptionsMenuKey;
+    label: string;
+    icon: FC<AppIconProps>;
+  }[] = [
+    { key: 'history', label: 'history', icon: CalendarDaysIcon },
+    { key: 'settings', label: 'settings', icon: SettingsGearIcon },
+    ...(__DEV__
+      ? [
+          {
+            key: 'demoData' as const,
+            label: demoDataLabel(demoDataEnabled),
+            icon: SettingsToggleIcon,
+          },
+          {
+            key: 'reset' as const,
+            label: 'reset',
+            icon: ArrowsRepeatCircleIcon,
+          },
+        ]
+      : []),
+  ];
 
   useEffect(() => {
     const wasVisible = wasVisibleRef.current;
@@ -115,6 +136,7 @@ export function OptionsMenuDropdown({
 
   const menuTop = anchorLayout.y + anchorLayout.height + spacing['s-4'];
   const menuRight = spacing['s-8'];
+  // Wider in DEV for "demo data : off"; release menu only has shorter labels.
   const menuWidth = spacing['s-17'];
 
   return (
@@ -142,7 +164,7 @@ export function OptionsMenuDropdown({
           },
         ]}
       >
-        {MENU_ITEMS.map((item) => {
+        {menuItems.map((item) => {
           const Icon = item.icon;
 
           return (
@@ -151,7 +173,6 @@ export function OptionsMenuDropdown({
               accessibilityRole="button"
               onPress={() => {
                 onSelect(item.key);
-                onClose();
               }}
               style={({ pressed }) => [
                 styles.item,

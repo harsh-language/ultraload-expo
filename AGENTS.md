@@ -59,6 +59,8 @@ U4 in progress — History list + session detail + progress math. Chart remains 
 
 Next after U4 is U5 — History chart with filters and muscle-group weighting.
 
+**DEV tooling (simulator only):** homepage options **demo data** toggle and **reset** are behind `__DEV__`. Seed code in `src/db/devSeed.ts` / `demoData.ts` also no-ops outside DEV. Release / U7 App Store builds must not show these — leave the `__DEV__` guards in place; do not expose them in production UI.
+
 ## Typography
 
 Font metrics: [`src/theme/typography.ts`](src/theme/typography.ts). Case: [`src/theme/textCase.ts`](src/theme/textCase.ts). Author UI copy in lowercase; components enforce case at render.

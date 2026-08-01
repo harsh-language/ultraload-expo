@@ -3,6 +3,7 @@ import {
   getAddSetRecordLabel,
   getEditSetRecordLabel,
   getNextStandardSetIndex,
+  getSetSheetTitle,
 } from '../../src/domain/set-labels';
 
 describe('formatSetIndex', () => {
@@ -70,5 +71,22 @@ describe('getEditSetRecordLabel', () => {
   it('labels edit save for warmup vs standard sets', () => {
     expect(getEditSetRecordLabel(true)).toBe('save warmup set');
     expect(getEditSetRecordLabel(false)).toBe('save set');
+  });
+});
+
+describe('getSetSheetTitle', () => {
+  it('labels edit and delete titles for warmup vs numbered sets', () => {
+    expect(getSetSheetTitle('edit', null)).toBe('edit set');
+    expect(getSetSheetTitle('delete', null)).toBe('delete set');
+    expect(getSetSheetTitle('edit', { warmUp: true })).toBe('edit warmup set');
+    expect(getSetSheetTitle('delete', { warmUp: true })).toBe(
+      'delete warmup set',
+    );
+    expect(getSetSheetTitle('edit', { warmUp: false, setIndex: 1 })).toBe(
+      'edit set 01',
+    );
+    expect(getSetSheetTitle('delete', { warmUp: false, setIndex: 2 })).toBe(
+      'delete set 02',
+    );
   });
 });

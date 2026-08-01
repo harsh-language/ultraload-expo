@@ -37,3 +37,22 @@ export function getAddSetRecordLabel(options: {
 export function getEditSetRecordLabel(warmUp: boolean): string {
   return warmUp ? 'save warmup set' : 'save set';
 }
+
+/**
+ * Add/Edit/Delete set sheet title.
+ * Warm-up → `{action} warmup set`; standard → `{action} set 01`.
+ */
+export function getSetSheetTitle(
+  action: 'edit' | 'delete',
+  set: { warmUp: boolean; setIndex?: number } | null,
+): string {
+  if (set == null) {
+    return `${action} set`;
+  }
+
+  if (set.warmUp) {
+    return `${action} warmup set`;
+  }
+
+  return `${action} set ${formatSetIndex(set.setIndex ?? 1)}`;
+}

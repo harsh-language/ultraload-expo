@@ -42,7 +42,23 @@ Source: `.cursor/rules/scroll-fade.mdc`, `src/screens/WorkOutScreen.tsx`
 Bad example: Putting the title bar or footer inside the scroll container so it
 fades or scrolls away with the log.
 Good example: `WorkOutScreen` renders title/footer overlays outside
-`ScrollFadeView` and uses `topOffset` / `bottomOffset`.
+`ScrollFadeView`; top fade uses `topOffset` under the title bar. Bottom fade
+stays page-bottom aligned (`bottomOffset` 0) — see proposed
+`rule/workout-bottom-fade-aligns-to-page`.
+
+## rule/workout-bottom-fade-aligns-to-page
+Status: proposed
+Scope: Work Out logged state
+Rule: Bottom scroll fade height is `s-16` (`SCROLL_FADE_HEIGHT`) and is
+bottom-aligned to the page viewport — do not lift it with `bottomOffset` to
+the footer button row. Title fade may still use `topOffset`.
+Why: Anchoring the fade to the buttons paints a dark band across the CTAs and
+leaves log rows readable in the gaps between / below them.
+Exceptions: Other screens (e.g. session detail edit footer) may still use
+`bottomOffset` when their chrome layout requires it.
+Source: `src/screens/WorkOutScreen.tsx`, `.cursor/rules/scroll-fade.mdc`
+Bad example: `bottomOffset={FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT}` on Work Out.
+Good example: omit `bottomOffset` (defaults to 0); keep `bottomFadeHeight={SCROLL_FADE_HEIGHT}`.
 
 ## rule/buttons-do-not-carry-drop-shadows
 Status: proposed

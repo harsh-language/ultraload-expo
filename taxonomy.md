@@ -16,7 +16,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 |------|--------|
 | App shell, splash, onboarding | **Built** |
 | Work Out — log today's sets | **Built** (add, edit, delete, warm-up auto-tag) |
-| Options menu (history, settings, reset) | **Built** (History + Settings navigate; reset is dev-only and must be removed before U7 / App Store compile) |
+| Options menu (history, settings, demo data, reset) | **Built** (History + Settings for everyone; **demo-data toggle + reset are `__DEV__` only** — visible on simulator for personal testing, hidden in release / U7) |
 | Rest timer | **Built** (foreground countdown, pause/resume, dismiss, background notification) |
 | History (list, chart, session detail) | **Partial** — list + session detail built (U4); chart is a stub until U5 |
 | Settings | **Built** (profile, plan editing, presets, units) |
@@ -50,7 +50,7 @@ A personal, offline strength-training app for one experienced lifter. It logs ad
 - **Exercise picker:** muscle-group sections, multi-select options, floating “N selected” ticker (`ExerciseSelectionTicker`), scroll edge fades (`ScrollFadeView` with per-edge height overrides).
 - **Log a set:** Work Out → Add new set → `AddSetSheet` → exercise dropdown + reps/weight sliders + warm-up toggle → Record → persists to today's workout row (creates workout on first set of the day).
 - **Review today:** Work Out scroll list — exercise headers + set rows (`LogRow`); warm-up sets show `W`, standard sets numbered. Edge fades on the log list.
-- **Navigate elsewhere:** session title bar chevron → options menu (`OptionsMenuDropdown`) — Settings and History open stack screens; History chart is a stub until U5; dev reset wipes data and replays onboarding.
+- **Navigate elsewhere:** session title bar chevron → options menu (`OptionsMenuDropdown`) — Settings and History open stack screens; History chart is a stub until U5; in `__DEV__` only, demo-data toggle seeds or clears placeholder history and reset wipes data / replays onboarding.
 - **Edit/delete sets:** tap a logged row to edit; delete opens a confirmation sheet.
 - **Rest timer:** Work Out supports start, pause/resume, dismiss, and a background notification.
 - **Manage settings:** edit profile, warm-up/rest presets, display units, and plan exercises; changes write through to SQLite. Per-exercise override UI is not in this version (catalogue per-exercise data still used for sliders).

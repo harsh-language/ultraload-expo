@@ -24,6 +24,6 @@ Delete when the pattern no longer exists, you explicitly chose to refactor it, o
 |----|------|---------|--------|
 | T3 | `src/navigation/RootNavigator.tsx` | `AppPhase` rendered via `if (splash)` / `if (onboarding)` / implicit `main` return — no exhaustive switch | Launch states stable (splash → onboarding → main); unlikely to add phases |
 | Q3 | `src/components/useHomepageOptionsMenu.tsx` | Hook returns `<OptionsMenuDropdown />` as `menu` JSX for caller to render | Single consumer (Work Out); colocate until U3/U4 navigation work |
-| Q6 | `src/components/useHomepageOptionsMenu.tsx` | `handleSelect` async reset without try/catch — errors swallowed | Dev-only reset; removed before App Store (U7) |
-| Q9 | `src/components/OptionsMenuDropdown.tsx` | Reset menu item ships without `__DEV__` guard | Dev builds only until U7; explicit removal in plan |
+| Q6 | `src/components/useHomepageOptionsMenu.tsx` | `handleSelect` async reset without try/catch — errors swallowed | Dev-only reset; UI gated by `__DEV__` |
+| Q9 | `src/components/OptionsMenuDropdown.tsx` | Demo-data + reset menu items wrapped in `__DEV__` | Simulator/dev only; absent in release / U7 App Store builds |
 | T2 | `src/screens/WorkOutScreen.tsx` / `src/components/OptionsMenuDropdown.tsx` | Title bar and menu keep separate `zIndex` literals (menu above title) | Shared stacking constant/comment rejected; values intentional |

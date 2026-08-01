@@ -4,7 +4,7 @@ import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { createDatabase, DATABASE_NAME } from './client';
 import { ensurePersistedRows } from './repositories';
-import { seedDevBaselineSets } from './devSeed';
+import { seedDemoData } from './devSeed';
 import migrations from './migrations/migrations';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
@@ -32,7 +32,7 @@ function MigrationGate({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         await ensurePersistedRows(db);
-        await seedDevBaselineSets(db);
+        await seedDemoData(db);
         await hydrateStores(db);
         if (!cancelled) {
           setReady(true);

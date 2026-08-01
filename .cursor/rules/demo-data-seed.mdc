@@ -1,0 +1,31 @@
+---
+description: Demo workout seed must match docs/demo-data.md; replace Jan 1 baseline
+globs: src/db/**/*.{ts,tsx},src/components/useHomepageOptionsMenu.tsx,docs/demo-data.md
+alwaysApply: false
+---
+
+# Demo data seed
+
+[`docs/demo-data.md`](docs/demo-data.md) is the only source of truth for placeholder workout history and demo metadata (profile + plan).
+
+## Mandates
+
+1. **Doc first:** change dates, exercises, weights, reps, profile, or plan in `docs/demo-data.md` before changing seed code.
+2. **Seed matches doc:** `src/db/demoData.ts` mirrors the doc (`DEMO_SESSIONS`, `DEMO_PROFILE`, `DEMO_PLAN`); `seedDemoData` in `src/db/devSeed.ts` applies them — no extra dates, exercises, or invented loads. When the doc changes, update `demoData.ts` in the same change.
+3. **Reset:** wipe **all** workouts, then re-seed from `docs/demo-data.md`. Do not preserve leftover user days. Do not keep a special single baseline date. Clear `today_demo_date` before reseed so rolling today injects again.
+4. **Replace Jan 1 baseline:** remove `DEV_BASELINE_DATE` / `2026-01-01` warm-up-only seed and any `resetAllUserData` logic that preserves that day. The July demo sessions in the doc supersede it.
+5. **Startup + reset:** after migrations or menu reset, call the demo seed so the doc’s sessions are present when missing (or always re-seed after a full wipe on reset). Apply demo profile when onboarding is incomplete; apply demo plan when the plan is empty.
+6. **Plan order** matches session exercise order in the doc.
+7. **Toggle:** homepage options menu item above reset (`demo data : on` / `demo data : off`) gates seeding. When off, `seedDemoData` is a no-op and existing demo session days are cleared — code in `demoData.ts` must not appear in the simulator. Also delete the workout for `today_demo_date` and clear that pref.
+8. **Rolling today:** after fixed history seed, if today has zero sets and `today_demo_date` ≠ today, inject `buildNextDemoSession(last fixed July session)` for `getLocalCalendarDate()`, then set the pref. Do not add rolling days to the fixed Sessions table. Do not repair after user clears/edits today — only Reset reseeds.
+9. **DEV only:** demo seed, the demo-data toggle, and reset are for simulator / `__DEV__` builds. They must not appear in release or U7 App Store polish — keep them behind `__DEV__` (do not ship to end users).
+
+## Do not
+
+- Invent alternate demo data in chat or code without updating the doc
+- Reintroduce a separate “baseline day” outside `docs/demo-data.md`
+- Add fixed August (or “today”) dates into the July Sessions table — rolling today is generated
+- Seed OHP, rows, or other exercises unless they appear in the doc
+- Seed demo sessions when the demo-data toggle is off
+- Show demo-data toggle or reset outside `__DEV__`
+- Auto-delete yesterday’s leftover rolling-today rows (out of scope)

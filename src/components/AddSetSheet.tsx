@@ -25,6 +25,7 @@ import {
   getAddSetRecordLabel,
   getEditSetRecordLabel,
   getNextStandardSetIndex,
+  getSetSheetTitle,
 } from '../domain/set-labels';
 import { formatWeight, getUnitLabel } from '../domain/units';
 import {
@@ -44,6 +45,8 @@ export interface EditableSet {
   weight: number;
   reps: number;
   warmUp: boolean;
+  /** Standard-set display index; ignored when `warmUp` is true. */
+  setIndex?: number;
 }
 
 export interface AddSetSheetHandle {
@@ -142,6 +145,7 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
     const sheetRef = useRef<BottomSheetModal>(null);
     const [mode, setMode] = useState<SheetMode>('add');
     const [editingSetId, setEditingSetId] = useState<number | null>(null);
+    const [editingSetIndex, setEditingSetIndex] = useState<number | undefined>();
     const [exerciseId, setExerciseId] = useState(exerciseIds[0] ?? '');
     const [reps, setReps] = useState(REPS_MIN);
     const [weight, setWeight] = useState(0);
@@ -201,12 +205,14 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
 
       setMode('add');
       setEditingSetId(null);
+      setEditingSetIndex(undefined);
       applyDraftFields(nextExerciseId, draft);
     }, [applyDraftFields, draftContext, exerciseIds]);
 
     const initializeEditDraft = useCallback((set: EditableSet) => {
       setMode('edit');
       setEditingSetId(set.id);
+      setEditingSetIndex(set.warmUp ? undefined : set.setIndex);
       setExerciseId(set.exerciseId);
       setReps(set.reps);
       setWeight(set.weight);
@@ -348,7 +354,14 @@ export const AddSetSheet = forwardRef<AddSetSheetHandle, AddSetSheetProps>(
             />
           </>
         }
-        title={mode === 'edit' ? 'edit set' : 'add new set'}
+        title={
+          mode === 'edit'
+            ? getSetSheetTitle('edit', {
+                warmUp,
+                setIndex: editingSetIndex,
+              })
+            : 'add new set'
+        }
       >
         <ExerciseDropdown
           canNext={exerciseIndex >= 0 && exerciseIndex < exerciseIds.length - 1}

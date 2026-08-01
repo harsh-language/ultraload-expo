@@ -3,6 +3,5 @@ export type MainStackParamList = {
   Settings: undefined;
   AddExercises: undefined;
   HistoryList: undefined;
-  HistoryChart: undefined;
   SessionDetail: { date: string };
 };
