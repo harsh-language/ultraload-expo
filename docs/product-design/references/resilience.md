@@ -50,7 +50,7 @@ or when completion is already in progress.
 Why: The user should never advance into an invalid profile or submit the same
 finish action twice.
 Exceptions: Steps with prefilled optional presets can remain enabled.
-Source: `taxonomy.md`, `src/screens/onboarding/WarmUpStep.tsx`, `src/screens/onboarding/BodyweightStep.tsx`, `src/screens/onboarding/ExercisePickerStep.tsx`
+Source: `src/screens/onboarding/WarmUpStep.tsx`, `src/screens/onboarding/BodyweightStep.tsx`, `src/screens/onboarding/ExercisePickerStep.tsx`
 Bad example: Allowing the user to continue from profile with no bodyweight or
 from exercise selection with zero exercises.
 Good example: `actionDisabled={completing}` in `WarmUpStep` and gating in the
@@ -93,7 +93,7 @@ they matched.
 Why: The skill should stay traceable about what is implemented versus what is
 merely planned.
 Exceptions: None yet; requires human confirmation before becoming accepted.
-Source: `taxonomy.md`, `src/screens/WorkOutScreen.tsx`, `src/components/DeleteSetSheet.tsx`, `src/components/RestTimer.tsx`
-Bad example: Treating `taxonomy.md` as current truth for rest timer or set
+Source: `docs/blueprint.md`, `src/screens/WorkOutScreen.tsx`, `src/components/DeleteSetSheet.tsx`, `src/components/RestTimer.tsx`
+Bad example: Treating a planning doc as current truth for rest timer or set
 editing without acknowledging the implemented code.
 Good example: Learn mode records the contradiction and asks for confirmation.

@@ -42,7 +42,7 @@ creates the workout for that calendar day.
 Why: UltraLoad is a notepad, not a session manager. Logging should begin at the
 moment of capture, not behind a setup step.
 Exceptions: None documented in current code or approved docs.
-Source: `docs/blueprint.md`, `src/stores/todaySlice.ts`, `taxonomy.md`
+Source: `docs/blueprint.md`, `src/stores/todaySlice.ts`
 Bad example: A primary CTA that asks the user to create or start a workout
 before they can log the first set.
 Good example: `WorkOutScreen` shows `add new set` even when `workout` is null,

@@ -152,7 +152,7 @@ user can adjust the slider, but the default path is a quick confirm.
 Why: Setup should front-load only what the product truly needs, then get the
 user into Work Out quickly.
 Exceptions: Exercise selection still requires at least one deliberate choice.
-Source: `docs/blueprint.md`, `src/screens/onboarding/WarmUpStep.tsx`, `taxonomy.md`
+Source: `docs/blueprint.md`, `src/screens/onboarding/WarmUpStep.tsx`
 Bad example: Turning rest or warm-up setup into a blank form that requires
 typed input before progress.
 Good example: Warm-up and rest steps use sliders with defaults and a simple CTA.

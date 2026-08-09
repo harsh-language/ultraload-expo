@@ -62,7 +62,7 @@ This skill hits that architecture: modes, routing, decision records, exemplars, 
 - Routing to existing rules
 - Lint candidates without writing linters yet
 - Human-gated `proposed`
-- Coverage gaps for taxonomy drift
+- Coverage gaps for doc/code drift
 
 ## Implication for skill combinations
 

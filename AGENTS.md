@@ -23,10 +23,6 @@ Central Icons requires `CENTRAL_LICENSE_KEY` in `.env` (copy from `.env.example`
 - First-time install: `npm run install:deps`
 - With [direnv](https://direnv.net/): run `direnv allow` once, then `npm install` works normally
 
-## Project map
-
-Built vs stub screens, flows, and code locations: [`taxonomy.md`](taxonomy.md).
-
 ## Product design
 
 When shaping, editing, or reviewing user-facing UI, load the

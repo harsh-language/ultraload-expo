@@ -457,7 +457,6 @@ ultraload/
 ## Sources & Research
 
 - **Origin:** [docs/blueprint.md](docs/blueprint.md) (approved 2026-06-22)
-- **Human summary:** [taxonomy.md](taxonomy.md)
 - **Design:** Figma ultraload-v1 + v1-components (links in blueprint frontmatter)
 - **Local codebase:** Greenfield — no prior patterns
 

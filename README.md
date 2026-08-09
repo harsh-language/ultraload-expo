@@ -19,8 +19,6 @@ React Native (Expo 56), iOS + Android, 100% offline, dark mode only. No splits, 
 | Export / import / reset | Not built (U6; DEV reset in options menu) |
 | App Store release | Not built (U7) |
 
-Full screen/flow map: [`taxonomy.md`](taxonomy.md)
-
 ## Quick start
 
 1. Copy `.env.example` → `.env` and set `CENTRAL_LICENSE_KEY`
@@ -33,7 +31,6 @@ Agent conventions: [`AGENTS.md`](AGENTS.md)
 
 | Path | Purpose |
 |------|---------|
-| [`taxonomy.md`](taxonomy.md) | Built vs stub screens, flows, code locations |
 | [`docs/blueprint.md`](docs/blueprint.md) | Product blueprint (requirements, rules, screens) |
 | [`docs/blueprint-status.yaml`](docs/blueprint-status.yaml) | Blueprint coverage status |
 | [`docs/demo-data.md`](docs/demo-data.md) | Canonical DEV demo workouts + rolling today rules |

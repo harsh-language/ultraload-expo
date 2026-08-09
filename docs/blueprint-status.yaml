@@ -2,7 +2,6 @@ phase: approved
 approved_at: 2026-06-22
 product_name: "UltraLoad"
 completion_pct: 100
-taxonomy_status: current  # draft | current
 next_section: null
 ui_block_mode: null
 sections:  # each: not_started | partial | blocked | complete

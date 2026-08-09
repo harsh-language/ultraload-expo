@@ -26,32 +26,13 @@ Why it matters:
 Follow-up:
 - Accept `rule/workout-fades-clear-system-ui` and drop the obsolete page-edge wording.
 
-### taxonomy-vs-current-u2-code
-
-Status: open
-Type: contradiction
-Source: `taxonomy.md`, `src/screens/WorkOutScreen.tsx`, `src/components/DeleteSetSheet.tsx`, `src/components/RestTimer.tsx`
-
-Observation:
-- `taxonomy.md` still describes edit/delete and rest timer as not built or stub.
-- Current code implements set editing, set deletion, and a visible rest-timer
-  surface on Work Out.
-
-Why it matters:
-- Learn mode needs a stable way to detect code that has advanced beyond the
-  screen map and build-stage notes.
-
-Follow-up:
-- Confirm whether `taxonomy.md` should be updated now or whether the mismatch is
-  intentional while U2 is in flight.
-
 ## Missing standards
 
 ### history-and-settings-surfaces-not-yet-extracted
 
 Status: open
 Type: missing-standard
-Source: `docs/blueprint.md`, `taxonomy.md`, `src/screens/HistoryListScreen.tsx`
+Source: `docs/blueprint.md`, `src/screens/HistoryListScreen.tsx`
 
 Observation:
 - History list + session detail are now implemented (U4); chart remains a stub.
