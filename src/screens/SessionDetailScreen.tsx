@@ -13,6 +13,7 @@ import {
   type DeleteSetSheetHandle,
 } from '../components/DeleteSetSheet';
 import { IconButton } from '../components/IconButton';
+import { LoggedSetRows } from '../components/LoggedSetRows';
 import { LogRow } from '../components/LogRow';
 import { ScreenTitleBar } from '../components/ScreenTitleBar';
 import { ScrollFadeView } from '../components/ScrollFadeView';
@@ -21,21 +22,22 @@ import { ArrowPathDownIcon } from '../components/icons/ArrowPathDownIcon';
 import { ArrowPathUpIcon } from '../components/icons/ArrowPathUpIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
 import { getDatabase } from '../db/client';
-import { loadStandardSetsForExercise } from '../db/workoutRepository';
+import { loadReferenceWeightByExerciseId } from '../db/referenceWeights';
 import { getExerciseLabel } from '../domain/catalogue';
 import { formatHistoryDateLabel } from '../domain/history-date';
 import {
   buildSessionExerciseStats,
   filterWorkoutByPlan,
   formatPercentChange,
-  formatSessionTotalWeightLabel,
   getDayPercentChange,
   getPercentDirection,
+} from '../domain/progress';
+import {
+  formatSessionTotalWeightLabel,
   getSessionTotalWeightMoved,
   hasStandardSets,
-} from '../domain/progress';
-import { getUnitLabel, kgToDisplay } from '../domain/units';
-import { getReferenceWeightFromHistory } from '../domain/warmup';
+} from '../domain/session-totals';
+import { getUnitLabel } from '../domain/units';
 import type { MainStackParamList } from '../navigation/types';
 import {
   useHistoryStore,
@@ -43,6 +45,7 @@ import {
   useProfileStore,
 } from '../stores';
 import type { TodaySet } from '../stores/todaySlice';
+import { clampSafeInset } from '../theme/safeAreaInset';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -55,45 +58,6 @@ const TITLE_MAIN_HEIGHT = spacing['s-14'];
 const SESSION_BOTTOM_FADE_HEIGHT = spacing['s-14'];
 /** Figma title-main arrow-path-up instance size. */
 const SUMMARY_STAT_ICON_SIZE = spacing['s-9'];
-
-function clampSafeInset(value: number): number {
-  return Math.max(value, spacing['s-5']);
-}
-
-function toDeletableSet(set: TodaySet, setIndex?: number): DeletableSet {
-  if (set.warmUp) {
-    return {
-      id: set.id,
-      weight: set.weight,
-      reps: set.reps,
-      warmUp: true,
-    };
-  }
-
-  return {
-    id: set.id,
-    weight: set.weight,
-    reps: set.reps,
-    warmUp: false,
-    setIndex,
-  };
-}
-
-async function loadReferenceWeightByExerciseId(
-  exerciseIds: string[],
-): Promise<Record<string, number | null>> {
-  const db = getDatabase();
-  const weights: Record<string, number | null> = {};
-
-  await Promise.all(
-    exerciseIds.map(async (exerciseId) => {
-      const standardSets = await loadStandardSetsForExercise(db, exerciseId);
-      weights[exerciseId] = getReferenceWeightFromHistory(standardSets);
-    }),
-  );
-
-  return weights;
-}
 
 export function SessionDetailScreen({ navigation, route }: Props) {
   const { date } = route.params;
@@ -157,7 +121,10 @@ export function SessionDetailScreen({ navigation, route }: Props) {
   const sheetChromeHidden = addSetSheetVisible || deleteSetSheetVisible;
 
   const refreshReferenceWeights = useCallback(async () => {
-    const weights = await loadReferenceWeightByExerciseId(exerciseIds);
+    const weights = await loadReferenceWeightByExerciseId(
+      getDatabase(),
+      exerciseIds,
+    );
     setReferenceWeightByExerciseId(weights);
   }, [exerciseIds]);
 
@@ -311,7 +278,6 @@ export function SessionDetailScreen({ navigation, route }: Props) {
             <View style={styles.session}>
               {visibleWorkout.loggedExercises.map(
                 (loggedExercise, exerciseIndex) => {
-                  let standardSetIndex = 0;
                   const exerciseStat = statsByExerciseId.get(
                     loggedExercise.exerciseId,
                   );
@@ -341,62 +307,14 @@ export function SessionDetailScreen({ navigation, route }: Props) {
                         title={getExerciseLabel(loggedExercise.exerciseId)}
                         type="exercise"
                       />
-                      <View style={styles.logStack}>
-                        {loggedExercise.sets.map((set, setOrdinal) => {
-                          const isLastSet =
-                            setOrdinal === loggedExercise.sets.length - 1;
-                          if (set.warmUp) {
-                            return (
-                              <LogRow
-                                key={set.id}
-                                onDelete={() => {
-                                  handleRequestDelete(toDeletableSet(set));
-                                }}
-                                onEdit={() => {
-                                  void handleEditSet(
-                                    set,
-                                    loggedExercise.exerciseId,
-                                  );
-                                }}
-                                reps={set.reps}
-                                showActions
-                                showBottomBorder={!isLastSet}
-                                type="set"
-                                unit={unitLabel}
-                                warmUp
-                                weight={kgToDisplay(set.weight, units)}
-                              />
-                            );
-                          }
-
-                          standardSetIndex += 1;
-                          const setIndex = standardSetIndex;
-                          return (
-                            <LogRow
-                              key={set.id}
-                              onDelete={() => {
-                                handleRequestDelete(
-                                  toDeletableSet(set, setIndex),
-                                );
-                              }}
-                              onEdit={() => {
-                                void handleEditSet(
-                                  set,
-                                  loggedExercise.exerciseId,
-                                  setIndex,
-                                );
-                              }}
-                              reps={set.reps}
-                              setIndex={setIndex}
-                              showActions
-                              showBottomBorder={!isLastSet}
-                              type="set"
-                              unit={unitLabel}
-                              weight={kgToDisplay(set.weight, units)}
-                            />
-                          );
-                        })}
-                      </View>
+                      <LoggedSetRows
+                        exerciseId={loggedExercise.exerciseId}
+                        onDelete={handleRequestDelete}
+                        onEdit={handleEditSet}
+                        sets={loggedExercise.sets}
+                        unitLabel={unitLabel}
+                        units={units}
+                      />
                       {isLastExercise ? null : <LogRow type="space" />}
                     </View>
                   );
@@ -494,9 +412,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: spacing['s-8'],
     paddingTop: spacing['s-8'],
-  },
-  logStack: {
-    width: '100%',
   },
   emptyBody: {
     flex: 1,

@@ -51,9 +51,9 @@ intent (`rule/later-product-decisions-update-the-blueprint`).
 
 ## Build stage
 
-U4 in progress — History list + session detail + progress math. Chart remains a stub until U5.
+U4 done — History list + session detail + progress math. Chart remains a stub until U5.
 
-Next after U4 is U5 — History chart with filters and muscle-group weighting.
+Next is U5 — History chart with filters and muscle-group weighting.
 
 **DEV tooling (simulator only):** homepage options **demo data** toggle and **reset** are behind `__DEV__`. Seed code in `src/db/devSeed.ts` / `demoData.ts` also no-ops outside DEV. Release / U7 App Store builds must not show these — leave the `__DEV__` guards in place; do not expose them in production UI.
 

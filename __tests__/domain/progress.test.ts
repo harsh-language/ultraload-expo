@@ -6,12 +6,14 @@ import {
   formatPercentChange,
   getDayPercentChange,
   getExercisePercentChange,
-  getExerciseTotalWeightMoved,
   getPercentDirection,
   groupHistoryListRows,
   type ProgressWorkout,
 } from '../../src/domain/progress';
-import { getSessionTotalWeightMoved } from '../../src/domain/session-totals';
+import {
+  getExerciseTotalWeightMoved,
+  getSessionTotalWeightMoved,
+} from '../../src/domain/session-totals';
 
 function workout(
   date: string,

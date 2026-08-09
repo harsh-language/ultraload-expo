@@ -4,12 +4,21 @@ import { DATABASE_NAME } from './client';
 const DEMO_DATA_KEY = 'demo_data_enabled';
 const TODAY_DEMO_DATE_KEY = 'today_demo_date';
 
+let prefsClient: SQLiteDatabase | null = null;
+let prefsTableReady = false;
+
 function getPrefsClient(): SQLiteDatabase {
-  const client = openDatabaseSync(DATABASE_NAME, {
-    enableChangeListener: true,
-  });
-  client.execSync('PRAGMA foreign_keys = ON');
-  return client;
+  if (!prefsClient) {
+    prefsClient = openDatabaseSync(DATABASE_NAME, {
+      enableChangeListener: true,
+    });
+    prefsClient.execSync('PRAGMA foreign_keys = ON');
+  }
+  if (!prefsTableReady) {
+    ensureDevPrefsTable(prefsClient);
+    prefsTableReady = true;
+  }
+  return prefsClient;
 }
 
 function ensureDevPrefsTable(client: SQLiteDatabase): void {
@@ -31,7 +40,6 @@ export function isDemoDataEnabled(): boolean {
   }
 
   const client = getPrefsClient();
-  ensureDevPrefsTable(client);
   const row = client.getFirstSync<{ value: string }>(
     'SELECT value FROM _dev_prefs WHERE key = ?',
     DEMO_DATA_KEY,
@@ -51,7 +59,6 @@ export function setDemoDataEnabled(enabled: boolean): void {
   }
 
   const client = getPrefsClient();
-  ensureDevPrefsTable(client);
   client.runSync(
     'INSERT OR REPLACE INTO _dev_prefs (key, value) VALUES (?, ?)',
     DEMO_DATA_KEY,
@@ -69,7 +76,6 @@ export function getTodayDemoDate(): string | null {
   }
 
   const client = getPrefsClient();
-  ensureDevPrefsTable(client);
   const row = client.getFirstSync<{ value: string }>(
     'SELECT value FROM _dev_prefs WHERE key = ?',
     TODAY_DEMO_DATE_KEY,
@@ -85,7 +91,6 @@ export function setTodayDemoDate(date: string): void {
   }
 
   const client = getPrefsClient();
-  ensureDevPrefsTable(client);
   client.runSync(
     'INSERT OR REPLACE INTO _dev_prefs (key, value) VALUES (?, ?)',
     TODAY_DEMO_DATE_KEY,
@@ -100,6 +105,5 @@ export function clearTodayDemoDate(): void {
   }
 
   const client = getPrefsClient();
-  ensureDevPrefsTable(client);
   client.runSync('DELETE FROM _dev_prefs WHERE key = ?', TODAY_DEMO_DATE_KEY);
 }

@@ -17,21 +17,18 @@ import { formatHistoryDateLabel } from '../domain/history-date';
 import {
   buildHistoryListRows,
   formatPercentChange,
-  formatSessionTotalWeightLabel,
   getPercentDirection,
   groupHistoryListRows,
 } from '../domain/progress';
+import { formatSessionTotalWeightLabel } from '../domain/session-totals';
 import { SlidePager } from '../navigation/SlidePager';
 import type { MainStackParamList } from '../navigation/types';
 import { useHistoryStore, usePlanStore, useProfileStore } from '../stores';
+import { clampSafeInset } from '../theme/safeAreaInset';
 import { colors, spacing } from '../theme/tokens';
 import { SCROLL_FADE_HEIGHT } from '../theme/scrollFade';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'HistoryList'>;
-
-function clampSafeInset(value: number): number {
-  return Math.max(value, spacing['s-5']);
-}
 
 export function HistoryListScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();

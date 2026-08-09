@@ -1,8 +1,10 @@
 import { eachCalendarDateDescending } from './history-date';
 import {
   formatSessionTotalWeightLabel,
+  getExerciseTotalWeightMoved,
   getSessionTotalWeightMoved,
   hasStandardSets,
+  hasStandardSetsForExercise,
 } from './session-totals';
 
 export type PercentDirection = 'up' | 'down' | 'flat';
@@ -46,23 +48,6 @@ export interface SessionExerciseStat {
   totalKg: number;
   /** Null when there is no valid prior session (BR8 / BR10 / BR11). */
   percentChange: number | null;
-}
-
-/** BR6 — Σ(weight × reps) for one exercise’s standard sets. */
-export function getExerciseTotalWeightMoved(
-  sets: ProgressSet[],
-): number {
-  let total = 0;
-  for (const set of sets) {
-    if (!set.warmUp) {
-      total += set.weight * set.reps;
-    }
-  }
-  return total;
-}
-
-function hasStandardSetsForExercise(sets: ProgressSet[]): boolean {
-  return sets.some((set) => !set.warmUp);
 }
 
 /** Exercise ids on a workout that have at least one standard set. */
@@ -420,5 +405,3 @@ export function groupHistoryListRows(
 
   return groups;
 }
-
-export { formatSessionTotalWeightLabel, getSessionTotalWeightMoved, hasStandardSets };

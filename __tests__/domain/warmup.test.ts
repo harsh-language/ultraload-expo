@@ -2,6 +2,7 @@ import { getExerciseById } from '../../src/domain/catalogue';
 import {
   getReferenceWeightFromHistory,
   getWarmUpThreshold,
+  mapReferenceWeightsByExerciseId,
   shouldAutoTagWarmUp,
 } from '../../src/domain/warmup';
 
@@ -83,5 +84,16 @@ describe('warmup domain', () => {
 
   it('returns null when no standard-set history exists (T15)', () => {
     expect(getReferenceWeightFromHistory([])).toBeNull();
+  });
+
+  it('maps every plan exercise, including those with no history', () => {
+    expect(
+      mapReferenceWeightsByExerciseId(['bench', 'squat'], {
+        bench: [{ weight: 100, reps: 6 }],
+      }),
+    ).toEqual({
+      bench: 100,
+      squat: null,
+    });
   });
 });

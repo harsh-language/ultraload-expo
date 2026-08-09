@@ -45,6 +45,20 @@ export function getReferenceWeightFromHistory(
   return null;
 }
 
+/** One reference weight per plan exercise — shared by Work Out and session detail. */
+export function mapReferenceWeightsByExerciseId(
+  exerciseIds: readonly string[],
+  standardSetsByExerciseId: Record<string, StandardSetForReference[]>,
+): Record<string, number | null> {
+  const weights: Record<string, number | null> = {};
+  for (const exerciseId of exerciseIds) {
+    weights[exerciseId] = getReferenceWeightFromHistory(
+      standardSetsByExerciseId[exerciseId] ?? [],
+    );
+  }
+  return weights;
+}
+
 export function getWarmUpThreshold(
   warmUpPercent: number,
   referenceWeight: number | null,

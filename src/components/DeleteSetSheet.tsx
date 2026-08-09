@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { DisplayUnit } from '../data/exercise-catalogue';
+import type { DeletableSet } from '../domain/deletable-set';
 import { formatSetIndex, getSetSheetTitle } from '../domain/set-labels';
 import { formatWeightLabel } from '../domain/units';
 import { colors, spacing } from '../theme/tokens';
@@ -16,15 +17,7 @@ import { AppBottomSheet } from './AppBottomSheet';
 import { PrimaryButton } from './PrimaryButton';
 import { logSetTextStyles } from './logSetTextStyles';
 
-export interface DeletableSet {
-  id: number;
-  /** Stored kg. */
-  weight: number;
-  reps: number;
-  warmUp: boolean;
-  /** Standard-set display index; ignored when `warmUp` is true. */
-  setIndex?: number;
-}
+export type { DeletableSet };
 
 export interface DeleteSetSheetHandle {
   present: (set: DeletableSet) => void;

@@ -27,3 +27,4 @@ Delete when the pattern no longer exists, you explicitly chose to refactor it, o
 | Q6 | `src/components/useHomepageOptionsMenu.tsx` | `handleSelect` async reset without try/catch — errors swallowed | Dev-only reset; UI gated by `__DEV__` |
 | Q9 | `src/components/OptionsMenuDropdown.tsx` | Demo-data + reset menu items wrapped in `__DEV__` | Simulator/dev only; absent in release / U7 App Store builds |
 | T2 | `src/screens/WorkOutScreen.tsx` / `src/components/OptionsMenuDropdown.tsx` | Title bar and menu keep separate `zIndex` literals (menu above title) | Shared stacking constant/comment rejected; values intentional |
+| Q1 | `src/stores/historySlice.ts` / `src/stores/todaySlice.ts` | Today’s workout lives in `todaySlice` and `historySlice`; History mutates then `syncTodayIfNeeded` | Instant Work Out updates; full History reload would hitch; stack rarely shows both |

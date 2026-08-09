@@ -29,6 +29,12 @@ const LEGACY_BASELINE_DATE = '2026-01-01';
 
 const DEMO_DATES = DEMO_SESSIONS.map((session) => session.date);
 
+function formatDemoSetTimestamp(calendarDate: string, setIndex: number): string {
+  const minute = String(setIndex % 60).padStart(2, '0');
+  const hour = String(12 + Math.floor(setIndex / 60)).padStart(2, '0');
+  return `${calendarDate}T${hour}:${minute}:00.000Z`;
+}
+
 function countSetsInTree(
   tree: Awaited<ReturnType<typeof loadWorkoutTree>>,
 ): number {
@@ -102,15 +108,13 @@ async function seedRollingToday(db: AppDatabase): Promise<void> {
   );
 
   for (const set of sets) {
-    const minute = String(setIndex % 60).padStart(2, '0');
-    const hour = String(12 + Math.floor(setIndex / 60)).padStart(2, '0');
     await recordSet(db, {
       calendarDate: today,
       exerciseId: set.exerciseId,
       weight: set.weightKg,
       reps: set.reps,
       warmUp: set.warmUp,
-      timestamp: `${today}T${hour}:${minute}:00.000Z`,
+      timestamp: formatDemoSetTimestamp(today, setIndex),
     });
     setIndex += 1;
   }
@@ -152,15 +156,13 @@ export async function seedDemoData(db: AppDatabase): Promise<void> {
     }
 
     for (const set of session.sets) {
-      const minute = String(setIndex % 60).padStart(2, '0');
-      const hour = String(12 + Math.floor(setIndex / 60)).padStart(2, '0');
       await recordSet(db, {
         calendarDate: session.date,
         exerciseId: set.exerciseId,
         weight: set.weightKg,
         reps: set.reps,
         warmUp: set.warmUp,
-        timestamp: `${session.date}T${hour}:${minute}:00.000Z`,
+        timestamp: formatDemoSetTimestamp(session.date, setIndex),
       });
       setIndex += 1;
     }

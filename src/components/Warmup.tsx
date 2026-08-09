@@ -45,10 +45,6 @@ const styles = StyleSheet.create({
   on: {
     borderColor: colors['border-1'],
   },
-  pressed: {
-    backgroundColor: colors['bg-1'],
-    borderColor: colors['content-3'],
-  },
   labelOff: {
     color: colors['content-2'],
   },

@@ -1,3 +1,5 @@
+import { getLocalCalendarDate } from './day-record';
+
 /** Format a YYYY-MM-DD calendar date for session/history chrome (e.g. "31 OCT"). */
 export function formatHistoryDateLabel(calendarDate: string): string {
   const [year, month, day] = calendarDate.split('-').map(Number);
@@ -22,10 +24,7 @@ export function addCalendarDays(calendarDate: string, deltaDays: number): string
 
   const date = new Date(year, month - 1, day);
   date.setDate(date.getDate() + deltaDays);
-  const nextYear = date.getFullYear();
-  const nextMonth = String(date.getMonth() + 1).padStart(2, '0');
-  const nextDay = String(date.getDate()).padStart(2, '0');
-  return `${nextYear}-${nextMonth}-${nextDay}`;
+  return getLocalCalendarDate(date);
 }
 
 /**

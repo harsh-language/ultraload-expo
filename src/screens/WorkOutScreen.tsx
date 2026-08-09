@@ -12,6 +12,7 @@ import {
   type DeletableSet,
   type DeleteSetSheetHandle,
 } from '../components/DeleteSetSheet';
+import { LoggedSetRows } from '../components/LoggedSetRows';
 import { LogRow } from '../components/LogRow';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { RestTimer } from '../components/RestTimer';
@@ -19,17 +20,17 @@ import { SecondaryButton } from '../components/SecondaryButton';
 import { TodaySessionTitleBar } from '../components/TodaySessionTitleBar';
 import { useHomepageOptionsMenu } from '../components/useHomepageOptionsMenu';
 import { getDatabase } from '../db/client';
-import { loadStandardSetsForExercise } from '../db/workoutRepository';
+import { loadReferenceWeightByExerciseId } from '../db/referenceWeights';
 import { getExerciseLabel } from '../domain/catalogue';
-import { getReferenceWeightFromHistory } from '../domain/warmup';
 import { useRestTimer } from '../hooks/useRestTimer';
-import { getUnitLabel, kgToDisplay } from '../domain/units';
+import { getUnitLabel } from '../domain/units';
 import {
   usePlanStore,
   useProfileStore,
   useTodayStore,
 } from '../stores';
 import type { TodaySet } from '../stores/todaySlice';
+import { clampSafeInset } from '../theme/safeAreaInset';
 import { colors, spacing } from '../theme/tokens';
 
 /** Figma — gap between footer buttons and screen bottom / title bar and status bar. */
@@ -47,29 +48,6 @@ const PINNED_FOOTER_HEIGHT = spacing['s-12'];
 const REST_TIMER_HEIGHT = spacing['s-1'] + spacing['s-8'] * 2 + spacing['s-12'];
 /** Figma gap between the add-set button and the started timer bar. */
 const REST_TIMER_BUTTON_GAP = spacing['s-8'];
-
-function toDeletableSet(set: TodaySet, setIndex?: number): DeletableSet {
-  if (set.warmUp) {
-    return {
-      id: set.id,
-      weight: set.weight,
-      reps: set.reps,
-      warmUp: true,
-    };
-  }
-
-  return {
-    id: set.id,
-    weight: set.weight,
-    reps: set.reps,
-    warmUp: false,
-    setIndex,
-  };
-}
-
-function clampSafeInset(value: number): number {
-  return Math.max(value, spacing['s-5']);
-}
 
 /** Figma section gap (title→session) + session paddingTop — both s-8. */
 const TITLE_TO_SESSION_GAP = spacing['s-8'];
@@ -104,22 +82,6 @@ function getTimerScrollBottomInset(insets: { bottom: number }): number {
     PINNED_FOOTER_HEIGHT +
     spacing['s-8']
   );
-}
-
-async function loadReferenceWeightByExerciseId(
-  exerciseIds: string[],
-): Promise<Record<string, number | null>> {
-  const db = getDatabase();
-  const weights: Record<string, number | null> = {};
-
-  await Promise.all(
-    exerciseIds.map(async (exerciseId) => {
-      const standardSets = await loadStandardSetsForExercise(db, exerciseId);
-      weights[exerciseId] = getReferenceWeightFromHistory(standardSets);
-    }),
-  );
-
-  return weights;
 }
 
 export function WorkOutScreen() {
@@ -158,7 +120,10 @@ export function WorkOutScreen() {
   } = useRestTimer();
 
   const refreshReferenceWeights = useCallback(async () => {
-    const weights = await loadReferenceWeightByExerciseId(exerciseIds);
+    const weights = await loadReferenceWeightByExerciseId(
+      getDatabase(),
+      exerciseIds,
+    );
     setReferenceWeightByExerciseId(weights);
   }, [exerciseIds]);
 
@@ -340,70 +305,23 @@ export function WorkOutScreen() {
           style={styles.scroll}
         >
           <View style={styles.session}>
-            {visibleLoggedExercises.map((loggedExercise) => {
-              let standardSetIndex = 0;
-
-              return (
+            {visibleLoggedExercises.map((loggedExercise) => (
                 <View key={loggedExercise.id}>
                   <LogRow
                     title={getExerciseLabel(loggedExercise.exerciseId)}
                     type="exercise"
                   />
-                  <View style={styles.logStack}>
-                    {loggedExercise.sets.map((set, setOrdinal) => {
-                      const isLastSet =
-                        setOrdinal === loggedExercise.sets.length - 1;
-                      if (set.warmUp) {
-                        return (
-                          <LogRow
-                            key={set.id}
-                            onDelete={() => {
-                              handleRequestDelete(toDeletableSet(set));
-                            }}
-                            onEdit={() => {
-                              void handleEditSet(set, loggedExercise.exerciseId);
-                            }}
-                            reps={set.reps}
-                            showActions
-                            showBottomBorder={!isLastSet}
-                            type="set"
-                            unit={unitLabel}
-                            warmUp
-                            weight={kgToDisplay(set.weight, units)}
-                          />
-                        );
-                      }
-
-                      standardSetIndex += 1;
-                      const setIndex = standardSetIndex;
-                      return (
-                        <LogRow
-                          key={set.id}
-                          onDelete={() => {
-                            handleRequestDelete(toDeletableSet(set, setIndex));
-                          }}
-                          onEdit={() => {
-                            void handleEditSet(
-                              set,
-                              loggedExercise.exerciseId,
-                              setIndex,
-                            );
-                          }}
-                          reps={set.reps}
-                          setIndex={setIndex}
-                          showActions
-                          showBottomBorder={!isLastSet}
-                          type="set"
-                          unit={unitLabel}
-                          weight={kgToDisplay(set.weight, units)}
-                        />
-                      );
-                    })}
-                  </View>
+                  <LoggedSetRows
+                    exerciseId={loggedExercise.exerciseId}
+                    onDelete={handleRequestDelete}
+                    onEdit={handleEditSet}
+                    sets={loggedExercise.sets}
+                    unitLabel={unitLabel}
+                    units={units}
+                  />
                   <LogRow type="space" />
                 </View>
-              );
-            })}
+            ))}
           </View>
         </ScrollFadeView>
       ) : null}
@@ -548,9 +466,6 @@ const styles = StyleSheet.create({
   },
   session: {
     paddingBottom: spacing['s-8'],
-  },
-  logStack: {
-    gap: 0,
   },
   titleOverlay: {
     position: 'absolute',

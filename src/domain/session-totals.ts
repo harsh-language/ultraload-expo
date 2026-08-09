@@ -7,6 +7,19 @@ export interface WorkoutForSessionTotal {
   }[];
 }
 
+/** BR6 — Σ(weight × reps) for one exercise’s standard sets. */
+export function getExerciseTotalWeightMoved(
+  sets: { weight: number; reps: number; warmUp: boolean }[],
+): number {
+  let total = 0;
+  for (const set of sets) {
+    if (!set.warmUp) {
+      total += set.weight * set.reps;
+    }
+  }
+  return total;
+}
+
 /** BR7 — Σ(weight × reps) across standard sets only. */
 export function getSessionTotalWeightMoved(
   workout: WorkoutForSessionTotal | null,
@@ -16,16 +29,16 @@ export function getSessionTotalWeightMoved(
   }
 
   let total = 0;
-
   for (const loggedExercise of workout.loggedExercises) {
-    for (const set of loggedExercise.sets) {
-      if (!set.warmUp) {
-        total += set.weight * set.reps;
-      }
-    }
+    total += getExerciseTotalWeightMoved(loggedExercise.sets);
   }
-
   return total;
+}
+
+export function hasStandardSetsForExercise(
+  sets: { warmUp: boolean }[],
+): boolean {
+  return sets.some((set) => !set.warmUp);
 }
 
 export function hasStandardSets(workout: WorkoutForSessionTotal | null): boolean {
@@ -34,7 +47,7 @@ export function hasStandardSets(workout: WorkoutForSessionTotal | null): boolean
   }
 
   return workout.loggedExercises.some((loggedExercise) =>
-    loggedExercise.sets.some((set) => !set.warmUp),
+    hasStandardSetsForExercise(loggedExercise.sets),
   );
 }
 

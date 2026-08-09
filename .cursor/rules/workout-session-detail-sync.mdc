@@ -1,0 +1,15 @@
+---
+description: Work Out and session detail share set rows, delete preview, and warm-up reference
+globs: src/screens/WorkOutScreen.tsx, src/screens/SessionDetailScreen.tsx, src/components/LoggedSetRows.tsx, src/domain/deletable-set.ts, src/domain/logged-set-rows.ts, src/db/referenceWeights.ts
+alwaysApply: false
+---
+
+# Work Out ↔ session detail sync
+
+Today’s log and a past day’s log stay identical for:
+
+- set rows (`W` / `01`, edit/delete, last-row border) — `LoggedSetRows`
+- delete-sheet preview — `toDeletableSet`
+- warm-up reference weight when opening add-set — `loadReferenceWeightByExerciseId`
+
+Do not copy these into one screen. Exercise headers may differ (History shows % change; today does not).

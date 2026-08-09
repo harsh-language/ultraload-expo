@@ -1,7 +1,9 @@
 import {
   formatSessionTotalWeightLabel,
+  getExerciseTotalWeightMoved,
   getSessionTotalWeightMoved,
   hasStandardSets,
+  hasStandardSetsForExercise,
   type WorkoutForSessionTotal,
 } from '../../src/domain/session-totals';
 
@@ -33,12 +35,28 @@ describe('session totals domain', () => {
     expect(getSessionTotalWeightMoved(null)).toBe(0);
     expect(getSessionTotalWeightMoved(workoutWithWarmUpOnly)).toBe(0);
     expect(getSessionTotalWeightMoved(workoutWithStandardSets)).toBe(100 * 5 + 110 * 3 + 140 * 2);
+    expect(getSessionTotalWeightMoved(workoutWithStandardSets)).toBe(
+      getExerciseTotalWeightMoved(workoutWithStandardSets.loggedExercises[0]!.sets) +
+        getExerciseTotalWeightMoved(workoutWithStandardSets.loggedExercises[1]!.sets),
+    );
   });
 
   it('detects when only warm-up sets are logged', () => {
     expect(hasStandardSets(null)).toBe(false);
     expect(hasStandardSets(workoutWithWarmUpOnly)).toBe(false);
     expect(hasStandardSets(workoutWithStandardSets)).toBe(true);
+  });
+
+  it('detects standard sets at the exercise level', () => {
+    expect(
+      hasStandardSetsForExercise([{ weight: 80, reps: 10, warmUp: true }]),
+    ).toBe(false);
+    expect(
+      hasStandardSetsForExercise([
+        { weight: 80, reps: 10, warmUp: true },
+        { weight: 100, reps: 5, warmUp: false },
+      ]),
+    ).toBe(true);
   });
 
   it('formats session total with grouped thousands and unit suffix', () => {
