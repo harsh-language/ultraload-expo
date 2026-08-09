@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { formatSetIndex } from '../domain/set-labels';
 import { formatDisplayWeight } from '../domain/units';
 import { colors, spacing } from '../theme/tokens';
@@ -23,7 +23,7 @@ type LogSetRowBaseProps = {
   weight: number;
   reps: number;
   unit?: string;
-  /** Figma `button/info` — edit/delete icons on Work Out; hidden on History */
+  /** Figma `button/info` — edit/delete icons on Work Out and session detail */
   showActions?: boolean;
   /**
    * Bottom border between rows. Off for the last set in an exercise group —
@@ -52,10 +52,16 @@ interface LogExerciseRowProps {
 interface LogSessionRowProps {
   type: 'session';
   dateLabel: string;
-  totalLabel: string;
+  /** Omitted for rest rows (date only). */
+  totalLabel?: string;
+  /** Calendar gap / warm-up-only day — faded Para-2 date only, no border. */
+  isRest?: boolean;
   /** All-time high for this day’s exercise set — Figma `bestRecord` crown. */
   isBestRecord?: boolean;
-  /** Bottom border between rows. Off for the last History list item. */
+  /**
+   * Bottom border. Prefer group-level borders on History; default off for
+   * session rows that sit inside a padded group.
+   */
   showBottomBorder?: boolean;
   stat?: { label: string; direction: LogStatDirection };
   showStat?: boolean;
@@ -92,10 +98,12 @@ export function LogRow(props: LogRowProps) {
 function RowPressable({
   onPress,
   bordered = false,
+  rowStyle,
   children,
 }: {
   onPress?: () => void;
   bordered?: boolean;
+  rowStyle?: StyleProp<ViewStyle>;
   children: ReactNode;
 }) {
   return (
@@ -109,7 +117,7 @@ function RowPressable({
         pressed && onPress && styles.pressed,
       ]}
     >
-      <View style={styles.row}>{children}</View>
+      <View style={[styles.row, rowStyle]}>{children}</View>
     </ScaledPressable>
   );
 }
@@ -205,14 +213,31 @@ function LogExerciseRow({
 function LogSessionRow({
   dateLabel,
   totalLabel,
+  isRest = false,
   isBestRecord = false,
-  showBottomBorder = true,
+  showBottomBorder = false,
   stat,
   showStat = false,
   onPress,
 }: LogSessionRowProps) {
+  if (isRest) {
+    return (
+      <RowPressable onPress={onPress} rowStyle={styles.rowSession}>
+        <View style={styles.sessionColumn}>
+          <Text style={styles.sessionDateRest} numberOfLines={1}>
+            {dateLabel}
+          </Text>
+        </View>
+      </RowPressable>
+    );
+  }
+
   return (
-    <RowPressable bordered={showBottomBorder} onPress={onPress}>
+    <RowPressable
+      bordered={showBottomBorder}
+      onPress={onPress}
+      rowStyle={styles.rowSession}
+    >
       <View style={styles.sessionColumn}>
         <Text style={styles.sessionDate} numberOfLines={1}>
           {dateLabel}
@@ -267,6 +292,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors['bg-1'],
     gap: spacing['s-5'],
   },
+  /** History session + rest — Figma log/day height s-11. */
+  rowSession: {
+    height: spacing['s-11'],
+  },
   rowBordered: {
     borderBottomWidth: spacing['s-1'],
     borderBottomColor: colors['border-2'],
@@ -318,6 +347,11 @@ const styles = StyleSheet.create({
     color: colors['content-1'],
     ...textCase.none,
   },
+  sessionDateRest: {
+    ...typography.para2,
+    color: colors['content-3'],
+    ...textCase.none,
+  },
   sessionTotal: {
     ...typography.para2,
     flexGrow: 1,
@@ -325,6 +359,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     color: colors['content-3'],
     textAlign: 'right',
+    ...textCase.lower,
   },
   sessionTotalBest: {
     color: colors['content-1'],

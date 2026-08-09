@@ -1,3 +1,4 @@
+import { eachCalendarDateDescending } from './history-date';
 import {
   formatSessionTotalWeightLabel,
   getSessionTotalWeightMoved,
@@ -33,6 +34,11 @@ export interface HistoryListRow {
    * first session with that exercise set (no comparable prior).
    */
   isBestRecord: boolean;
+  /**
+   * True when this calendar day has no standard sets (gap fill or warm-up-only).
+   * Rest rows are tappable and open session detail.
+   */
+  isRest: boolean;
 }
 
 export interface SessionExerciseStat {
@@ -289,12 +295,60 @@ export function buildSessionExerciseStats(
 }
 
 /**
- * History list rows newest-first: day total + day % (or null/0 → "–").
+ * Fill missing calendar days between the oldest session and `throughDate`
+ * (or the newest session when `throughDate` is omitted / earlier). Newest-first.
+ */
+export function fillHistoryCalendarGaps(
+  sessionRowsNewestFirst: HistoryListRow[],
+  throughDate?: string,
+): HistoryListRow[] {
+  if (sessionRowsNewestFirst.length === 0) {
+    return [];
+  }
+
+  const byDate = new Map(
+    sessionRowsNewestFirst.map((row) => [row.date, row]),
+  );
+  let oldest = sessionRowsNewestFirst[0]!.date;
+  let newest = sessionRowsNewestFirst[0]!.date;
+  for (const row of sessionRowsNewestFirst) {
+    if (row.date < oldest) {
+      oldest = row.date;
+    }
+    if (row.date > newest) {
+      newest = row.date;
+    }
+  }
+  const end =
+    throughDate != null && throughDate > newest ? throughDate : newest;
+
+  const filled: HistoryListRow[] = [];
+  for (const date of eachCalendarDateDescending(oldest, end)) {
+    const existing = byDate.get(date);
+    if (existing) {
+      filled.push(existing);
+      continue;
+    }
+    filled.push({
+      date,
+      totalKg: 0,
+      dayPercent: null,
+      isBestRecord: false,
+      isRest: true,
+    });
+  }
+  return filled;
+}
+
+/**
+ * History list rows newest-first: day total + day % (or null/0 → "–"),
+ * with rest rows for missing calendar days through `throughDate`.
  * BR7, BR9, BR10, BR11. Plan filter applied (BR3).
  */
 export function buildHistoryListRows(
   workouts: ProgressWorkout[],
   activeExerciseIds: ReadonlySet<string> | readonly string[],
+  throughDate?: string,
 ): HistoryListRow[] {
   const oldestFirst = sortOldestFirst(
     workouts.map((workout) => filterWorkoutByPlan(workout, activeExerciseIds)),
@@ -303,7 +357,9 @@ export function buildHistoryListRows(
   const rows: HistoryListRow[] = [];
 
   for (const workout of oldestFirst) {
-    if (!hasStandardSets(workout) && workout.loggedExercises.length === 0) {
+    // Warm-up-only days are not active history sessions — gap fill shows them
+    // as rest rows. Session detail still opens and shows the warm-up sets.
+    if (!hasStandardSets(workout)) {
       continue;
     }
 
@@ -330,10 +386,39 @@ export function buildHistoryListRows(
       totalKg: getSessionTotalWeightMoved(workout),
       dayPercent: getDayPercentChange(exercisePercents),
       isBestRecord: isSessionBestRecord(oldestFirst, workout.date),
+      isRest: false,
     });
   }
 
-  return rows.reverse();
+  return fillHistoryCalendarGaps(rows.reverse(), throughDate);
+}
+
+export interface HistoryListGroup {
+  /** Newer rest days above this session (newest-first). */
+  rests: HistoryListRow[];
+  session: HistoryListRow;
+}
+
+/**
+ * Cluster rests with the chronologically previous session (row below in
+ * newest-first order). A session with no rests above is still its own group.
+ */
+export function groupHistoryListRows(
+  rows: HistoryListRow[],
+): HistoryListGroup[] {
+  const groups: HistoryListGroup[] = [];
+  let rests: HistoryListRow[] = [];
+
+  for (const row of rows) {
+    if (row.isRest) {
+      rests.push(row);
+      continue;
+    }
+    groups.push({ rests, session: row });
+    rests = [];
+  }
+
+  return groups;
 }
 
 export { formatSessionTotalWeightLabel, getSessionTotalWeightMoved, hasStandardSets };

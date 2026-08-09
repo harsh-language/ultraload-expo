@@ -5,7 +5,25 @@ alwaysApply: false
 ---
 # Scroll fade
 
-Figma reference: `top-fade` / `bottom-fade` on scroll viewports (`top-scroll` / `bottom-scroll` gradients, height `s-16`).
+Figma reference: `# design` fades outside system UI
+(`O7SlK5o3Ozt8ztG4Ds8iZY` node `2749:8352`) — `top-fade` / `bottom-fade`
+(`top-scroll` / `bottom-scroll` gradients).
+
+## System-UI placement (Work Out / full-bleed scroll)
+
+Fades sit **inside** the safe area, not under the status bar or home indicator:
+
+| Edge | Figma | Code |
+|------|-------|------|
+| Top | `top: 62` (below status bar), height `s-17` | `topOffset={insets.top}`, `topFadeHeight={spacing['s-17']}` |
+| Bottom | `bottom: 34` (above home indicator), height `s-16` | `bottomOffset={insets.bottom}`, `bottomFadeHeight={SCROLL_FADE_HEIGHT}` |
+
+Do **not** pin fades to app chrome (title / footer buttons). System insets only.
+
+When `topOffset` / `bottomOffset` are set, `ScrollFadeView` also paints a solid
+`bg-1` cap in the inset band so scrolled content cannot show through the status
+bar or home-indicator region (the gradient alone starts *after* the inset and
+would leave that band uncovered).
 
 ## When
 
@@ -24,11 +42,12 @@ import { ScrollFadeView } from '../components/ScrollFadeView';
   {children}
 </ScrollFadeView>
 
-// Per-edge heights (exercises screen example)
+// Work Out — outside system UI (Figma # design)
 <ScrollFadeView
-  topFadeHeight={spacing['s-12']}
-  bottomFadeHeight={spacing['s-16']}
-  bottomOffset={footerHeight}
+  topFadeHeight={spacing['s-17']}
+  bottomFadeHeight={SCROLL_FADE_HEIGHT}
+  topOffset={insets.top}
+  bottomOffset={insets.bottom}
   ...
 >
 ```
@@ -45,11 +64,11 @@ Only tune via props when layout requires it:
 
 | Prop | Use |
 |------|-----|
-| `fadeHeight` | Shared default height for both gradient bands |
+| `fadeHeight` | Shared default height for both fades when top/bottom heights are omitted |
 | `topFadeHeight` | Top band only — overrides `fadeHeight` |
 | `bottomFadeHeight` | Bottom band only — overrides `fadeHeight` |
-| `topOffset` | Push top fade below pinned header |
-| `bottomOffset` | Push bottom fade above pinned footer |
+| `topOffset` | Push top fade below system status inset (`insets.top`) |
+| `bottomOffset` | Push bottom fade above home-indicator inset (`insets.bottom`) |
 | `topFadeEnabled` | Set `false` when pinned chrome replaces the top fade (e.g. Settings title bar) |
 
 ## Layering

@@ -10,21 +10,21 @@ questions. Do not silently upgrade a candidate here into an accepted rule.
 Status: open
 Type: contradiction
 Source: `docs/product-design/references/interface-quality.md`
-(`rule/chrome-stays-pinned-scroll-underneath`), `src/screens/WorkOutScreen.tsx`
+(`rule/chrome-stays-pinned-scroll-underneath`), `src/screens/WorkOutScreen.tsx`,
+Figma `2749:8352`
 
 Observation:
-- Accepted chrome rule previously cited Work Out `bottomOffset` above the
-  footer as the good example.
-- Shipped Work Out now page-aligns the bottom fade (`bottomOffset` 0); proposed
-  `rule/workout-bottom-fade-aligns-to-page` records the correction.
+- Earlier proposed page-edge alignment (`topOffset`/`bottomOffset` 0) conflicted
+  with Figma `# design`, which clears status bar + home indicator only.
+- Shipped Work Out now uses safe-area insets; proposed
+  `rule/workout-fades-clear-system-ui` replaces the old page-edge proposal.
 
 Why it matters:
-- Agents following the accepted good example alone would reintroduce the CTA
-  band glitch.
+- Edge-aligned top fades paint under the status bar and make height experiments
+  hard to see.
 
 Follow-up:
-- Accept or revise `rule/workout-bottom-fade-aligns-to-page`, then tighten the
-  accepted chrome rule’s good example.
+- Accept `rule/workout-fades-clear-system-ui` and drop the obsolete page-edge wording.
 
 ### taxonomy-vs-current-u2-code
 

@@ -12,7 +12,7 @@ alwaysApply: false
 
 1. **Doc first:** change dates, exercises, weights, reps, profile, or plan in `docs/demo-data.md` before changing seed code.
 2. **Seed matches doc:** `src/db/demoData.ts` mirrors the doc (`DEMO_SESSIONS`, `DEMO_PROFILE`, `DEMO_PLAN`); `seedDemoData` in `src/db/devSeed.ts` applies them — no extra dates, exercises, or invented loads. When the doc changes, update `demoData.ts` in the same change.
-3. **Reset:** wipe **all** workouts, then re-seed from `docs/demo-data.md`. Do not preserve leftover user days. Do not keep a special single baseline date. Clear `today_demo_date` before reseed so rolling today injects again.
+3. **Reset:** wipe **all** workouts (sets + logged exercises + workout rows), then re-seed from `docs/demo-data.md`. Do not preserve leftover user days or prior rolling-today days. Clear `today_demo_date` before reseed so rolling today injects again. After reseed, prune dates that are neither fixed `DEMO_SESSIONS` dates nor today (`pruneStaleDemoWorkouts`).
 4. **Replace Jan 1 baseline:** remove `DEV_BASELINE_DATE` / `2026-01-01` warm-up-only seed and any `resetAllUserData` logic that preserves that day. The July demo sessions in the doc supersede it.
 5. **Startup + reset:** after migrations or menu reset, call the demo seed so the doc’s sessions are present when missing (or always re-seed after a full wipe on reset). Apply demo profile when onboarding is incomplete; apply demo plan when the plan is empty.
 6. **Plan order** matches session exercise order in the doc.
@@ -28,4 +28,4 @@ alwaysApply: false
 - Seed OHP, rows, or other exercises unless they appear in the doc
 - Seed demo sessions when the demo-data toggle is off
 - Show demo-data toggle or reset outside `__DEV__`
-- Auto-delete yesterday’s leftover rolling-today rows (out of scope)
+- Auto-delete yesterday’s leftover rolling-today rows on ordinary launch (out of scope — only Reset / `pruneStaleDemoWorkouts` after reseed)

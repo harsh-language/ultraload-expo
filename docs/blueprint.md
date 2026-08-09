@@ -3,7 +3,7 @@ title: Application Blueprint
 product: UltraLoad
 status: approved
 created: 2026-06-22
-last_updated: 2026-06-27
+last_updated: 2026-08-08
 approved: 2026-06-22
 design_references:
   - "Figma screens (ultraload-v1): https://www.figma.com/design/O7SlK5o3Ozt8ztG4Ds8iZY/experiment----ultraload?node-id=2008-2004"
@@ -35,7 +35,7 @@ UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sess
 | F4 | Feature | Warm-up auto-tag + override | FL2, SCR7 |
 | F5 | Feature | Rest timer | FL4, SCR9 |
 | F6 | Feature | History list (totals + % change) | FL5, SCR10 |
-| F7 | Feature | Session detail (view + edit) | FL6, SCR12, SCR13 |
+| F7 | Feature | Session detail (view + edit) | FL6, SCR12 |
 | F8 | Feature | History chart (filters + ranges) | FL7, SCR11 |
 | F9 | Feature | Progress measurement math | FL5, FL6, FL7 |
 | F10 | Feature | Settings hub | FL8, FL9, FL10, FL11, FL12, SCR14, SCR15 |
@@ -58,8 +58,8 @@ UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sess
 | F3 | Catalogue + workout plan | 22 built-in exercises (E3); flat ordered plan chosen at onboarding, editable in Settings. Only plan exercises are visible (BR2); removal hides history until re-enabled (BR3). Settings-tag removals persist immediately; the add-exercises sub-screen stages changes until Save (FL8). No confirmation sheet. |
 | F4 | Warm-up auto-tag + override | Sets at weight ≤ history-derived threshold auto-tag as warm-up (BR4, BR15); toggle always visible; manual override applies to one set only (BR5). |
 | F5 | Rest timer | Optional, user-triggered, global range 15 s – 5 min in 15 s steps (BR20); background notification when app is backgrounded. |
-| F6 | History list | Per-day rows: day total weight + day % change, or "—" when no comparison (BR7, BR9, BR10). |
-| F7 | Session detail | Read-only by default; top-right edit enters editable mode reusing the logging bottom sheet; edits recalc downstream (BR12). |
+| F6 | History list | Per-day rows: day total weight + day % change, or "—" when no comparison (BR7, BR9, BR10). Rest/warm-up-only days are tappable empty-looking rows. |
+| F7 | Session detail | Opens for any calendar day in the list. Always editable — set actions are visible immediately; add-set is a primary icon button (plus) in the title bar; empty days show centered copy only; mutates reuse the logging / delete sheets; edits recalc downstream (BR12). |
 | F8 | History chart | Y = session/exercise/muscle-group total; X = date; exercise + muscle-group filters; ranges month/year/all-time; 10 latest visible, horizontal scroll. |
 | F9 | Progress measurement | Total weight moved, % change, day averaging, muscle-group weighting (BR6–BR13). |
 | F10 | Settings hub | Bodyweight (profile), plan editing, global warm-up %, rest preset, units, export, reset. Catalogue per-exercise range/increment/warm-up metadata still exists for logging and future versions; **no per-exercise override UI in this version**. |
@@ -104,16 +104,16 @@ flowchart TD
 - Defaults: last set's values for the same exercise today, else slider minimum (BR21). Warm-up auto-tags per BR4/BR15 (weight vs history-derived threshold); manual override lasts one set (BR5).
 
 ### FL3 — Edit / delete a set (F1)
-**Work Out (SCR6):** tap a logged set row → SCR7 opens in **edit mode** with that set's values (per Figma "edit a set"). **History (SCR12/SCR13):** same bottom sheet in edit mode. Change values → Record, or Delete (confirmation overlay per Figma). Editing recalculates affected totals/% (BR12).
+**Work Out (SCR6):** tap a set’s edit icon → SCR7 opens in **edit mode** with that set's values (per Figma "edit a set"). **History (SCR12):** same icons and same bottom sheet — no screen-level edit toggle. Change values → Record, or Delete (confirmation overlay per Figma). Editing recalculates affected totals/% (BR12).
 
 ### FL4 — Rest timer (F5)
 User taps the timer on the Work Out main page → timer runs (range 15 s–5 min, 15 s steps). Backgrounding the app fires a notification alert. Never auto-starts after recording a set.
 
 ### FL5 — View history list (F6, F9)
-Work Out home → options menu → History → List view → rows per day with day total + day % change (or "—"). Empty state shown when no data (shared list/chart empty state per Figma).
+Work Out home → options menu → History → List view → calendar days from the oldest **active** session (has ≥1 standard set) through today, grouped as rests-above + session (or session alone when no gap). Each group uses vertical pad `s-5` and a bottom border; rows are `s-11`. Rest days (no standard sets — including warm-up-only and true empty calendar gaps) are faded Para-2 dates only and are tappable. Workout days show day total + day % (or "–"). Empty state when no active sessions exist.
 
 ### FL6 — View / edit a session (F7)
-Tap a day → session detail (read-only, grouped exercise → sets) → top-right edit → editable mode → edit/delete via bottom sheet → downstream % recalculated (BR12).
+Tap any day (active or rest) → session detail (back + date + add-set icon). **Empty day** (no sets at all): centered "no sets recorded"; add-set stays in the title bar. **Warm-up-only or logged day:** grouped exercise → sets with edit/delete icons; add-set stays in the title bar → mutates via bottom sheet → downstream % recalculated (BR12). Warm-up-only days stay rest-style on the history list until a standard set exists.
 
 ### FL7 — Chart + filter (F8, F9)
 Work Out home → options menu → History → Chart view → default Y = session total, 10 latest visible. Filter by exercise (Y switches to that exercise) or by muscle group (weighted calc, BR13). Time range month/year/all-time; horizontal scroll along timeline.
@@ -150,7 +150,6 @@ flowchart TD
   hist --> list["SCR10 List view"]
   hist --> chart["SCR11 Chart view"]
   list --> detail["SCR12 Session detail"]
-  detail --> editS["SCR13 Edit session"]
   set --> addEx["SCR15 Add exercises sub-screen"]
   set --> exp["SCR16 Export overlay"]
   set --> reset["SCR17 Reset overlay"]
@@ -169,8 +168,7 @@ flowchart TD
 | SCR9 | Rest timer | Home | Optional rest countdown |
 | SCR10 | History — list | History | Per-day totals + % change |
 | SCR11 | History — chart | History | Progress over time with filters |
-| SCR12 | Session detail (read-only) | History | Review a past day's sets |
-| SCR13 | Edit session | History | Edit a past day's sets |
+| SCR12 | Session detail | History | Review and edit a past day's sets |
 | SCR14 | Settings hub | Settings | Profile, plan, presets, units, export, reset |
 | SCR15 | Add exercises sub-screen | Settings | Add/remove plan exercises (only pushed sub-screen) |
 | SCR16 | Export data overlay | Settings | Trigger export |
@@ -395,7 +393,7 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 
 - **Root:** Splash → (first launch) Onboarding → **Work Out home**; (returning) straight to Work Out home.
 - **Home (Work Out):** default screen; session title bar includes an **options menu** (chevron) for **History** and **Settings**. Add/Edit Set as bottom sheet; rest timer; delete confirmation overlay. No pushed sub-screens from home. **Dev interim (U0–U6):** options menu may include **Reset** for faster testing — **remove before Stage 7 production build** (canonical reset is the Settings overlay, SCR17).
-- **History:** reached via options menu → stack push; `history-navigation` switches List ↔ Chart within History; tapping a day pushes Session detail; edit toggles Edit session (same sheet).
+- **History:** reached via options menu → stack push; `history-navigation` switches List ↔ Chart within History; tapping a day pushes Session detail (always editable; same add/edit/delete sheets as Work Out).
 - **Settings:** reached via options menu → stack push; hub screen; Add exercises is the only real pushed sub-screen; Export and Reset are overlay alerts on Settings.
 - **No bottom tab bar,** no horizontal tab pager, no `main-navigation` component.
 
@@ -404,7 +402,7 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 > **Build-time contract:** interaction **intent** is fully specified below. Motion/transition timing matches **Figma defaults** (no custom motion specs in v1); exact values are verified via the Figma MCP at build time (see §10). No custom gestures/long-press in v1.
 
 - **Add/record set:** Add Set → bottom sheet → reps slider, weight slider, warm-up toggle → Record (commits) / Cancel (discards).
-- **Edit/delete set:** tap a logged set row on Work Out (or from History session detail) → SCR7 in edit mode → change values → Record / Delete (confirmation overlay).
+- **Edit/delete set:** tap edit/delete icons on a logged set (Work Out or History session detail) → SCR7 in edit mode or SCR8 delete confirm → change values → Record / Delete.
 - **Warm-up tagging:** auto per BR4/BR15 (weight ≤ history-derived threshold); manual override one set only.
 - **Rest timer:** user-triggered only; range 15 s–5 min in 15 s steps; background → notification (iOS Live Activity-style; Android equivalent if available).
 - **Chart:** filter by exercise / muscle group; switch time range; horizontal scroll along timeline.
@@ -506,7 +504,7 @@ flowchart LR
 | 1 — Core loop slice (design checkpoint) | Full onboarding (splash→bodyweight→picker→rest→warm-up→Work Out); Work Out main page (empty state); Add Set sheet (pick exercise, reps slider, weight slider, warm-up toggle); record one set | Fresh install → onboarding → log one set → set appears under correct exercise; splash/one onboarding step/main page/sheet match Figma. Design-fidelity gate. | F2, F15, F1 (record), F4 (toggle visible) |
 | 2 — Work Out complete | Edit/delete sets (same sheet); warm-up auto-tag + per-set override; rest timer (optional, user-triggered); default reps/weight from last set today; delete confirmations | Full Work Out screen matches Figma inventory (add/edit/delete/warm-up/timer); warm-up excluded from totals shown here; rest timer works foreground; background notification validated on dev build | F1, F4, F5, BR21 |
 | 3 — Settings | Settings hub; profile bodyweight; edit plan (add-exercises sub-screen); global warm-up on/off + %; rest preset; unit toggle (kg/lbs/stone). Catalogue per-exercise range/increment retained for Add Set; **no per-exercise override UI in this version** | Add/remove exercises updates picker + lists; units apply uniformly; Add Set uses catalogue ranges/increments | F10, F11, F3 (plan editing) |
-| 4 — History list + session detail | Progress measurement logic + unit tests (T1–T3, T5, T6); list view (day total + % change); session detail (read-only); edit session reusing sheet; downstream recalc; removed exercises hidden, re-enable restores | Log several days → list shows correct totals + % (or "—"); edit a past set → list updates; warm-up-only days + missing priors behave per rules | F6, F7, F9 (core math) |
+| 4 — History list + session detail | Progress measurement logic + unit tests (T1–T3, T5, T6); list view (day total + % change); session detail always editable reusing sheet; downstream recalc; removed exercises hidden, re-enable restores | Log several days → list shows correct totals + % (or "—"); edit a past set → list updates; warm-up-only days + missing priors behave per rules | F6, F7, F9 (core math) |
 | 5 — History chart | Chart view; exercise + muscle-group filters; muscle-group weighting (T4); time ranges month/year/all-time; horizontal scroll; shared History empty state | Chart renders real data; exercise + muscle-group filters match hand-checked calcs; matches Figma on device | F8, F9 (weighting) |
 | 6 — Export, reset, polish | Export JSON via share sheet; import via document picker; reset with confirmation → full wipe → onboarding replay; final iOS + Android pass | Export → reset → re-import restores all workouts + settings; reset returns to onboarding; no blocking issues on target devices | F12, F13, F14 |
 | 7 — App Store release (iOS) | Remove **Reset** from Work Out options menu before production compile; Apple Developer Program; EAS project + `eas.json` production profile; App Store Connect app record; store listing (name, subtitle, description, screenshots, icon); privacy nutrition label (no data collected); export-compliance questionnaire; EAS Submit → App Review | **UltraLoad installs from the App Store** on a clean device (not sideload, not dev-client-only); Work Out options menu is History + Settings only; update installs without manual re-sign; App Review approved (or rejection addressed and resubmitted) | Distribution (§9) |

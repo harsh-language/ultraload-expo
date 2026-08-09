@@ -16,11 +16,7 @@ export function Warmup({ value, onValueChange }: WarmupProps) {
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       onPress={() => onValueChange(!value)}
-      style={({ pressed }) => [
-        styles.pill,
-        value && styles.on,
-        pressed && styles.pressed,
-      ]}
+      style={[styles.pill, value && styles.on]}
     >
       <Text
         style={[

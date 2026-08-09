@@ -1,7 +1,9 @@
 import { eq } from 'drizzle-orm';
 import type { AppDatabase, DbOrTransaction } from './client';
 import {
+  loggedExercises,
   profile,
+  sets,
   workoutPlan,
   workouts,
   type Profile,
@@ -141,7 +143,9 @@ export async function ensurePersistedRows(db: AppDatabase): Promise<void> {
 /** Dev-only — wipe all user data. Callers re-seed demo workouts after. */
 export async function resetAllUserData(db: AppDatabase): Promise<void> {
   await db.transaction(async (tx) => {
-    // Cascade deletes logged exercises + sets for every workout
+    // Delete children first so a connection without FK still wipes fully.
+    await tx.delete(sets);
+    await tx.delete(loggedExercises);
     await tx.delete(workouts);
     await saveProfile(tx, DEFAULT_PROFILE);
     await savePlan(tx, DEFAULT_PLAN);

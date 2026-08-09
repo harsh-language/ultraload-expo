@@ -19,6 +19,7 @@ import {
   SCROLL_FADE_HEIGHT,
   scrollFadeGradients,
 } from '../theme/scrollFade';
+import { colors } from '../theme/tokens';
 
 const FADE_TRANSITION_MS = 150;
 
@@ -27,7 +28,9 @@ export interface ScrollFadeViewProps extends ScrollViewProps {
   fadeHeight?: number;
   topFadeHeight?: number;
   bottomFadeHeight?: number;
+  /** Distance below screen top before the top gradient starts (e.g. status inset). */
   topOffset?: number;
+  /** Distance above screen bottom before the bottom gradient starts (e.g. home inset). */
   bottomOffset?: number;
   /** Show bottom fade even when content does not overflow (e.g. workout footer overlay). */
   alwaysShowBottomFade?: boolean;
@@ -58,131 +61,164 @@ export const ScrollFadeView = forwardRef<ScrollView, ScrollFadeViewProps>(
     },
     ref,
   ) {
-  const resolvedTopFadeHeight = topFadeHeight ?? fadeHeight;
-  const resolvedBottomFadeHeight = bottomFadeHeight ?? fadeHeight;
+    const resolvedTopFadeHeight = topFadeHeight ?? fadeHeight;
+    const resolvedBottomFadeHeight = bottomFadeHeight ?? fadeHeight;
 
-  const [scrollY, setScrollY] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
+    const [scrollY, setScrollY] = useState(0);
+    const [viewportHeight, setViewportHeight] = useState(0);
+    const [contentHeight, setContentHeight] = useState(0);
 
-  const { showTop, showBottom } = useMemo(
-    () =>
-      getScrollFadeVisibility({
-        scrollY,
-        viewportHeight,
-        contentHeight,
-      }),
-    [scrollY, viewportHeight, contentHeight],
-  );
+    const { showTop, showBottom } = useMemo(
+      () =>
+        getScrollFadeVisibility({
+          scrollY,
+          viewportHeight,
+          contentHeight,
+        }),
+      [scrollY, viewportHeight, contentHeight],
+    );
 
-  const topOpacity = useSharedValue(0);
-  const bottomOpacity = useSharedValue(0);
+    const topOpacity = useSharedValue(0);
+    const bottomOpacity = useSharedValue(0);
 
-  const hasOverflow =
-    viewportHeight > 0 && contentHeight > viewportHeight + 1;
-  const showBottomFade = alwaysShowBottomFade || (hasOverflow && showBottom);
-  const showTopFade =
-    topFadeEnabled && (alwaysShowTopFade || (hasOverflow && showTop));
+    const hasOverflow =
+      viewportHeight > 0 && contentHeight > viewportHeight + 1;
+    const showBottomFade = alwaysShowBottomFade || (hasOverflow && showBottom);
+    const showTopFade =
+      topFadeEnabled && (alwaysShowTopFade || (hasOverflow && showTop));
 
-  useEffect(() => {
-    topOpacity.value = withTiming(showTopFade ? 1 : 0, {
-      duration: FADE_TRANSITION_MS,
-    });
-  }, [showTopFade, topOpacity]);
+    useEffect(() => {
+      topOpacity.value = withTiming(showTopFade ? 1 : 0, {
+        duration: FADE_TRANSITION_MS,
+      });
+    }, [showTopFade, topOpacity]);
 
-  useEffect(() => {
-    bottomOpacity.value = withTiming(showBottomFade ? 1 : 0, {
-      duration: FADE_TRANSITION_MS,
-    });
-  }, [showBottomFade, bottomOpacity]);
+    useEffect(() => {
+      bottomOpacity.value = withTiming(showBottomFade ? 1 : 0, {
+        duration: FADE_TRANSITION_MS,
+      });
+    }, [showBottomFade, bottomOpacity]);
 
-  const topFadeStyle = useAnimatedStyle(() => ({
-    opacity: topOpacity.value,
-  }));
+    const topFadeStyle = useAnimatedStyle(() => ({
+      opacity: topOpacity.value,
+    }));
 
-  const bottomFadeStyle = useAnimatedStyle(() => ({
-    opacity: bottomOpacity.value,
-  }));
+    const bottomFadeStyle = useAnimatedStyle(() => ({
+      opacity: bottomOpacity.value,
+    }));
 
-  const handleScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      setScrollY(event.nativeEvent.contentOffset.y);
-      onScroll?.(event);
-    },
-    [onScroll],
-  );
+    const handleScroll = useCallback(
+      (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        setScrollY(event.nativeEvent.contentOffset.y);
+        onScroll?.(event);
+      },
+      [onScroll],
+    );
 
-  const handleLayout = useCallback(
-    (event: LayoutChangeEvent) => {
-      setViewportHeight(event.nativeEvent.layout.height);
-      onLayout?.(event);
-    },
-    [onLayout],
-  );
+    const handleLayout = useCallback(
+      (event: LayoutChangeEvent) => {
+        setViewportHeight(event.nativeEvent.layout.height);
+        onLayout?.(event);
+      },
+      [onLayout],
+    );
 
-  const handleContentSizeChange = useCallback(
-    (width: number, height: number) => {
-      setContentHeight(height);
-      onContentSizeChange?.(width, height);
-    },
-    [onContentSizeChange],
-  );
+    const handleContentSizeChange = useCallback(
+      (width: number, height: number) => {
+        setContentHeight(height);
+        onContentSizeChange?.(width, height);
+      },
+      [onContentSizeChange],
+    );
 
-  return (
-    <View style={styles.container}>
-      <GHScrollView
-        {...scrollViewProps}
-        ref={ref}
-        onContentSizeChange={handleContentSizeChange}
-        onLayout={handleLayout}
-        onScroll={handleScroll}
-        scrollEventThrottle={scrollEventThrottle}
-        style={[styles.scroll, style]}
-      >
-        {children}
-      </GHScrollView>
-      {showTopFade || showBottomFade ? (
-        <>
-          {showTopFade ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.fade,
-              styles.topFade,
-              { height: resolvedTopFadeHeight, top: topOffset },
-              topFadeStyle,
-            ]}
-          >
-            <LinearGradient
-              colors={[...scrollFadeGradients.top]}
-              end={{ x: 0.5, y: 1 }}
-              start={{ x: 0.5, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </Animated.View>
-          ) : null}
-          {showBottomFade ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.fade,
-              styles.bottomFade,
-              { height: resolvedBottomFadeHeight, bottom: bottomOffset },
-              bottomFadeStyle,
-            ]}
-          >
-            <LinearGradient
-              colors={[...scrollFadeGradients.bottom]}
-              end={{ x: 0.5, y: 1 }}
-              start={{ x: 0.5, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </Animated.View>
-          ) : null}
-        </>
-      ) : null}
-    </View>
-  );
+    return (
+      <View style={styles.container}>
+        <GHScrollView
+          {...scrollViewProps}
+          ref={ref}
+          onContentSizeChange={handleContentSizeChange}
+          onLayout={handleLayout}
+          onScroll={handleScroll}
+          scrollEventThrottle={scrollEventThrottle}
+          style={[styles.scroll, style]}
+        >
+          {children}
+        </GHScrollView>
+        {showTopFade || showBottomFade ? (
+          <>
+            {showTopFade ? (
+              <>
+                {/*
+                  Solid cap under system UI. The gradient starts at topOffset,
+                  so without this, 0…topOffset stays uncovered and content
+                  bleeds into the status bar.
+                */}
+                {topOffset > 0 ? (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.fade,
+                      styles.topFade,
+                      styles.safeAreaCap,
+                      { height: topOffset, top: 0 },
+                      topFadeStyle,
+                    ]}
+                  />
+                ) : null}
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.fade,
+                    styles.topFade,
+                    { height: resolvedTopFadeHeight, top: topOffset },
+                    topFadeStyle,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[...scrollFadeGradients.top]}
+                    end={{ x: 0.5, y: 1 }}
+                    start={{ x: 0.5, y: 0 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                </Animated.View>
+              </>
+            ) : null}
+            {showBottomFade ? (
+              <>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.fade,
+                    styles.bottomFade,
+                    { height: resolvedBottomFadeHeight, bottom: bottomOffset },
+                    bottomFadeStyle,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[...scrollFadeGradients.bottom]}
+                    end={{ x: 0.5, y: 1 }}
+                    start={{ x: 0.5, y: 0 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                </Animated.View>
+                {bottomOffset > 0 ? (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.fade,
+                      styles.bottomFade,
+                      styles.safeAreaCap,
+                      { height: bottomOffset, bottom: 0 },
+                      bottomFadeStyle,
+                    ]}
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </>
+        ) : null}
+      </View>
+    );
   },
 );
 
@@ -203,5 +239,8 @@ const styles = StyleSheet.create({
   },
   bottomFade: {
     bottom: 0,
+  },
+  safeAreaCap: {
+    backgroundColor: colors['bg-1'],
   },
 });

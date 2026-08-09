@@ -276,11 +276,86 @@ export const DEMO_SESSIONS: readonly DemoSession[] = [
       { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 85, reps: 8 },
     ],
   },
+  {
+    date: '2026-07-26',
+    sets: [
+      { exerciseId: 'bench-press', warmUp: true, weightKg: 50, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 9 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 8 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 95, reps: 8 },
+      { exerciseId: 'low-bar-squats', warmUp: true, weightKg: 60, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 9 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 8 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 115, reps: 8 },
+      { exerciseId: 'lat-pulldown', warmUp: true, weightKg: 45, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 9 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 8 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 85, reps: 8 },
+    ],
+  },
+  {
+    date: '2026-07-28',
+    sets: [
+      { exerciseId: 'bench-press', warmUp: true, weightKg: 50, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 9 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 8 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 95, reps: 8 },
+      { exerciseId: 'low-bar-squats', warmUp: true, weightKg: 60, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 9 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 8 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 115, reps: 8 },
+      { exerciseId: 'lat-pulldown', warmUp: true, weightKg: 45, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 9 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 8 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 85, reps: 8 },
+    ],
+  },
+  {
+    date: '2026-07-31',
+    sets: [
+      { exerciseId: 'bench-press', warmUp: true, weightKg: 50, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 9 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 8 },
+      { exerciseId: 'low-bar-squats', warmUp: true, weightKg: 60, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 9 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 8 },
+      { exerciseId: 'lat-pulldown', warmUp: true, weightKg: 45, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 9 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 8 },
+    ],
+  },
 ];
 
 /** Last fixed history session — rolling today progresses from this, never from a prior rolling day. */
 export const LAST_FIXED_DEMO_SESSION: DemoSession =
   DEMO_SESSIONS[DEMO_SESSIONS.length - 1]!;
+
+const FIXED_DEMO_DATES = new Set(DEMO_SESSIONS.map((session) => session.date));
+
+/**
+ * Workout dates that are neither fixed demo sessions nor today.
+ * After reset, these leftovers (prior rolling-today days) must be removed.
+ */
+export function getStaleDemoWorkoutDates(
+  existingDates: readonly string[],
+  today: string,
+): string[] {
+  return existingDates.filter(
+    (date) => date !== today && !FIXED_DEMO_DATES.has(date),
+  );
+}
 
 function roundWarmUpKg(workingKg: number): number {
   return Math.round((workingKg * 0.5) / 5) * 5;
@@ -320,7 +395,7 @@ function buildNextExerciseSets(
 
 /**
  * Next demo session sets from a prior session, per docs/demo-data.md progression rules.
- * Used for the rolling “today” seed from the last fixed July day.
+ * Used for the rolling “today” seed from the last fixed July day (currently 2026-07-31).
  */
 export function buildNextDemoSession(prior: DemoSession): DemoSet[] {
   const next: DemoSet[] = [];

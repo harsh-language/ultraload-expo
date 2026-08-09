@@ -12,12 +12,14 @@ import {
 import { LogRow } from '../components/LogRow';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { getDatabase } from '../db/client';
+import { getLocalCalendarDate } from '../domain/day-record';
 import { formatHistoryDateLabel } from '../domain/history-date';
 import {
   buildHistoryListRows,
   formatPercentChange,
   formatSessionTotalWeightLabel,
   getPercentDirection,
+  groupHistoryListRows,
 } from '../domain/progress';
 import { SlidePager } from '../navigation/SlidePager';
 import type { MainStackParamList } from '../navigation/types';
@@ -46,9 +48,10 @@ export function HistoryListScreen({ navigation }: Props) {
   );
 
   const rows = useMemo(
-    () => buildHistoryListRows(workouts, exerciseIds),
+    () => buildHistoryListRows(workouts, exerciseIds, getLocalCalendarDate()),
     [exerciseIds, workouts],
   );
+  const groups = useMemo(() => groupHistoryListRows(rows), [rows]);
   const isEmpty = rows.length === 0;
 
   const handleBack = useCallback(() => {
@@ -69,33 +72,49 @@ export function HistoryListScreen({ navigation }: Props) {
       topFadeEnabled={false}
       topFadeHeight={SCROLL_FADE_HEIGHT}
     >
-      {rows.map((row, index) => {
-        const dayPercent = row.dayPercent;
+      {groups.map((group, groupIndex) => {
+        const { session, rests } = group;
+        const dayPercent = session.dayPercent;
+        // Figma log flat state — null (no compare) and 0% both show "–".
         const hasChange = dayPercent != null && dayPercent !== 0;
-        const showStat = dayPercent == null || hasChange;
         return (
-          <LogRow
-            key={row.date}
-            dateLabel={formatHistoryDateLabel(row.date)}
-            isBestRecord={row.isBestRecord}
-            onPress={() => {
-              navigation.navigate('SessionDetail', { date: row.date });
-            }}
-            showBottomBorder={index < rows.length - 1}
-            showStat={showStat}
-            stat={
-              hasChange
-                ? {
-                    label: formatPercentChange(dayPercent),
-                    direction: getPercentDirection(dayPercent),
-                  }
-                : dayPercent == null
-                  ? { label: '–', direction: 'flat' }
-                  : undefined
-            }
-            totalLabel={formatSessionTotalWeightLabel(row.totalKg, units)}
-            type="session"
-          />
+          <View
+            key={session.date}
+            style={[
+              styles.sessionGroup,
+              groupIndex < groups.length - 1 && styles.sessionGroupBordered,
+            ]}
+          >
+            {rests.map((rest) => (
+              <LogRow
+                key={rest.date}
+                dateLabel={formatHistoryDateLabel(rest.date)}
+                isRest
+                onPress={() => {
+                  navigation.navigate('SessionDetail', { date: rest.date });
+                }}
+                type="session"
+              />
+            ))}
+            <LogRow
+              dateLabel={formatHistoryDateLabel(session.date)}
+              isBestRecord={session.isBestRecord}
+              onPress={() => {
+                navigation.navigate('SessionDetail', { date: session.date });
+              }}
+              showStat
+              stat={
+                hasChange
+                  ? {
+                      label: formatPercentChange(dayPercent),
+                      direction: getPercentDirection(dayPercent),
+                    }
+                  : { label: '–', direction: 'flat' }
+              }
+              totalLabel={formatSessionTotalWeightLabel(session.totalKg, units)}
+              type="session"
+            />
+          </View>
         );
       })}
     </ScrollFadeView>
@@ -150,6 +169,17 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing['s-8'],
+  },
+  /**
+   * Figma history list group — rests + session (or session alone).
+   * Vertical pad s-5; bottom border separates groups.
+   */
+  sessionGroup: {
+    paddingVertical: spacing['s-5'],
+  },
+  sessionGroupBordered: {
+    borderBottomWidth: spacing['s-1'],
+    borderBottomColor: colors['border-2'],
   },
   chartStub: {
     flex: 1,

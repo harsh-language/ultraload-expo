@@ -8,7 +8,11 @@ import {
   isDemoDataEnabled,
   setDemoDataEnabled,
 } from '../db/devPrefs';
-import { clearDemoWorkouts, seedDemoData } from '../db/devSeed';
+import {
+  clearDemoWorkouts,
+  pruneStaleDemoWorkouts,
+  seedDemoData,
+} from '../db/devSeed';
 import { resetAllUserData } from '../db/repositories';
 import type { MainStackParamList } from '../navigation/types';
 import { hydrateStores } from '../stores';
@@ -74,6 +78,7 @@ export function useHomepageOptionsMenu() {
         // Allow rolling today to re-inject after a full wipe.
         clearTodayDemoDate();
         await seedDemoData(db);
+        await pruneStaleDemoWorkouts(db);
         await hydrateStores(db);
         useDevAppResetStore.getState().trigger();
         return;

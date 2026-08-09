@@ -301,13 +301,47 @@ Source: `src/domain/progress.ts` `filterWorkoutByPlan`,
 Bad example: Showing removed-plan exercises in History day totals.
 Good example: Pass `exerciseIds` from `planSlice` into `buildHistoryListRows`.
 
-## rule/session-detail-edit-is-an-explicit-mode
+## rule/history-list-shows-rest-days-for-calendar-gaps
+Status: proposed
+Scope: History list
+Rule: The list is a continuous calendar from the oldest active session (has ≥1
+standard set) through today. Rest days sit above the chronologically previous
+session and share one padded group (`py s-5`, bottom border, row height `s-11`).
+Rest rows show a faded Para-2 date only and open session detail on tap. A
+session with no rests above it is still its own group with the same chrome.
+Warm-up-only days are rest rows on the list (not active sessions); opening them
+still shows the warm-up sets on session detail.
+Why: Rest clusters read as recovery attached to the last workout; equal group
+chrome keeps sessions comparable when there is no gap. History “active” means
+standard work only, matching progress math.
+Exceptions: Empty history still uses the shared empty state (no rest-only list).
+Source: `src/domain/progress.ts` `fillHistoryCalendarGaps` /
+`groupHistoryListRows` / `buildHistoryListRows`, `src/screens/HistoryListScreen.tsx`,
+`src/components/LogRow.tsx`, `docs/blueprint.md` FL5,
+Figma `2754:8668` / `2755:8711`
+Bad example: Showing only logged session dates with silent multi-day holes,
+different row height for grouped vs lone sessions, or treating warm-up-only days
+as active history rows.
+Good example: Gap fill + group wrapper with rests above their session; rest
+`onPress` → `SessionDetail`.
+
+## rule/session-detail-has-no-screen-mode
 Status: proposed
 Scope: Session detail
-Rule: Session detail opens read-only. Edit is an explicit pencil toggle that
-reveals set actions and add-set. Leaving the screen can drop the mode.
-Why: Past-session review is the default job; editing is intentional.
+Rule: Session detail has no read-only vs edit toggle. Set edit/delete icons are
+always available. Add-set is a primary `IconButton` (`button-icon-1`, plus only)
+in the title bar on both empty and logged days. Empty days show centered “no
+sets recorded” with no body CTA. Mutates go through Add Set / Delete sheets,
+same as Work Out. Set-row hit targets are icon-only (no whole-row press).
+Why: Sheets already confirm every mutate, so a screen-level mode adds friction
+without reducing accidents. Title-bar add-set keeps one entry point across empty
+and logged layouts. Empty rest days stay openable so the notepad can fill gaps
+without a separate create flow.
 Exceptions: None.
-Source: `src/screens/SessionDetailScreen.tsx`, `docs/blueprint.md` FL6
-Bad example: Always showing edit/delete icons on past sets.
-Good example: `editing` gates `showActions` and the add-set footer.
+Source: `src/screens/SessionDetailScreen.tsx`, `docs/blueprint.md` FL6,
+Figma `2104:8839`
+Bad example: A pencil toggle that hides actions until edit, a second add-set in
+the body/footer, or bouncing back when opening a rest day with no workout row
+yet.
+Good example: Always `showActions`; title-bar plus opens the sheet; empty body
+is copy only.

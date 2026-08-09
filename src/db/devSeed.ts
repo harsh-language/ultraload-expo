@@ -7,6 +7,7 @@ import {
   DEMO_SESSIONS,
   LAST_FIXED_DEMO_SESSION,
   buildNextDemoSession,
+  getStaleDemoWorkoutDates,
 } from './demoData';
 import {
   clearTodayDemoDate,
@@ -60,6 +61,27 @@ export async function clearDemoWorkouts(db: AppDatabase): Promise<void> {
   }
 
   clearTodayDemoDate();
+}
+
+/**
+ * DEV-only: after a full wipe + reseed, drop leftover rolling-today days
+ * (e.g. Aug 3 when today is Aug 8). Keeps fixed demo sessions + today only.
+ */
+export async function pruneStaleDemoWorkouts(db: AppDatabase): Promise<void> {
+  if (!__DEV__) {
+    return;
+  }
+
+  const existing = await db.select({ date: workouts.date }).from(workouts);
+  const stale = getStaleDemoWorkoutDates(
+    existing.map((row) => row.date),
+    getLocalCalendarDate(),
+  );
+  if (stale.length === 0) {
+    return;
+  }
+
+  await db.delete(workouts).where(inArray(workouts.date, stale));
 }
 
 async function seedRollingToday(db: AppDatabase): Promise<void> {

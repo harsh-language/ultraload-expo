@@ -42,29 +42,26 @@ Source: `.cursor/rules/scroll-fade.mdc`, `src/screens/WorkOutScreen.tsx`
 Bad example: Putting the title bar or footer inside the scroll container so it
 fades or scrolls away with the log.
 Good example: `WorkOutScreen` renders title/footer overlays outside
-`ScrollFadeView`; top fade uses `topOffset` under the title bar. Bottom fade
-stays page-bottom aligned (`bottomOffset` 0) — see proposed
-`rule/workout-bottom-fade-aligns-to-page`.
+`ScrollFadeView`; fades use safe-area offsets only — see proposed
+`rule/workout-fades-clear-system-ui`.
 
-## rule/workout-bottom-fade-aligns-to-page
+## rule/workout-fades-clear-system-ui
 Status: proposed
 Scope: Work Out logged state
-Rule: Bottom scroll fade height is `s-16` (`SCROLL_FADE_HEIGHT`) and is
-bottom-aligned to the page viewport — do not lift it with `bottomOffset` to
-the footer button row. Top fade is likewise page-top aligned (`topOffset` 0)
-so content under the transparent session title is masked; do not push the top
-fade below the title bar.
-Why: Anchoring the fade to the buttons paints a dark band across the CTAs and
-leaves log rows readable in the gaps between / below them. Pushing the top fade
-below a transparent title leaves scrolled sets visible through the status bar
-and date.
-Exceptions: Other screens (e.g. session detail edit footer) may still use
-`bottomOffset` when their chrome layout requires it. Screens with opaque title
-chrome (`ScreenTitleBar`) may use `topFadeEnabled={false}` instead.
-Source: `src/screens/WorkOutScreen.tsx`, `.cursor/rules/scroll-fade.mdc`
-Bad example: `bottomOffset={FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT}` or
-`topOffset={titleTop + TITLE_BAR_HEIGHT}` on Work Out.
-Good example: omit both offsets (default 0); keep fade heights on the page edges.
+Rule: Scroll fades clear system UI only — `topOffset={insets.top}`,
+`bottomOffset={insets.bottom}`. Top height `s-17`, bottom `s-16`
+(`SCROLL_FADE_HEIGHT`). Do not pin fades to the session title or footer
+buttons, and do not start them at the absolute screen edge (`offset` 0).
+Why: Figma `# design` (`2749:8352`) places `top-fade` below the status bar and
+`bottom-fade` above the home indicator. Edge-aligned fades paint under system
+chrome; button-aligned fades band across CTAs.
+Exceptions: Other screens may still offset for app chrome when that surface
+requires it. Opaque title chrome (`ScreenTitleBar`) may use
+`topFadeEnabled={false}` instead.
+Source: Figma `2749:8352`, `src/screens/WorkOutScreen.tsx`,
+`.cursor/rules/scroll-fade.mdc`
+Bad example: `topOffset={0}`, or `bottomOffset={FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT}`.
+Good example: safe-area insets only; Figma heights `s-17` / `s-16`.
 
 ## rule/last-log-row-omits-bottom-border
 Status: proposed

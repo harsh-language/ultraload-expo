@@ -1,6 +1,6 @@
 ---
 status: source-of-truth
-last_updated: 2026-08-01
+last_updated: 2026-08-08
 ---
 
 # Demo data
@@ -13,7 +13,7 @@ Seed and reset must match this file exactly. Update this file before changing se
 
 - Weights in kg.
 - All recorded weights are multiples of **5** (no decimals).
-- On reset: wipe all workouts, then re-seed from this file (sessions + metadata) when the homepage **demo data** toggle is on.
+- On reset: wipe all workouts, then re-seed from this file (sessions + metadata) when the homepage **demo data** toggle is on. After reseed, only **Sessions** dates + rolling today remain — drop leftover prior rolling-today days (e.g. Aug 3 when today is Aug 8).
 - Homepage options menu (`__DEV__` only): `demo data : on` / `demo data : off` — when off, seed is skipped and demo session days are removed. Hidden in release builds.
 - Fixed history: do not seed dates outside the **Sessions** list below.
 - Exercise order within a session: bench-press → low-bar-squats → lat-pulldown.
@@ -28,10 +28,11 @@ Seed and reset must match this file exactly. Update this file before changing se
 
 Not a fixed date in the Sessions table. Generated at seed time for the device-local calendar day.
 
-- Continues progression from the **last fixed session** (currently `2026-07-24`) using the rules above — never from a previous rolling-today day.
+- Continues progression from the **last fixed session** (currently `2026-07-31`) using the rules above — never from a previous rolling-today day.
 - Date = `getLocalCalendarDate()` (today on this device). Yesterday’s rolling day is not promoted into fixed history.
 - Inject **only** when today has **zero sets** (warm-ups count) **and** `_dev_prefs.today_demo_date` ≠ today.
 - After inject, set `today_demo_date` to today (code-only tag; not shown in UI). No repair if the user clears or edits today — reseed only on **reset**.
+- **Reset** also prunes any workout date that is not a Sessions date and not today, so an older rolling-today day whose pref tag was overwritten does not survive.
 - Toggle off / `clearDemoWorkouts`: remove fixed demo dates **and** the workout for `today_demo_date` if set; clear the pref.
 
 ## Metadata
@@ -301,3 +302,63 @@ Applied on seed when the plan is empty or onboarding is incomplete (including af
 | lat-pulldown | false | 85 | 10 |
 | lat-pulldown | false | 85 | 9 |
 | lat-pulldown | false | 85 | 8 |
+
+### 2026-07-26
+
+| exercise_id | warmUp | weight_kg | reps |
+|-------------|--------|----------:|-----:|
+| bench-press | true | 50 | 10 |
+| bench-press | false | 100 | 10 |
+| bench-press | false | 100 | 9 |
+| bench-press | false | 100 | 8 |
+| bench-press | false | 95 | 8 |
+| low-bar-squats | true | 60 | 10 |
+| low-bar-squats | false | 120 | 10 |
+| low-bar-squats | false | 120 | 9 |
+| low-bar-squats | false | 120 | 8 |
+| low-bar-squats | false | 115 | 8 |
+| lat-pulldown | true | 45 | 10 |
+| lat-pulldown | false | 90 | 10 |
+| lat-pulldown | false | 90 | 9 |
+| lat-pulldown | false | 90 | 8 |
+| lat-pulldown | false | 85 | 8 |
+
+### 2026-07-28
+
+| exercise_id | warmUp | weight_kg | reps |
+|-------------|--------|----------:|-----:|
+| bench-press | true | 50 | 10 |
+| bench-press | false | 100 | 10 |
+| bench-press | false | 100 | 9 |
+| bench-press | false | 100 | 8 |
+| bench-press | false | 95 | 8 |
+| low-bar-squats | true | 60 | 10 |
+| low-bar-squats | false | 120 | 10 |
+| low-bar-squats | false | 120 | 9 |
+| low-bar-squats | false | 120 | 8 |
+| low-bar-squats | false | 115 | 8 |
+| lat-pulldown | true | 45 | 10 |
+| lat-pulldown | false | 90 | 10 |
+| lat-pulldown | false | 90 | 9 |
+| lat-pulldown | false | 90 | 8 |
+| lat-pulldown | false | 85 | 8 |
+
+### 2026-07-31
+
+| exercise_id | warmUp | weight_kg | reps |
+|-------------|--------|----------:|-----:|
+| bench-press | true | 50 | 10 |
+| bench-press | false | 100 | 10 |
+| bench-press | false | 100 | 10 |
+| bench-press | false | 100 | 9 |
+| bench-press | false | 100 | 8 |
+| low-bar-squats | true | 60 | 10 |
+| low-bar-squats | false | 120 | 10 |
+| low-bar-squats | false | 120 | 10 |
+| low-bar-squats | false | 120 | 9 |
+| low-bar-squats | false | 120 | 8 |
+| lat-pulldown | true | 45 | 10 |
+| lat-pulldown | false | 90 | 10 |
+| lat-pulldown | false | 90 | 10 |
+| lat-pulldown | false | 90 | 9 |
+| lat-pulldown | false | 90 | 8 |

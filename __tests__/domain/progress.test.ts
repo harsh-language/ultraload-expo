@@ -8,6 +8,7 @@ import {
   getExercisePercentChange,
   getExerciseTotalWeightMoved,
   getPercentDirection,
+  groupHistoryListRows,
   type ProgressWorkout,
 } from '../../src/domain/progress';
 import { getSessionTotalWeightMoved } from '../../src/domain/session-totals';
@@ -59,6 +60,7 @@ describe('progress domain', () => {
       const warmUpOnly = rows.find((row) => row.date === '2026-01-02');
       const later = rows.find((row) => row.date === '2026-01-03');
 
+      expect(warmUpOnly?.isRest).toBe(true);
       expect(warmUpOnly?.totalKg).toBe(0);
       expect(warmUpOnly?.dayPercent).toBeNull();
       // Later day compares against Jan 1, not the warm-up-only day (BR11).
@@ -86,6 +88,7 @@ describe('progress domain', () => {
           totalKg: 500,
           dayPercent: null,
           isBestRecord: false,
+          isRest: false,
         },
       ]);
 
@@ -260,6 +263,114 @@ describe('progress domain', () => {
       expect(getPercentDirection(1)).toBe('up');
       expect(getPercentDirection(-1)).toBe('down');
       expect(getPercentDirection(0)).toBe('flat');
+    });
+  });
+
+  describe('history calendar gaps (rest days)', () => {
+    it('inserts rest rows for missing days between sessions', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 100, reps: 5, warmUp: false }],
+          },
+        ]),
+        workout('2026-01-04', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 110, reps: 5, warmUp: false }],
+          },
+        ]),
+      ];
+
+      const rows = buildHistoryListRows(workouts, ['bench']);
+      expect(rows.map((row) => ({ date: row.date, isRest: row.isRest }))).toEqual([
+        { date: '2026-01-04', isRest: false },
+        { date: '2026-01-03', isRest: true },
+        { date: '2026-01-02', isRest: true },
+        { date: '2026-01-01', isRest: false },
+      ]);
+    });
+
+    it('extends rest rows through an explicit throughDate', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 100, reps: 5, warmUp: false }],
+          },
+        ]),
+      ];
+
+      const rows = buildHistoryListRows(workouts, ['bench'], '2026-01-03');
+      expect(rows.map((row) => ({ date: row.date, isRest: row.isRest }))).toEqual([
+        { date: '2026-01-03', isRest: true },
+        { date: '2026-01-02', isRest: true },
+        { date: '2026-01-01', isRest: false },
+      ]);
+    });
+
+    it('groups rests with the session below them', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 100, reps: 5, warmUp: false }],
+          },
+        ]),
+        workout('2026-01-04', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 110, reps: 5, warmUp: false }],
+          },
+        ]),
+      ];
+
+      const groups = groupHistoryListRows(
+        buildHistoryListRows(workouts, ['bench']),
+      );
+      expect(
+        groups.map((group) => ({
+          rests: group.rests.map((row) => row.date),
+          session: group.session.date,
+        })),
+      ).toEqual([
+        { rests: [], session: '2026-01-04' },
+        {
+          rests: ['2026-01-03', '2026-01-02'],
+          session: '2026-01-01',
+        },
+      ]);
+    });
+
+    it('keeps a lone session as its own group when no rests sit above', () => {
+      const workouts = [
+        workout('2026-01-01', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 100, reps: 5, warmUp: false }],
+          },
+        ]),
+        workout('2026-01-02', [
+          {
+            exerciseId: 'bench',
+            sets: [{ weight: 110, reps: 5, warmUp: false }],
+          },
+        ]),
+      ];
+
+      const groups = groupHistoryListRows(
+        buildHistoryListRows(workouts, ['bench']),
+      );
+      expect(
+        groups.map((group) => ({
+          rests: group.rests.length,
+          session: group.session.date,
+        })),
+      ).toEqual([
+        { rests: 0, session: '2026-01-02' },
+        { rests: 0, session: '2026-01-01' },
+      ]);
     });
   });
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,13 +14,12 @@ import {
 } from '../components/DeleteSetSheet';
 import { IconButton } from '../components/IconButton';
 import { LogRow } from '../components/LogRow';
-import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenTitleBar } from '../components/ScreenTitleBar';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { BackIcon } from '../components/icons/BackIcon';
 import { ArrowPathDownIcon } from '../components/icons/ArrowPathDownIcon';
 import { ArrowPathUpIcon } from '../components/icons/ArrowPathUpIcon';
-import { PencilIcon } from '../components/icons/PencilIcon';
+import { PlusIcon } from '../components/icons/PlusIcon';
 import { getDatabase } from '../db/client';
 import { loadStandardSetsForExercise } from '../db/workoutRepository';
 import { getExerciseLabel } from '../domain/catalogue';
@@ -47,13 +46,13 @@ import type { TodaySet } from '../stores/todaySlice';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
-import { SCROLL_FADE_HEIGHT } from '../theme/scrollFade';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'SessionDetail'>;
 
-const TITLE_TOP_GAP = spacing['s-8'];
-const FOOTER_BOTTOM_GAP = spacing['s-8'];
-const PINNED_FOOTER_HEIGHT = spacing['s-12'];
+/** Figma `title-main` height (2468:4714 / 2470:10433). */
+const TITLE_MAIN_HEIGHT = spacing['s-14'];
+/** Figma bottom-fade on session detail. */
+const SESSION_BOTTOM_FADE_HEIGHT = spacing['s-14'];
 /** Figma title-main arrow-path-up instance size. */
 const SUMMARY_STAT_ICON_SIZE = spacing['s-9'];
 
@@ -102,7 +101,6 @@ export function SessionDetailScreen({ navigation, route }: Props) {
   const sheetRef = useRef<AddSetSheetHandle>(null);
   const deleteSheetRef = useRef<DeleteSetSheetHandle>(null);
 
-  const [editing, setEditing] = useState(false);
   const [addSetSheetVisible, setAddSetSheetVisible] = useState(false);
   const [deleteSetSheetVisible, setDeleteSetSheetVisible] = useState(false);
   const [referenceWeightByExerciseId, setReferenceWeightByExerciseId] = useState<
@@ -229,47 +227,13 @@ export function SessionDetailScreen({ navigation, route }: Props) {
     [deleteSet],
   );
 
-  useEffect(() => {
-    if (workout == null) {
-      navigation.goBack();
-    }
-  }, [navigation, workout]);
-
-  if (!visibleWorkout || !hasSets) {
-    return (
-      <View style={styles.container}>
-        <View
-          style={[
-            styles.header,
-            { paddingTop: clampSafeInset(insets.top) + TITLE_TOP_GAP },
-          ]}
-        >
-          <ScreenTitleBar>
-            <IconButton
-              accessibilityLabel="back"
-              onPress={() => {
-                navigation.goBack();
-              }}
-              size="small"
-            >
-              <BackIcon />
-            </IconButton>
-            <Text style={styles.dateTitle}>
-              {formatHistoryDateLabel(date)}
-            </Text>
-          </ScreenTitleBar>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <View
         pointerEvents={sheetChromeHidden ? 'none' : 'box-none'}
         style={[
           styles.header,
-          { paddingTop: clampSafeInset(insets.top) + TITLE_TOP_GAP },
+          { paddingTop: clampSafeInset(insets.top) },
         ]}
       >
         <ScreenTitleBar>
@@ -286,229 +250,166 @@ export function SessionDetailScreen({ navigation, route }: Props) {
             {formatHistoryDateLabel(date)}
           </Text>
           <IconButton
-            accessibilityLabel={editing ? 'done editing' : 'edit session'}
+            accessibilityLabel="add set"
             onPress={() => {
-              setEditing((value) => !value);
+              void openAddSheet();
             }}
-            pressed={editing}
             size="small"
+            variant="primary"
           >
-            <PencilIcon />
+            <PlusIcon />
           </IconButton>
         </ScreenTitleBar>
       </View>
 
-      <ScrollFadeView
-        bottomFadeHeight={SCROLL_FADE_HEIGHT}
-        bottomOffset={
-          editing ? FOOTER_BOTTOM_GAP + PINNED_FOOTER_HEIGHT : 0
-        }
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            // Figma: section gap (s-8) + bottom-space (safe-area + s-8)
-            paddingBottom: editing
-              ? FOOTER_BOTTOM_GAP +
-                PINNED_FOOTER_HEIGHT +
-                clampSafeInset(insets.bottom) +
-                spacing['s-8']
-              : spacing['s-8'] +
-                spacing['s-8'] +
-                clampSafeInset(insets.bottom),
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-        style={styles.scroll}
-        topFadeEnabled={false}
-      >
-        {showTotal ? (
-          <View style={styles.summary}>
-            <Text style={styles.summaryTotal}>
-              {formatSessionTotalWeightLabel(sessionTotal, units)}
-            </Text>
-            {dayPercent != null && dayPercent !== 0 ? (
-              <View style={styles.summaryStat}>
-                <Text
-                  style={[
-                    styles.summaryPercent,
-                    getPercentDirection(dayPercent) === 'down' &&
-                      styles.summaryPercentDown,
-                  ]}
-                >
-                  {formatPercentChange(dayPercent)}
+      {hasSets && visibleWorkout ? (
+        <>
+          <ScrollFadeView
+            bottomFadeHeight={SESSION_BOTTOM_FADE_HEIGHT}
+            contentContainerStyle={[
+              styles.scrollContent,
+              {
+                paddingBottom:
+                  spacing['s-8'] +
+                  spacing['s-8'] +
+                  clampSafeInset(insets.bottom),
+              },
+            ]}
+            showsVerticalScrollIndicator={false}
+            style={styles.scroll}
+            topFadeEnabled={false}
+          >
+            {showTotal ? (
+              <View style={styles.summary}>
+                <Text style={styles.summaryTotal}>
+                  {formatSessionTotalWeightLabel(sessionTotal, units)}
                 </Text>
-                {getPercentDirection(dayPercent) === 'up' ? (
-                  <ArrowPathUpIcon
-                    color={colors['content-1']}
-                    size={SUMMARY_STAT_ICON_SIZE}
-                  />
-                ) : null}
-                {getPercentDirection(dayPercent) === 'down' ? (
-                  <ArrowPathDownIcon
-                    color={colors['content-3']}
-                    size={SUMMARY_STAT_ICON_SIZE}
-                  />
+                {dayPercent != null && dayPercent !== 0 ? (
+                  <View style={styles.summaryStat}>
+                    <Text style={styles.summaryPercent}>
+                      {formatPercentChange(dayPercent)}
+                    </Text>
+                    {getPercentDirection(dayPercent) === 'up' ? (
+                      <ArrowPathUpIcon
+                        color={colors['content-1']}
+                        size={SUMMARY_STAT_ICON_SIZE}
+                      />
+                    ) : null}
+                    {getPercentDirection(dayPercent) === 'down' ? (
+                      <ArrowPathDownIcon
+                        color={colors['content-1']}
+                        size={SUMMARY_STAT_ICON_SIZE}
+                      />
+                    ) : null}
+                  </View>
+                ) : dayPercent == null ? (
+                  <Text style={styles.summaryPercentMissing}>—</Text>
                 ) : null}
               </View>
-            ) : dayPercent == null ? (
-              <Text style={[styles.summaryPercent, styles.summaryPercentDown]}>
-                —
-              </Text>
             ) : null}
-          </View>
-        ) : null}
 
-        <View style={styles.session}>
-          {visibleWorkout.loggedExercises.map((loggedExercise, exerciseIndex) => {
-            let standardSetIndex = 0;
-            const exerciseStat = statsByExerciseId.get(
-              loggedExercise.exerciseId,
-            );
-            const showExerciseStat =
-              exerciseStat?.percentChange != null &&
-              exerciseStat.percentChange !== 0;
-            const isLastExercise =
-              exerciseIndex === visibleWorkout.loggedExercises.length - 1;
+            <View style={styles.session}>
+              {visibleWorkout.loggedExercises.map(
+                (loggedExercise, exerciseIndex) => {
+                  let standardSetIndex = 0;
+                  const exerciseStat = statsByExerciseId.get(
+                    loggedExercise.exerciseId,
+                  );
+                  const showExerciseStat =
+                    exerciseStat?.percentChange != null &&
+                    exerciseStat.percentChange !== 0;
+                  const isLastExercise =
+                    exerciseIndex ===
+                    visibleWorkout.loggedExercises.length - 1;
 
-            return (
-              <View key={loggedExercise.id}>
-                <LogRow
-                  showStat={showExerciseStat}
-                  stat={
-                    showExerciseStat
-                      ? {
-                          label: formatPercentChange(
-                            exerciseStat.percentChange!,
-                          ),
-                          direction: getPercentDirection(
-                            exerciseStat.percentChange!,
-                          ),
-                        }
-                      : undefined
-                  }
-                  title={getExerciseLabel(loggedExercise.exerciseId)}
-                  type="exercise"
-                />
-                <View style={styles.logStack}>
-                  {loggedExercise.sets.map((set, setOrdinal) => {
-                    const isLastSet =
-                      setOrdinal === loggedExercise.sets.length - 1;
-                    if (set.warmUp) {
-                      return (
-                        <LogRow
-                          key={set.id}
-                          onDelete={
-                            editing
-                              ? () => {
-                                  handleRequestDelete(toDeletableSet(set));
-                                }
-                              : undefined
-                          }
-                          onEdit={
-                            editing
-                              ? () => {
-                                  void handleEditSet(
-                                    set,
-                                    loggedExercise.exerciseId,
-                                  );
-                                }
-                              : undefined
-                          }
-                          onPress={
-                            editing
-                              ? () => {
-                                  void handleEditSet(
-                                    set,
-                                    loggedExercise.exerciseId,
-                                  );
-                                }
-                              : undefined
-                          }
-                          reps={set.reps}
-                          showActions={editing}
-                          showBottomBorder={!isLastSet}
-                          type="set"
-                          unit={unitLabel}
-                          warmUp
-                          weight={kgToDisplay(set.weight, units)}
-                        />
-                      );
-                    }
-
-                    standardSetIndex += 1;
-                    const setIndex = standardSetIndex;
-                    return (
+                  return (
+                    <View key={loggedExercise.id}>
                       <LogRow
-                        key={set.id}
-                        onDelete={
-                          editing
-                            ? () => {
+                        showStat={showExerciseStat}
+                        stat={
+                          showExerciseStat
+                            ? {
+                                label: formatPercentChange(
+                                  exerciseStat.percentChange!,
+                                ),
+                                direction: getPercentDirection(
+                                  exerciseStat.percentChange!,
+                                ),
+                              }
+                            : undefined
+                        }
+                        title={getExerciseLabel(loggedExercise.exerciseId)}
+                        type="exercise"
+                      />
+                      <View style={styles.logStack}>
+                        {loggedExercise.sets.map((set, setOrdinal) => {
+                          const isLastSet =
+                            setOrdinal === loggedExercise.sets.length - 1;
+                          if (set.warmUp) {
+                            return (
+                              <LogRow
+                                key={set.id}
+                                onDelete={() => {
+                                  handleRequestDelete(toDeletableSet(set));
+                                }}
+                                onEdit={() => {
+                                  void handleEditSet(
+                                    set,
+                                    loggedExercise.exerciseId,
+                                  );
+                                }}
+                                reps={set.reps}
+                                showActions
+                                showBottomBorder={!isLastSet}
+                                type="set"
+                                unit={unitLabel}
+                                warmUp
+                                weight={kgToDisplay(set.weight, units)}
+                              />
+                            );
+                          }
+
+                          standardSetIndex += 1;
+                          const setIndex = standardSetIndex;
+                          return (
+                            <LogRow
+                              key={set.id}
+                              onDelete={() => {
                                 handleRequestDelete(
                                   toDeletableSet(set, setIndex),
                                 );
-                              }
-                            : undefined
-                        }
-                        onEdit={
-                          editing
-                            ? () => {
+                              }}
+                              onEdit={() => {
                                 void handleEditSet(
                                   set,
                                   loggedExercise.exerciseId,
                                   setIndex,
                                 );
-                              }
-                            : undefined
-                        }
-                        onPress={
-                          editing
-                            ? () => {
-                                void handleEditSet(
-                                  set,
-                                  loggedExercise.exerciseId,
-                                  setIndex,
-                                );
-                              }
-                            : undefined
-                        }
-                        reps={set.reps}
-                        setIndex={setIndex}
-                        showActions={editing}
-                        showBottomBorder={!isLastSet}
-                        type="set"
-                        unit={unitLabel}
-                        weight={kgToDisplay(set.weight, units)}
-                      />
-                    );
-                  })}
-                </View>
-                {isLastExercise ? null : <LogRow type="space" />}
-              </View>
-            );
-          })}
+                              }}
+                              reps={set.reps}
+                              setIndex={setIndex}
+                              showActions
+                              showBottomBorder={!isLastSet}
+                              type="set"
+                              unit={unitLabel}
+                              weight={kgToDisplay(set.weight, units)}
+                            />
+                          );
+                        })}
+                      </View>
+                      {isLastExercise ? null : <LogRow type="space" />}
+                    </View>
+                  );
+                },
+              )}
+            </View>
+          </ScrollFadeView>
+        </>
+      ) : (
+        <View style={styles.emptyBody}>
+          <Text style={styles.emptyCopy}>no sets recorded</Text>
         </View>
-      </ScrollFadeView>
-
-      {editing ? (
-        <View
-          pointerEvents={sheetChromeHidden ? 'none' : 'box-none'}
-          style={[
-            styles.footer,
-            {
-              bottom: clampSafeInset(insets.bottom) + FOOTER_BOTTOM_GAP,
-            },
-          ]}
-        >
-          <PrimaryButton
-            label="add set"
-            leadingIcon="plus"
-            onPress={() => {
-              void openAddSheet();
-            }}
-            trailingIcon="none"
-          />
-        </View>
-      ) : null}
+      )}
 
       <AddSetSheet
         exerciseIds={exerciseIds}
@@ -551,20 +452,25 @@ const styles = StyleSheet.create({
   scroll: {
     flex: 1,
   },
+  /** No horizontal pad — `title-main` is full-bleed; session supplies inset. */
   scrollContent: {
-    paddingHorizontal: spacing['s-8'],
-    paddingTop: spacing['s-8'],
-    gap: spacing['s-8'],
+    paddingTop: 0,
   },
+  /** Figma `title-main` (2470:10433) — scrolls with session content. */
   summary: {
+    alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing['s-5'],
-    height: spacing['s-12'],
+    height: TITLE_MAIN_HEIGHT,
+    paddingHorizontal: spacing['s-8'],
+    borderBottomWidth: spacing['s-1'],
+    borderBottomColor: colors['border-2'],
+    backgroundColor: colors['bg-1'],
   },
   summaryTotal: {
     ...typography.brand2,
-    color: colors['content-2'],
+    color: colors['content-3'],
     flex: 1,
     ...textCase.none,
   },
@@ -578,18 +484,29 @@ const styles = StyleSheet.create({
     color: colors['content-1'],
     ...textCase.none,
   },
-  summaryPercentDown: {
+  summaryPercentMissing: {
+    ...typography.brand2,
     color: colors['content-3'],
+    ...textCase.none,
   },
+  /** Figma `section` pad s-8 around session log. */
   session: {
     width: '100%',
+    paddingHorizontal: spacing['s-8'],
+    paddingTop: spacing['s-8'],
   },
   logStack: {
     width: '100%',
   },
-  footer: {
-    position: 'absolute',
-    left: spacing['s-8'],
-    right: spacing['s-8'],
+  emptyBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing['s-11'],
+  },
+  emptyCopy: {
+    ...typography.para2,
+    color: colors['content-2'],
+    ...textCase.lower,
   },
 });

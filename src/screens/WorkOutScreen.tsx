@@ -31,7 +31,6 @@ import {
 } from '../stores';
 import type { TodaySet } from '../stores/todaySlice';
 import { colors, spacing } from '../theme/tokens';
-import { SCROLL_FADE_HEIGHT } from '../theme/scrollFade';
 
 /** Figma — gap between footer buttons and screen bottom / title bar and status bar. */
 const FOOTER_BOTTOM_GAP = spacing['s-8'];
@@ -332,8 +331,9 @@ export function WorkOutScreen() {
         <ScrollFadeView
           ref={scrollRef}
           alwaysShowBottomFade
-          topFadeHeight={spacing['s-18']}
-          bottomFadeHeight={spacing['s-17']}
+          topFadeHeight={spacing['s-17']}
+          topOffset={insets.top}
+          bottomOffset={insets.bottom}
           contentContainerStyle={scrollContentStyle}
           onContentSizeChange={handleScrollContentSizeChange}
           showsVerticalScrollIndicator={false}
