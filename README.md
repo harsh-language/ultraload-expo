@@ -4,7 +4,7 @@ Personal, offline strength-training app for one experienced lifter. Log ad-hoc g
 
 React Native (Expo 56), iOS + Android, 100% offline, dark mode only. No splits, no cloud.
 
-**Last updated:** 2026-08-09
+**Last updated:** 2026-08-10
 
 ## Status (v1)
 
