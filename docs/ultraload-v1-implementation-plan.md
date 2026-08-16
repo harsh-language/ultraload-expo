@@ -32,7 +32,7 @@ The blueprint is approved and complete (18/18 sections). The repo has spec artif
 | R7 | Rest timer (optional, 15s–5min in 15s steps, background notification on dev build) | FL4, F5, BR20 |
 | R8 | Settings hub: bodyweight, plan edit, warm-up, units | FL8, FL12, F10–11 |
 | R9 | History list + session detail + edit with progress math | FL5–6, F6–7, F9, BR6–12 |
-| R10 | History chart with exercise/muscle-group filters and time ranges | FL7, F8, BR13, BR23 |
+| R10 | History chart with exercise/muscle-group filters and navigable time ranges (shared with list) | FL7, F8, BR13, BR23 |
 | R11 | Export/import JSON round-trip; reset wipes and replays onboarding | FL9–11, F12–14, T22–T24 |
 | R12 | UI matches Figma 1:1 (tokens via Figma MCP at Stage 0) | §10–13 |
 | R13 | Progress math unit tests (T1–T26 per blueprint §17) | §17 |
@@ -353,8 +353,10 @@ ultraload/
 
 **Approach:**
 1. Integrate react-native-gifted-charts.
-2. Default Y = session total; filter by exercise or muscle group.
-3. Time ranges month/year/all-time; horizontal scroll; 10 latest visible.
+2. Default Y = session total. Duration + muscle are always available; selecting
+   a muscle reveals a subordinate exercise filter limited to catalogue
+   `primaryMuscle` matches. Exercise selection keeps muscle active.
+3. Time ranges month/year/all-time; horizontal scroll; 12 latest visible.
 4. Shared History empty state.
 
 **Test scenarios:**

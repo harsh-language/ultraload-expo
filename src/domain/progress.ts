@@ -1,9 +1,6 @@
 import { eachCalendarDateDescending } from './history-date';
 import {
-  formatSessionTotalWeightLabel,
   getExerciseTotalWeightMoved,
-  getSessionTotalWeightMoved,
-  hasStandardSets,
   hasStandardSetsForExercise,
 } from './session-totals';
 
@@ -323,59 +320,6 @@ export function fillHistoryCalendarGaps(
     });
   }
   return filled;
-}
-
-/**
- * History list rows newest-first: day total + day % (or null/0 → "–"),
- * with rest rows for missing calendar days through `throughDate`.
- * BR7, BR9, BR10, BR11. Plan filter applied (BR3).
- */
-export function buildHistoryListRows(
-  workouts: ProgressWorkout[],
-  activeExerciseIds: ReadonlySet<string> | readonly string[],
-  throughDate?: string,
-): HistoryListRow[] {
-  const oldestFirst = sortOldestFirst(
-    workouts.map((workout) => filterWorkoutByPlan(workout, activeExerciseIds)),
-  );
-
-  const rows: HistoryListRow[] = [];
-
-  for (const workout of oldestFirst) {
-    // Warm-up-only days are not active history sessions — gap fill shows them
-    // as rest rows. Session detail still opens and shows the warm-up sets.
-    if (!hasStandardSets(workout)) {
-      continue;
-    }
-
-    const exercisePercents: Array<number | null> = [];
-
-    for (const logged of workout.loggedExercises) {
-      if (!hasStandardSetsForExercise(logged.sets)) {
-        continue;
-      }
-
-      const current = getExerciseTotalWeightMoved(logged.sets);
-      const prior = findPriorExerciseTotal(
-        oldestFirst,
-        logged.exerciseId,
-        workout.date,
-      );
-      exercisePercents.push(
-        prior == null ? null : getExercisePercentChange(current, prior),
-      );
-    }
-
-    rows.push({
-      date: workout.date,
-      totalKg: getSessionTotalWeightMoved(workout),
-      dayPercent: getDayPercentChange(exercisePercents),
-      isBestRecord: isSessionBestRecord(oldestFirst, workout.date),
-      isRest: false,
-    });
-  }
-
-  return fillHistoryCalendarGaps(rows.reverse(), throughDate);
 }
 
 export interface HistoryListGroup {

@@ -51,9 +51,10 @@ intent (`rule/later-product-decisions-update-the-blueprint`).
 
 ## Build stage
 
-U4 done — History list + session detail + progress math. Chart remains a stub until U5.
+U5 done — History chart + shared filters (period / muscle / exercise on list and
+chart) + muscle-group weighting (BR13).
 
-Next is U5 — History chart with filters and muscle-group weighting.
+Next is U6 — Export / import / reset / polish.
 
 **DEV tooling (simulator only):** homepage options **demo data** toggle and **reset** are behind `__DEV__`. Seed code in `src/db/devSeed.ts` / `demoData.ts` also no-ops outside DEV. Release / U7 App Store builds must not show these — leave the `__DEV__` guards in place; do not expose them in production UI.
 

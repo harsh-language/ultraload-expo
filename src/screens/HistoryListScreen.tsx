@@ -1,13 +1,19 @@
-import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HistoryChartView } from '../components/HistoryChartView';
 import { HistoryEmptyState } from '../components/HistoryEmptyState';
+import { HistoryFilterBar } from '../components/HistoryFilterBar';
 import {
-  HISTORY_TABS,
   HistoryNavigation,
-  type HistoryTab,
+  type HistoryView,
 } from '../components/HistoryNavigation';
 import { LogRow } from '../components/LogRow';
 import { ScrollFadeView } from '../components/ScrollFadeView';
@@ -15,18 +21,27 @@ import { getDatabase } from '../db/client';
 import { getLocalCalendarDate } from '../domain/day-record';
 import { formatHistoryDateLabel } from '../domain/history-date';
 import {
+  buildChartSeries,
   buildHistoryListRows,
+  DEFAULT_HISTORY_FILTER,
+  listHistoryPeriods,
+  type HistoryFilter,
+} from '../domain/history-filter';
+import {
   formatPercentChange,
   getPercentDirection,
   groupHistoryListRows,
 } from '../domain/progress';
 import { formatSessionTotalWeightLabel } from '../domain/session-totals';
-import { SlidePager } from '../navigation/SlidePager';
 import type { MainStackParamList } from '../navigation/types';
 import { useHistoryStore, usePlanStore, useProfileStore } from '../stores';
+import { animateWithMotionPreference } from '../theme/animateWithMotionPreference';
+import { INTERACTIVE_SCALE } from '../theme/motion';
 import { clampSafeInset } from '../theme/safeAreaInset';
 import { colors, spacing } from '../theme/tokens';
 import { SCROLL_FADE_HEIGHT } from '../theme/scrollFade';
+import { textCase } from '../theme/textCase';
+import { typography } from '../theme/typography';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'HistoryList'>;
 
@@ -36,7 +51,9 @@ export function HistoryListScreen({ navigation }: Props) {
   const exerciseIds = usePlanStore((state) => state.exerciseIds);
   const workouts = useHistoryStore((state) => state.workouts);
   const refresh = useHistoryStore((state) => state.refresh);
-  const [activeTab, setActiveTab] = useState<HistoryTab>('list');
+  const [activeView, setActiveView] = useState<HistoryView>('list');
+  const [filter, setFilter] = useState<HistoryFilter>(DEFAULT_HISTORY_FILTER);
+  const [chartSelectionResetKey, setChartSelectionResetKey] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -44,16 +61,51 @@ export function HistoryListScreen({ navigation }: Props) {
     }, [refresh]),
   );
 
+  const today = getLocalCalendarDate();
+  const periodOptions = useMemo(
+    () => listHistoryPeriods(workouts, today),
+    [today, workouts],
+  );
+
   const rows = useMemo(
-    () => buildHistoryListRows(workouts, exerciseIds, getLocalCalendarDate()),
-    [exerciseIds, workouts],
+    () => buildHistoryListRows(workouts, exerciseIds, today, filter),
+    [exerciseIds, filter, today, workouts],
   );
   const groups = useMemo(() => groupHistoryListRows(rows), [rows]);
-  const isEmpty = rows.length === 0;
+  const chartPoints = useMemo(
+    () => buildChartSeries(workouts, filter, exerciseIds),
+    [exerciseIds, filter, workouts],
+  );
+
+  // Shared empty only when there is no active history at all (unfiltered).
+  const isEmpty = useMemo(
+    () => buildHistoryListRows(workouts, exerciseIds, today).length === 0,
+    [exerciseIds, today, workouts],
+  );
 
   const handleBack = useCallback(() => {
+    setFilter(DEFAULT_HISTORY_FILTER);
     navigation.goBack();
   }, [navigation]);
+
+  const handleOpenSession = useCallback(
+    (date: string) => {
+      navigation.navigate('SessionDetail', { date });
+    },
+    [navigation],
+  );
+
+  const dismissChartSelection = useCallback(() => {
+    setChartSelectionResetKey((current) => current + 1);
+  }, []);
+
+  const handleViewChange = useCallback(
+    (view: HistoryView) => {
+      dismissChartSelection();
+      setActiveView(view);
+    },
+    [dismissChartSelection],
+  );
 
   const listContent = (
     <ScrollFadeView
@@ -69,52 +121,69 @@ export function HistoryListScreen({ navigation }: Props) {
       topFadeEnabled={false}
       topFadeHeight={SCROLL_FADE_HEIGHT}
     >
-      {groups.map((group, groupIndex) => {
-        const { session, rests } = group;
-        const dayPercent = session.dayPercent;
-        // Figma log flat state — null (no compare) and 0% both show "–".
-        const hasChange = dayPercent != null && dayPercent !== 0;
-        return (
-          <View
-            key={session.date}
-            style={[
-              styles.sessionGroup,
-              groupIndex < groups.length - 1 && styles.sessionGroupBordered,
-            ]}
-          >
-            {rests.map((rest) => (
+      {groups.length === 0 ? (
+        <View style={styles.filterEmpty}>
+          <Text style={styles.filterEmptyCopy}>
+            no sessions for this filter.
+          </Text>
+        </View>
+      ) : (
+        groups.map((group, groupIndex) => {
+          const { session, rests } = group;
+          const dayPercent = session.dayPercent;
+          // Figma log flat state — null (no compare) and 0% both show "–".
+          const hasChange = dayPercent != null && dayPercent !== 0;
+          return (
+            <View
+              key={session.date}
+              style={[
+                styles.sessionGroup,
+                groupIndex < groups.length - 1 && styles.sessionGroupBordered,
+              ]}
+            >
+              {rests.map((rest) => (
+                <LogRow
+                  key={rest.date}
+                  dateLabel={formatHistoryDateLabel(rest.date)}
+                  isRest
+                  onPress={() => {
+                    handleOpenSession(rest.date);
+                  }}
+                  type="session"
+                />
+              ))}
               <LogRow
-                key={rest.date}
-                dateLabel={formatHistoryDateLabel(rest.date)}
-                isRest
+                dateLabel={formatHistoryDateLabel(session.date)}
+                isBestRecord={session.isBestRecord}
                 onPress={() => {
-                  navigation.navigate('SessionDetail', { date: rest.date });
+                  handleOpenSession(session.date);
                 }}
+                showStat
+                stat={
+                  hasChange
+                    ? {
+                        label: formatPercentChange(dayPercent),
+                        direction: getPercentDirection(dayPercent),
+                      }
+                    : { label: '–', direction: 'flat' }
+                }
+                totalLabel={formatSessionTotalWeightLabel(session.totalKg, units)}
                 type="session"
               />
-            ))}
-            <LogRow
-              dateLabel={formatHistoryDateLabel(session.date)}
-              isBestRecord={session.isBestRecord}
-              onPress={() => {
-                navigation.navigate('SessionDetail', { date: session.date });
-              }}
-              showStat
-              stat={
-                hasChange
-                  ? {
-                      label: formatPercentChange(dayPercent),
-                      direction: getPercentDirection(dayPercent),
-                    }
-                  : { label: '–', direction: 'flat' }
-              }
-              totalLabel={formatSessionTotalWeightLabel(session.totalKg, units)}
-              type="session"
-            />
-          </View>
-        );
-      })}
+            </View>
+          );
+        })
+      )}
     </ScrollFadeView>
+  );
+
+  const chartContent = (
+    <HistoryChartView
+      onOpenSession={handleOpenSession}
+      points={chartPoints}
+      selectionResetKey={chartSelectionResetKey}
+      units={units}
+    />
   );
 
   return (
@@ -125,31 +194,87 @@ export function HistoryListScreen({ navigation }: Props) {
         <>
           <View style={styles.header}>
             <HistoryNavigation
-              activeTab={activeTab}
+              activeView={activeView}
+              filters={
+                <HistoryFilterBar
+                  exerciseIds={exerciseIds}
+                  filter={filter}
+                  onChange={setFilter}
+                  onInteraction={dismissChartSelection}
+                  periodOptions={periodOptions}
+                />
+              }
               onBack={handleBack}
-              onTabChange={setActiveTab}
+              onViewChange={handleViewChange}
             />
           </View>
-          <SlidePager
-            items={HISTORY_TABS}
-            renderItem={(tab) => {
-              switch (tab) {
-                case 'list':
-                  return listContent;
-                case 'chart':
-                  // U4 stub — chart content ships in U5.
-                  return <View style={styles.chartStub} />;
-                default: {
-                  const _exhaustive: never = tab;
-                  return _exhaustive;
-                }
-              }
-            }}
-            selected={activeTab}
-          />
+          <View style={styles.body}>
+            <HistoryViewPane active={activeView === 'list'}>
+              {listContent}
+            </HistoryViewPane>
+            <HistoryViewPane active={activeView === 'chart'}>
+              {chartContent}
+            </HistoryViewPane>
+          </View>
         </>
       )}
     </View>
+  );
+}
+
+/**
+ * Incoming-only view switch: the leaving pane hides immediately so the two
+ * never overlap, and the arriving pane fades in from `INTERACTIVE_SCALE`
+ * on the house spring. Reduce Motion drops the scale and keeps the 150ms fade.
+ */
+function HistoryViewPane({
+  active,
+  children,
+}: {
+  active: boolean;
+  children: ReactNode;
+}) {
+  const reduceMotion = useReducedMotion();
+  const opacity = useSharedValue(active ? 1 : 0);
+  const scale = useSharedValue(1);
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    const reduced = reduceMotion === true;
+
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      opacity.value = active ? 1 : 0;
+      scale.value = 1;
+      return;
+    }
+
+    if (!active) {
+      opacity.value = 0;
+      scale.value = 1;
+      return;
+    }
+
+    opacity.value = 0;
+    scale.value = reduced ? 1 : INTERACTIVE_SCALE;
+    opacity.value = animateWithMotionPreference(1, reduced);
+    if (!reduced) {
+      scale.value = animateWithMotionPreference(1, false);
+    }
+  }, [active, opacity, reduceMotion, scale]);
+
+  const paneStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View
+      pointerEvents={active ? 'auto' : 'none'}
+      style={[styles.pane, paneStyle]}
+    >
+      {children}
+    </Animated.View>
   );
 }
 
@@ -161,11 +286,18 @@ const styles = StyleSheet.create({
   header: {
     zIndex: 1,
   },
+  body: {
+    flex: 1,
+  },
+  pane: {
+    ...StyleSheet.absoluteFill,
+  },
   scroll: {
     flex: 1,
   },
   listContent: {
     paddingHorizontal: spacing['s-8'],
+    flexGrow: 1,
   },
   /**
    * Figma history list group — rests + session (or session alone).
@@ -178,7 +310,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: spacing['s-1'],
     borderBottomColor: colors['border-2'],
   },
-  chartStub: {
-    flex: 1,
+  filterEmpty: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing['s-16'],
+  },
+  filterEmptyCopy: {
+    ...typography.para2,
+    color: colors['content-2'],
+    ...textCase.lower,
   },
 });

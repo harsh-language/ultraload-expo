@@ -3,7 +3,7 @@ title: Application Blueprint
 product: UltraLoad
 status: approved
 created: 2026-06-22
-last_updated: 2026-08-08
+last_updated: 2026-08-16
 approved: 2026-06-22
 design_references:
   - "Figma screens (ultraload-v1): https://www.figma.com/design/O7SlK5o3Ozt8ztG4Ds8iZY/experiment----ultraload?node-id=2008-2004"
@@ -60,7 +60,7 @@ UltraLoad is a personal, offline strength-training app that logs ad-hoc gym sess
 | F5 | Rest timer | Optional, user-triggered, global range 15 s – 5 min in 15 s steps (BR20); background notification when app is backgrounded. |
 | F6 | History list | Per-day rows: day total weight + day % change, or "—" when no comparison (BR7, BR9, BR10). Rest/warm-up-only days are tappable empty-looking rows. |
 | F7 | Session detail | Opens for any calendar day in the list. Always editable — set actions are visible immediately; add-set is a primary icon button (plus) in the title bar; empty days show centered copy only; mutates reuse the logging / delete sheets; edits recalc downstream (BR12). |
-| F8 | History chart | Y = session/exercise/muscle-group total; X = date; exercise + muscle-group filters; ranges month/year/all-time; 10 latest visible, horizontal scroll. |
+| F8 | History chart | Y = session/exercise/muscle-group total; X = date; shared period + exercise + muscle-group filters (list and chart); navigable month/year/all-time; 12 latest visible, horizontal scroll. Title-bar icon toggles list ↔ chart. Tap near the line to reveal the nearest session pill; tap the pill to open that session. |
 | F9 | Progress measurement | Total weight moved, % change, day averaging, muscle-group weighting (BR6–BR13). |
 | F10 | Settings hub | Bodyweight (profile), plan editing, global warm-up %, rest preset, units, export, reset. Catalogue per-exercise range/increment/warm-up metadata still exists for logging and future versions; **no per-exercise override UI in this version**. |
 | F11 | Unit system | Display in kg/lbs/stone uniformly; storage always kg; convert rounded to 0.5 (BR17). |
@@ -116,7 +116,7 @@ Work Out home → options menu → History → List view → calendar days from 
 Tap any day (active or rest) → session detail (back + date + add-set icon). **Empty day** (no sets at all): centered "no sets recorded"; add-set stays in the title bar. **Warm-up-only or logged day:** grouped exercise → sets with edit/delete icons; add-set stays in the title bar → mutates via bottom sheet → downstream % recalculated (BR12). Warm-up-only days stay rest-style on the history list until a standard set exists.
 
 ### FL7 — Chart + filter (F8, F9)
-Work Out home → options menu → History → Chart view → default Y = session total, 10 latest visible. Filter by exercise (Y switches to that exercise) or by muscle group (weighted calc, BR13). Time range month/year/all-time; horizontal scroll along timeline.
+Work Out home → options menu → History (list by default). Title-bar icon toggles list ↔ chart — no tab labels, no horizontal page slide. Shared filter bar scopes **both** views. **Duration** and **muscle group** are visible by default. Selecting a muscle group reveals the subordinate **exercise** filter, limited to active-plan exercises whose catalogue `primaryMuscle` is that group. The filter row is only scrollable while the exercise filter exists: with duration + muscle group alone it fits, and its scrolling is disabled entirely (no swipe, no indicator). Once three filters are present, manual scrolling is always available, and the row parks itself at one edge over 90 ms when a filter is applied (duration → start; muscle group or exercise → end) or when a trigger clipped by a viewport edge is tapped (duration → start; muscle group or exercise → end). Parking is a full move to that edge, and a dropdown opened by the same press follows its trigger. Selecting an exercise keeps both muscle group and exercise visibly active; changing muscle group resets exercise to `all`, while clearing exercise keeps the muscle-group filter active. Default Y = session total, 12 latest visible on chart. A muscle group uses the weighted calculation (BR13); a selected exercise switches Y to that exercise. Duration is navigable: any past month or year from oldest active session through today, plus all-time. Horizontal scroll along timeline. A single tap within the line's touch range reveals the nearest workout-session pill; the pill stays open until another chart selection or a tap outside the graph area. Tapping the pill opens that date in Session detail, matching the list. Filter state is transient and resets when leaving History.
 
 ### FL8 — Edit workout plan (F3)
 Settings → Edit workout plan → add-exercises sub-screen → toggle any combination of exercises on or off in a local draft. Tap the rightmost check action to save the complete draft; tap the close action to discard every addition and removal made since opening the screen. After save, removed exercises hide from pickers, Work Out, and History (BR3); re-added exercises become visible again. Settings exercise-tag removals remain immediate. Past sets stay in SQLite. No confirmation sheet — removal is reversible hide, not data loss. The draft cannot remove the last remaining plan exercise.
@@ -150,6 +150,7 @@ flowchart TD
   hist --> list["SCR10 List view"]
   hist --> chart["SCR11 Chart view"]
   list --> detail["SCR12 Session detail"]
+  chart --> detail
   set --> addEx["SCR15 Add exercises sub-screen"]
   set --> exp["SCR16 Export overlay"]
   set --> reset["SCR17 Reset overlay"]
@@ -166,8 +167,8 @@ flowchart TD
 | SCR7 | Add/Edit Set bottom sheet | Home + History | Pick exercise, reps/weight sliders, warm-up toggle |
 | SCR8 | Delete confirmation overlay | Home + History | Confirm set deletion |
 | SCR9 | Rest timer | Home | Optional rest countdown |
-| SCR10 | History — list | History | Per-day totals + % change |
-| SCR11 | History — chart | History | Progress over time with filters |
+| SCR10 | History — list | History | Per-day totals + % change (default History view) |
+| SCR11 | History — chart | History | Progress over time; toggled from the History title bar |
 | SCR12 | Session detail | History | Review and edit a past day's sets |
 | SCR14 | Settings hub | Settings | Profile, plan, presets, units, export, reset |
 | SCR15 | Add exercises sub-screen | Settings | Add/remove plan exercises (only pushed sub-screen) |
@@ -229,7 +230,7 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | BR20 | Rest timer is global, range 15 s – 5 min in 15 s steps; never auto-starts. (No per-exercise rest timers — out of scope; not planned for this version.) |
 | BR21 | Default reps/weight = last set's values for the same exercise today, else slider minimum. |
 | BR22 | Reps and weight input via sliders only — no steppers, number pads, or preset chips. |
-| BR23 | Chart muscle-group filters limited to Chest, Shoulders, Back, Glutes, Quads (not Biceps/Triceps). |
+| BR23 | History muscle-group filters are limited to Chest, Shoulders, Back, Glutes, Quads (not Biceps/Triceps). Exercise is subordinate to muscle group: it appears only after a muscle is selected and offers active-plan exercises whose catalogue `primaryMuscle` matches. Changing muscle resets exercise to `all`; clearing exercise retains the muscle filter. |
 | BR24 | Reset = full wipe + onboarding replay. |
 | BR25 | 75 kg reference bodyweight is used only to derive catalogue slider ranges; it does not scale with the user's actual bodyweight over time. |
 | BR27 | **Global warm-up auto-tag** (`warmUpAutoTagEnabled`, default on): when **on**, BR4 auto-tagging applies. When **off**, no set is auto-tagged; the warm-up toggle remains visible on every set and the user may still mark a set warm-up manually (manual warm-up sets remain excluded from progress per BR6). Per-set override (BR5) applies only when auto-tag is on. |
@@ -267,7 +268,7 @@ All weights stored in kg internally. Removal from plan hides exercise + history 
 | High bar back squat | Quads | 50–210 | 5 |
 | Reverse lunge | Quads | 30–150 | 5 |
 
-Warm-up thresholds are computed at runtime from logged history + `warmUpPercent` (BR15), not seeded in the catalogue. "Squats" in older docs = High bar back squat. Meadows row has no "per arm" label. Primary muscle column is catalogue organisation only — progress calc uses multipliers below.
+Warm-up thresholds are computed at runtime from logged history + `warmUpPercent` (BR15), not seeded in the catalogue. "Squats" in older docs = High bar back squat. Meadows row has no "per arm" label. Primary muscle drives catalogue organisation and direct-address exercise filtering; progress calculations use the multipliers below.
 
 ### Muscle-group multipliers (calculation only; not shown in UI)
 
@@ -354,7 +355,7 @@ Confirmed intent:
 - **Theme:** dark mode only; **Font:** Geist; tokens come from Figma variables.
 - **Work Out main page:** today's sets grouped by exercise (group order = first exercise logged); sets within a group in logging order. Alternating exercises route each set under its exercise automatically.
 - **History list rows:** date + total weight + % change; "—" where no comparison.
-- **Chart:** Y = session total (default) / exercise / muscle-group weighted; X = date; 10 latest visible with horizontal scroll; filters Chest/Shoulders/Back/Glutes/Quads; ranges month/year/all-time.
+- **Chart:** Y = session total (default) / exercise / muscle-group weighted; X = date; 12 latest visible with horizontal scroll; the plot spans the viewport edge to edge. A single tap within the line's touch band reveals the nearest session point + pill; it persists after release, opens Session detail on tap, and clears after an outside tap or when its point scrolls out of view. Filters Chest/Shoulders/Back/Glutes/Quads; navigable month/year/all-time. Shared filter bar also scopes the History list. List and chart share one History title; a trailing icon button toggles the view.
 - **Empty states:** Work Out has its own; History shares one empty state across list + chart; Settings has none.
 - **Inputs:** sliders only for reps/weight (BR22); warm-up toggle always visible.
 - **Resolved at build time (per contract above):** exact color/spacing/type token values, slider track styling, chart point styling, overlay styling — all pulled from Figma during Stage 0, not specified here.
@@ -393,7 +394,7 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 
 - **Root:** Splash → (first launch) Onboarding → **Work Out home**; (returning) straight to Work Out home.
 - **Home (Work Out):** default screen; session title bar includes an **options menu** (chevron) for **History** and **Settings**. Add/Edit Set as bottom sheet; rest timer; delete confirmation overlay. No pushed sub-screens from home. **Dev interim (U0–U6):** options menu may include **Reset** for faster testing — **remove before Stage 7 production build** (canonical reset is the Settings overlay, SCR17).
-- **History:** reached via options menu → stack push; `history-navigation` switches List ↔ Chart within History; tapping a day pushes Session detail (always editable; same add/edit/delete sheets as Work Out).
+- **History:** reached via options menu → stack push; title-bar icon switches List ↔ Chart within History; tapping a day pushes Session detail (always editable; same add/edit/delete sheets as Work Out).
 - **Settings:** reached via options menu → stack push; hub screen; Add exercises is the only real pushed sub-screen; Export and Reset are overlay alerts on Settings.
 - **No bottom tab bar,** no horizontal tab pager, no `main-navigation` component.
 
@@ -405,7 +406,7 @@ Code mapping: use semantic names in code; keep each slider/input use case distin
 - **Edit/delete set:** tap edit/delete icons on a logged set (Work Out or History session detail) → SCR7 in edit mode or SCR8 delete confirm → change values → Record / Delete.
 - **Warm-up tagging:** auto per BR4/BR15 (weight ≤ history-derived threshold); manual override one set only.
 - **Rest timer:** user-triggered only; range 15 s–5 min in 15 s steps; background → notification (iOS Live Activity-style; Android equivalent if available).
-- **Chart:** filter by exercise / muscle group; switch time range; horizontal scroll along timeline.
+- **Chart / History filters:** filter by exercise / muscle group (mutually exclusive); navigable period (month / year / all-time); horizontal scroll along timeline. Filters apply to both list and chart. Title-bar icon toggles the view.
 - **Remove exercise from plan:** toggle off on add-exercises → stage the removal until the title-bar check saves it; close discards the draft. Removing from Settings persists immediately. After persistence, the exercise hides instantly; sets are kept and re-adding restores visibility (FL8, BR3). No confirmation.
 - **Android:** match Figma on both platforms; no long-press or custom gestures in v1.
 
@@ -505,7 +506,7 @@ flowchart LR
 | 2 — Work Out complete | Edit/delete sets (same sheet); warm-up auto-tag + per-set override; rest timer (optional, user-triggered); default reps/weight from last set today; delete confirmations | Full Work Out screen matches Figma inventory (add/edit/delete/warm-up/timer); warm-up excluded from totals shown here; rest timer works foreground; background notification validated on dev build | F1, F4, F5, BR21 |
 | 3 — Settings | Settings hub; profile bodyweight; edit plan (add-exercises sub-screen); global warm-up on/off + %; rest preset; unit toggle (kg/lbs/stone). Catalogue per-exercise range/increment retained for Add Set; **no per-exercise override UI in this version** | Add/remove exercises updates picker + lists; units apply uniformly; Add Set uses catalogue ranges/increments | F10, F11, F3 (plan editing) |
 | 4 — History list + session detail | Progress measurement logic + unit tests (T1–T3, T5, T6); list view (day total + % change); session detail always editable reusing sheet; downstream recalc; removed exercises hidden, re-enable restores | Log several days → list shows correct totals + % (or "—"); edit a past set → list updates; warm-up-only days + missing priors behave per rules | F6, F7, F9 (core math) |
-| 5 — History chart | Chart view; exercise + muscle-group filters; muscle-group weighting (T4); time ranges month/year/all-time; horizontal scroll; shared History empty state | Chart renders real data; exercise + muscle-group filters match hand-checked calcs; matches Figma on device | F8, F9 (weighting) |
+| 5 — History chart | Chart view; shared period + exercise + muscle-group filters on list and chart; muscle-group weighting (T4); navigable month/year/all-time; horizontal scroll; shared History empty state | Chart renders real data; exercise + muscle-group filters match hand-checked calcs; matches Figma on device | F8, F9 (weighting) |
 | 6 — Export, reset, polish | Export JSON via share sheet; import via document picker; reset with confirmation → full wipe → onboarding replay; final iOS + Android pass | Export → reset → re-import restores all workouts + settings; reset returns to onboarding; no blocking issues on target devices | F12, F13, F14 |
 | 7 — App Store release (iOS) | Remove **Reset** from Work Out options menu before production compile; Apple Developer Program; EAS project + `eas.json` production profile; App Store Connect app record; store listing (name, subtitle, description, screenshots, icon); privacy nutrition label (no data collected); export-compliance questionnaire; EAS Submit → App Review | **UltraLoad installs from the App Store** on a clean device (not sideload, not dev-client-only); Work Out options menu is History + Settings only; update installs without manual re-sign; App Review approved (or rejection addressed and resubmitted) | Distribution (§9) |
 

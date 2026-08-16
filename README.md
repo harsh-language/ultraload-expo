@@ -4,7 +4,7 @@ Personal, offline strength-training app for one experienced lifter. Log ad-hoc g
 
 React Native (Expo 56), iOS + Android, 100% offline, dark mode only. No splits, no cloud.
 
-**Last updated:** 2026-08-10
+**Last updated:** 2026-08-13
 
 ## Status (v1)
 
@@ -14,8 +14,9 @@ React Native (Expo 56), iOS + Android, 100% offline, dark mode only. No splits, 
 | Work Out — log today’s sets | Built |
 | Rest timer | Built |
 | Settings — profile, plan, units, presets | Built (U3) |
-| History list + session detail | Built (U4) — list, rest days, always-editable detail; chart stub until U5 |
-| Progress math (day totals / % change) | Built (U4); muscle-group weighting is U5 |
+| History list + session detail | Built (U4) |
+| History chart + shared filters | Built (U5) — duration / muscle, then direct exercise; both tabs; BR13 weighting |
+| Progress math (day totals / % / muscle weighting) | Built (U4–U5) |
 | Export / import / reset | Not built (U6; DEV reset in options menu) |
 | App Store release | Not built (U7) |
 

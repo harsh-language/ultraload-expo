@@ -22,6 +22,7 @@ Sheets, menus, dropdowns, accordions, and other panels use house springs from
 | Soft edges | `rubberband` (**0.6**) |
 | First-paint stagger | `ENTER_STAGGER_MS` (**30**) |
 | Page slides | `slideTransitionTiming` — **300ms**, bezier **(0.24, 1, 0.33, 1)** |
+| Programmatic scroll park (filter rows) | `autoScrollTiming` — **90ms**, `interactiveEasing` |
 
 ## Rules
 
@@ -29,3 +30,9 @@ Sheets, menus, dropdowns, accordions, and other panels use house springs from
 - Prefer `ScaledPressable` for pressable chrome (not text-field shells)
 - Use `panelExitSpringConfig` for collapses / hides; `panelSpringConfig` for opens
 - Bottom sheets: pass `panelSpringConfig` into `useBottomSheetSpringConfigs`
+- `SlidePager` moves pages with `slideTransitionTiming` only — no opacity change
+- History list/chart swap is incoming-only: house spring + `INTERACTIVE_SCALE`,
+  leaving pane hides immediately (no slide, no overlapping fade)
+- Programmatic scrolling uses a driven offset (`useAnimatedReaction` + `scrollTo`)
+  with `autoScrollTiming`, not `scrollTo`/`scrollToEnd({ animated: true })` —
+  the platform default duration is not ours to set

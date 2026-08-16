@@ -15,38 +15,70 @@ function setsFor(
 }
 
 describe('buildNextDemoSession', () => {
-  it('exports the last fixed session as 2026-07-31', () => {
-    expect(LAST_FIXED_DEMO_SESSION.date).toBe('2026-07-31');
+  it('covers fixed history from April through August 9', () => {
+    expect(DEMO_SESSIONS.map((session) => session.date)).toEqual([
+      '2026-04-01',
+      '2026-04-08',
+      '2026-04-15',
+      '2026-04-22',
+      '2026-05-01',
+      '2026-05-08',
+      '2026-05-15',
+      '2026-05-22',
+      '2026-06-01',
+      '2026-06-08',
+      '2026-06-15',
+      '2026-06-22',
+      '2026-07-01',
+      '2026-07-03',
+      '2026-07-05',
+      '2026-07-07',
+      '2026-07-09',
+      '2026-07-11',
+      '2026-07-13',
+      '2026-07-15',
+      '2026-07-17',
+      '2026-07-20',
+      '2026-07-22',
+      '2026-07-24',
+      '2026-07-26',
+      '2026-07-28',
+      '2026-07-31',
+      '2026-08-02',
+      '2026-08-05',
+      '2026-08-09',
+    ]);
+    expect(LAST_FIXED_DEMO_SESSION.date).toBe('2026-08-09');
     expect(LAST_FIXED_DEMO_SESSION).toBe(
       DEMO_SESSIONS[DEMO_SESSIONS.length - 1],
     );
   });
 
-  it('increases working weight after two 10-rep sets (July 31 → Aug 8 rolling)', () => {
+  it('keeps working weight after one 10-rep set on August 9', () => {
     const next = buildNextDemoSession(LAST_FIXED_DEMO_SESSION);
 
     expect(setsFor(next, 'bench-press')).toEqual([
       { exerciseId: 'bench-press', warmUp: true, weightKg: 55, reps: 10 },
-      { exerciseId: 'bench-press', warmUp: false, weightKg: 105, reps: 10 },
-      { exerciseId: 'bench-press', warmUp: false, weightKg: 105, reps: 9 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 110, reps: 10 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 110, reps: 9 },
+      { exerciseId: 'bench-press', warmUp: false, weightKg: 110, reps: 8 },
       { exerciseId: 'bench-press', warmUp: false, weightKg: 105, reps: 8 },
-      { exerciseId: 'bench-press', warmUp: false, weightKg: 100, reps: 8 },
     ]);
 
     expect(setsFor(next, 'low-bar-squats')).toEqual([
       { exerciseId: 'low-bar-squats', warmUp: true, weightKg: 65, reps: 10 },
-      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 125, reps: 10 },
-      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 125, reps: 9 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 130, reps: 10 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 130, reps: 9 },
+      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 130, reps: 8 },
       { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 125, reps: 8 },
-      { exerciseId: 'low-bar-squats', warmUp: false, weightKg: 120, reps: 8 },
     ]);
 
     expect(setsFor(next, 'lat-pulldown')).toEqual([
       { exerciseId: 'lat-pulldown', warmUp: true, weightKg: 50, reps: 10 },
-      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 95, reps: 10 },
-      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 95, reps: 9 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 100, reps: 10 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 100, reps: 9 },
+      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 100, reps: 8 },
       { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 95, reps: 8 },
-      { exerciseId: 'lat-pulldown', warmUp: false, weightKg: 90, reps: 8 },
     ]);
   });
 
@@ -113,9 +145,9 @@ describe('getStaleDemoWorkoutDates', () => {
   it('drops prior rolling-today days after reset, keeps fixed sessions + today', () => {
     expect(
       getStaleDemoWorkoutDates(
-        ['2026-07-01', '2026-07-31', '2026-08-03', '2026-08-08'],
-        '2026-08-08',
+        ['2026-04-01', '2026-08-09', '2026-08-10', '2026-08-15'],
+        '2026-08-15',
       ),
-    ).toEqual(['2026-08-03']);
+    ).toEqual(['2026-08-10']);
   });
 });

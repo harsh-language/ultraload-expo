@@ -1,6 +1,6 @@
 ---
 status: source-of-truth
-last_updated: 2026-08-08
+last_updated: 2026-08-15
 ---
 
 # Demo data
@@ -28,7 +28,7 @@ Seed and reset must match this file exactly. Update this file before changing se
 
 Not a fixed date in the Sessions table. Generated at seed time for the device-local calendar day.
 
-- Continues progression from the **last fixed session** (currently `2026-07-31`) using the rules above — never from a previous rolling-today day.
+- Continues progression from the **last fixed session** (currently `2026-08-09`) using the rules above — never from a previous rolling-today day.
 - Date = `getLocalCalendarDate()` (today on this device). Yesterday’s rolling day is not promoted into fixed history.
 - Inject **only** when today has **zero sets** (warm-ups count) **and** `_dev_prefs.today_demo_date` ≠ today.
 - After inject, set `today_demo_date` to today (code-only tag; not shown in UI). No repair if the user clears or edits today — reseed only on **reset**.
@@ -63,302 +63,41 @@ Applied on seed when the plan is empty or onboarding is incomplete (including af
 
 ## Sessions
 
-### 2026-07-01
+The compact schedule below is canonical. Each weight column is that exercise's
+working weight. Expand each row in plan order:
 
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 40 | 10 |
-| bench-press | false | 80 | 10 |
-| bench-press | false | 80 | 9 |
-| bench-press | false | 80 | 8 |
-| bench-press | false | 75 | 8 |
-| low-bar-squats | true | 50 | 10 |
-| low-bar-squats | false | 100 | 10 |
-| low-bar-squats | false | 100 | 9 |
-| low-bar-squats | false | 100 | 8 |
-| low-bar-squats | false | 95 | 8 |
-| lat-pulldown | true | 35 | 10 |
-| lat-pulldown | false | 70 | 10 |
-| lat-pulldown | false | 70 | 9 |
-| lat-pulldown | false | 70 | 8 |
-| lat-pulldown | false | 65 | 8 |
+- `single`: warm-up `10 @ ~50%`; standard `10 / 9 / 8 @ W`; then `8 @ W−5`.
+- `double`: warm-up `10 @ ~50%`; standard `10 / 10 / 9 / 8 @ W`.
 
-### 2026-07-03
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 40 | 10 |
-| bench-press | false | 80 | 10 |
-| bench-press | false | 80 | 10 |
-| bench-press | false | 80 | 9 |
-| bench-press | false | 80 | 8 |
-| low-bar-squats | true | 50 | 10 |
-| low-bar-squats | false | 100 | 10 |
-| low-bar-squats | false | 100 | 9 |
-| low-bar-squats | false | 100 | 8 |
-| low-bar-squats | false | 95 | 8 |
-| lat-pulldown | true | 35 | 10 |
-| lat-pulldown | false | 70 | 10 |
-| lat-pulldown | false | 70 | 9 |
-| lat-pulldown | false | 70 | 8 |
-| lat-pulldown | false | 65 | 8 |
-
-### 2026-07-05
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 40 | 10 |
-| bench-press | false | 85 | 10 |
-| bench-press | false | 85 | 9 |
-| bench-press | false | 85 | 8 |
-| bench-press | false | 80 | 8 |
-| low-bar-squats | true | 50 | 10 |
-| low-bar-squats | false | 100 | 10 |
-| low-bar-squats | false | 100 | 10 |
-| low-bar-squats | false | 100 | 9 |
-| low-bar-squats | false | 100 | 8 |
-| lat-pulldown | true | 35 | 10 |
-| lat-pulldown | false | 70 | 10 |
-| lat-pulldown | false | 70 | 10 |
-| lat-pulldown | false | 70 | 9 |
-| lat-pulldown | false | 70 | 8 |
-
-### 2026-07-07
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 40 | 10 |
-| bench-press | false | 85 | 10 |
-| bench-press | false | 85 | 9 |
-| bench-press | false | 85 | 8 |
-| bench-press | false | 80 | 8 |
-| low-bar-squats | true | 50 | 10 |
-| low-bar-squats | false | 105 | 10 |
-| low-bar-squats | false | 105 | 9 |
-| low-bar-squats | false | 105 | 8 |
-| low-bar-squats | false | 100 | 8 |
-| lat-pulldown | true | 35 | 10 |
-| lat-pulldown | false | 75 | 10 |
-| lat-pulldown | false | 75 | 9 |
-| lat-pulldown | false | 75 | 8 |
-| lat-pulldown | false | 70 | 8 |
-
-### 2026-07-09
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 40 | 10 |
-| bench-press | false | 85 | 10 |
-| bench-press | false | 85 | 9 |
-| bench-press | false | 85 | 8 |
-| bench-press | false | 80 | 8 |
-| low-bar-squats | true | 50 | 10 |
-| low-bar-squats | false | 105 | 10 |
-| low-bar-squats | false | 105 | 9 |
-| low-bar-squats | false | 105 | 8 |
-| low-bar-squats | false | 100 | 8 |
-| lat-pulldown | true | 35 | 10 |
-| lat-pulldown | false | 75 | 10 |
-| lat-pulldown | false | 75 | 9 |
-| lat-pulldown | false | 75 | 8 |
-| lat-pulldown | false | 70 | 8 |
-
-### 2026-07-11
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 40 | 10 |
-| bench-press | false | 85 | 10 |
-| bench-press | false | 85 | 10 |
-| bench-press | false | 85 | 9 |
-| bench-press | false | 85 | 8 |
-| low-bar-squats | true | 50 | 10 |
-| low-bar-squats | false | 105 | 10 |
-| low-bar-squats | false | 105 | 10 |
-| low-bar-squats | false | 105 | 9 |
-| low-bar-squats | false | 105 | 8 |
-| lat-pulldown | true | 35 | 10 |
-| lat-pulldown | false | 75 | 10 |
-| lat-pulldown | false | 75 | 10 |
-| lat-pulldown | false | 75 | 9 |
-| lat-pulldown | false | 75 | 8 |
-
-### 2026-07-13
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 45 | 10 |
-| bench-press | false | 90 | 10 |
-| bench-press | false | 90 | 9 |
-| bench-press | false | 90 | 8 |
-| bench-press | false | 85 | 8 |
-| low-bar-squats | true | 55 | 10 |
-| low-bar-squats | false | 110 | 10 |
-| low-bar-squats | false | 110 | 9 |
-| low-bar-squats | false | 110 | 8 |
-| low-bar-squats | false | 105 | 8 |
-| lat-pulldown | true | 40 | 10 |
-| lat-pulldown | false | 80 | 10 |
-| lat-pulldown | false | 80 | 9 |
-| lat-pulldown | false | 80 | 8 |
-| lat-pulldown | false | 75 | 8 |
-
-### 2026-07-15
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 45 | 10 |
-| bench-press | false | 90 | 10 |
-| bench-press | false | 90 | 9 |
-| bench-press | false | 90 | 8 |
-| bench-press | false | 85 | 8 |
-| low-bar-squats | true | 55 | 10 |
-| low-bar-squats | false | 110 | 10 |
-| low-bar-squats | false | 110 | 9 |
-| low-bar-squats | false | 110 | 8 |
-| low-bar-squats | false | 105 | 8 |
-| lat-pulldown | true | 40 | 10 |
-| lat-pulldown | false | 80 | 10 |
-| lat-pulldown | false | 80 | 10 |
-| lat-pulldown | false | 80 | 9 |
-| lat-pulldown | false | 80 | 8 |
-
-### 2026-07-17
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 45 | 10 |
-| bench-press | false | 90 | 10 |
-| bench-press | false | 90 | 10 |
-| bench-press | false | 90 | 9 |
-| bench-press | false | 90 | 8 |
-| low-bar-squats | true | 55 | 10 |
-| low-bar-squats | false | 110 | 10 |
-| low-bar-squats | false | 110 | 9 |
-| low-bar-squats | false | 110 | 8 |
-| low-bar-squats | false | 105 | 8 |
-| lat-pulldown | true | 40 | 10 |
-| lat-pulldown | false | 85 | 10 |
-| lat-pulldown | false | 85 | 9 |
-| lat-pulldown | false | 85 | 8 |
-| lat-pulldown | false | 80 | 8 |
-
-### 2026-07-20
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 45 | 10 |
-| bench-press | false | 95 | 10 |
-| bench-press | false | 95 | 9 |
-| bench-press | false | 95 | 8 |
-| bench-press | false | 90 | 8 |
-| low-bar-squats | true | 55 | 10 |
-| low-bar-squats | false | 110 | 10 |
-| low-bar-squats | false | 110 | 9 |
-| low-bar-squats | false | 110 | 8 |
-| low-bar-squats | false | 105 | 8 |
-| lat-pulldown | true | 40 | 10 |
-| lat-pulldown | false | 85 | 10 |
-| lat-pulldown | false | 85 | 9 |
-| lat-pulldown | false | 85 | 8 |
-| lat-pulldown | false | 80 | 8 |
-
-### 2026-07-22
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 45 | 10 |
-| bench-press | false | 95 | 10 |
-| bench-press | false | 95 | 9 |
-| bench-press | false | 95 | 8 |
-| bench-press | false | 90 | 8 |
-| low-bar-squats | true | 55 | 10 |
-| low-bar-squats | false | 110 | 10 |
-| low-bar-squats | false | 110 | 10 |
-| low-bar-squats | false | 110 | 9 |
-| low-bar-squats | false | 110 | 8 |
-| lat-pulldown | true | 40 | 10 |
-| lat-pulldown | false | 85 | 10 |
-| lat-pulldown | false | 85 | 9 |
-| lat-pulldown | false | 85 | 8 |
-| lat-pulldown | false | 80 | 8 |
-
-### 2026-07-24
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 45 | 10 |
-| bench-press | false | 95 | 10 |
-| bench-press | false | 95 | 10 |
-| bench-press | false | 95 | 9 |
-| bench-press | false | 95 | 8 |
-| low-bar-squats | true | 55 | 10 |
-| low-bar-squats | false | 115 | 10 |
-| low-bar-squats | false | 115 | 10 |
-| low-bar-squats | false | 115 | 9 |
-| low-bar-squats | false | 115 | 8 |
-| lat-pulldown | true | 40 | 10 |
-| lat-pulldown | false | 85 | 10 |
-| lat-pulldown | false | 85 | 10 |
-| lat-pulldown | false | 85 | 9 |
-| lat-pulldown | false | 85 | 8 |
-
-### 2026-07-26
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 50 | 10 |
-| bench-press | false | 100 | 10 |
-| bench-press | false | 100 | 9 |
-| bench-press | false | 100 | 8 |
-| bench-press | false | 95 | 8 |
-| low-bar-squats | true | 60 | 10 |
-| low-bar-squats | false | 120 | 10 |
-| low-bar-squats | false | 120 | 9 |
-| low-bar-squats | false | 120 | 8 |
-| low-bar-squats | false | 115 | 8 |
-| lat-pulldown | true | 45 | 10 |
-| lat-pulldown | false | 90 | 10 |
-| lat-pulldown | false | 90 | 9 |
-| lat-pulldown | false | 90 | 8 |
-| lat-pulldown | false | 85 | 8 |
-
-### 2026-07-28
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 50 | 10 |
-| bench-press | false | 100 | 10 |
-| bench-press | false | 100 | 9 |
-| bench-press | false | 100 | 8 |
-| bench-press | false | 95 | 8 |
-| low-bar-squats | true | 60 | 10 |
-| low-bar-squats | false | 120 | 10 |
-| low-bar-squats | false | 120 | 9 |
-| low-bar-squats | false | 120 | 8 |
-| low-bar-squats | false | 115 | 8 |
-| lat-pulldown | true | 45 | 10 |
-| lat-pulldown | false | 90 | 10 |
-| lat-pulldown | false | 90 | 9 |
-| lat-pulldown | false | 90 | 8 |
-| lat-pulldown | false | 85 | 8 |
-
-### 2026-07-31
-
-| exercise_id | warmUp | weight_kg | reps |
-|-------------|--------|----------:|-----:|
-| bench-press | true | 50 | 10 |
-| bench-press | false | 100 | 10 |
-| bench-press | false | 100 | 10 |
-| bench-press | false | 100 | 9 |
-| bench-press | false | 100 | 8 |
-| low-bar-squats | true | 60 | 10 |
-| low-bar-squats | false | 120 | 10 |
-| low-bar-squats | false | 120 | 10 |
-| low-bar-squats | false | 120 | 9 |
-| low-bar-squats | false | 120 | 8 |
-| lat-pulldown | true | 45 | 10 |
-| lat-pulldown | false | 90 | 10 |
-| lat-pulldown | false | 90 | 10 |
-| lat-pulldown | false | 90 | 9 |
-| lat-pulldown | false | 90 | 8 |
+| date | bench kg | bench pattern | squat kg | squat pattern | lat kg | lat pattern |
+|------|---------:|---------------|---------:|---------------|-------:|-------------|
+| 2026-04-01 | 60 | single | 80 | single | 50 | single |
+| 2026-04-08 | 60 | double | 80 | double | 50 | double |
+| 2026-04-15 | 65 | single | 85 | single | 55 | single |
+| 2026-04-22 | 65 | double | 85 | double | 55 | double |
+| 2026-05-01 | 70 | single | 90 | single | 60 | single |
+| 2026-05-08 | 70 | single | 90 | single | 60 | single |
+| 2026-05-15 | 70 | double | 90 | double | 60 | double |
+| 2026-05-22 | 75 | single | 95 | single | 65 | single |
+| 2026-06-01 | 75 | single | 95 | single | 65 | single |
+| 2026-06-08 | 75 | double | 95 | double | 65 | double |
+| 2026-06-15 | 80 | single | 100 | single | 70 | single |
+| 2026-06-22 | 80 | single | 100 | single | 70 | single |
+| 2026-07-01 | 80 | single | 100 | single | 70 | single |
+| 2026-07-03 | 80 | double | 100 | single | 70 | single |
+| 2026-07-05 | 85 | single | 100 | double | 70 | double |
+| 2026-07-07 | 85 | single | 105 | single | 75 | single |
+| 2026-07-09 | 85 | single | 105 | single | 75 | single |
+| 2026-07-11 | 85 | double | 105 | double | 75 | double |
+| 2026-07-13 | 90 | single | 110 | single | 80 | single |
+| 2026-07-15 | 90 | single | 110 | single | 80 | double |
+| 2026-07-17 | 90 | double | 110 | single | 85 | single |
+| 2026-07-20 | 95 | single | 110 | single | 85 | single |
+| 2026-07-22 | 95 | single | 110 | double | 85 | single |
+| 2026-07-24 | 95 | double | 115 | double | 85 | double |
+| 2026-07-26 | 100 | single | 120 | single | 90 | single |
+| 2026-07-28 | 100 | single | 120 | single | 90 | single |
+| 2026-07-31 | 100 | double | 120 | double | 90 | double |
+| 2026-08-02 | 105 | single | 125 | single | 95 | single |
+| 2026-08-05 | 105 | double | 125 | double | 95 | double |
+| 2026-08-09 | 110 | single | 130 | single | 100 | single |

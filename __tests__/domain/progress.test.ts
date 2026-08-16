@@ -1,5 +1,5 @@
+import { buildHistoryListRows } from '../../src/domain/history-filter';
 import {
-  buildHistoryListRows,
   buildSessionExerciseStats,
   filterWorkoutByPlan,
   findPriorExerciseTotal,

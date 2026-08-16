@@ -76,8 +76,9 @@ shared empty copy (`no exercises recorded yet.`) plus a primary CTA. The CTA
 pops back to Work Out (`goBack`) so the transition matches a back gesture —
 not a forward push onto Work Out.
 Why: Empty History is not a dead end — the next useful action is logging, and
-the chrome for list/chart tabs is irrelevant with nothing to show.
-Exceptions: Chart stub with existing data may show a blank shell until U5.
+the chrome for list/chart is irrelevant with nothing to show.
+Exceptions: Filterable empty (sessions exist but none match the active filter)
+keeps History chrome and shows in-view copy `no sessions for this filter.`
 Source: `src/components/HistoryEmptyState.tsx`, `src/screens/HistoryListScreen.tsx`,
 Figma History empty frame
 Bad example: Empty History with a title bar, or `navigate('WorkOut')` which

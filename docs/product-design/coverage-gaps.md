@@ -30,25 +30,29 @@ Follow-up:
 
 ### history-and-settings-surfaces-not-yet-extracted
 
-Status: open
+Status: resolved (filters); open (bottom nav / standards extraction)
 Type: missing-standard
 Source: `docs/blueprint.md`, `src/screens/HistoryListScreen.tsx`
 
 Observation:
-- History list + session detail are now implemented (U4); chart remains a stub.
-- Proposed History rules are in `references/surfaces.md` and `resilience.md`
-  awaiting acceptance.
-- Figma History chrome includes muscle/exercise filters and a bottom main-
-  navigation bar; U4 ships stack navigation + List/Chart tabs only (filters and
-  bottom tabs deferred / codebase-nav wins).
+- History list + session detail + chart are implemented (U4–U5).
+- **U5 decision (2026-08-12, revised 2026-08-16):** shared filter bar applies
+  to **both** list and chart. Duration + muscle are the default controls;
+  exercise appears after muscle selection and is limited to direct
+  (`primaryMuscle`) matches. A title-bar icon toggles the two views (no tab
+  labels). Duration dropdown is navigable
+  (any past month/year + all-time). Bottom `main-navigation` remains excluded
+  (stack nav wins, same as U4).
+- Proposed History rules in `references/surfaces.md` and `resilience.md` still
+  await acceptance after device checkpoint.
 
 Why it matters:
-- Filter and bottom-nav decisions need explicit product confirmation before
-  matching Figma 1:1.
+- Filter behavior is now settled in blueprint FL7/F8; remaining gap is accepting
+  proposed surface/resilience rules.
 
 Follow-up:
 - Accept or revise proposed History rules after device checkpoint.
-- U5 should decide whether list filters activate with the chart.
+- Bottom-tab Figma chrome stays out of v1.
 
 ### rest-timer-finish-behavior-beyond-current-bar
 

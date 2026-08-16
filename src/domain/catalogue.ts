@@ -2,6 +2,7 @@ import {
   EXERCISE_CATALOGUE,
   ORPHAN_EXERCISE_FALLBACK_LABEL,
   type ExerciseCatalogueEntry,
+  type MuscleGroup,
 } from '../data/exercise-catalogue';
 
 const catalogueById = new Map(
@@ -42,6 +43,16 @@ export function getExercisesByIds(ids: string[]): ExerciseCatalogueEntry[] {
     .filter((entry): entry is ExerciseCatalogueEntry => entry !== undefined);
 }
 
-export function getFilterableMuscleGroups(): ExerciseCatalogueEntry['primaryMuscle'][] {
-  return ['Chest', 'Shoulders', 'Back', 'Glutes', 'Quads'];
+export const FILTERABLE_MUSCLE_GROUPS = [
+  'Chest',
+  'Shoulders',
+  'Back',
+  'Glutes',
+  'Quads',
+] as const satisfies readonly MuscleGroup[];
+
+export type FilterableMuscleGroup = (typeof FILTERABLE_MUSCLE_GROUPS)[number];
+
+export function getFilterableMuscleGroups(): FilterableMuscleGroup[] {
+  return [...FILTERABLE_MUSCLE_GROUPS];
 }

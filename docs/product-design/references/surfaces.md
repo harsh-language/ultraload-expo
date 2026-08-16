@@ -270,10 +270,12 @@ Canonical homes:
 
 - `src/screens/HistoryListScreen.tsx`
 - `src/screens/SessionDetailScreen.tsx`
-- `src/screens/HistoryChartScreen.tsx`
+- `src/components/HistoryChartView.tsx`
+- `src/components/HistoryFilterBar.tsx`
 - `src/components/HistoryNavigation.tsx`
 - `src/components/HistoryEmptyState.tsx`
 - `src/domain/progress.ts`
+- `src/domain/history-filter.ts`
 
 ## rule/history-percent-is-derived-never-stored
 Status: proposed
@@ -324,6 +326,111 @@ different row height for grouped vs lone sessions, or treating warm-up-only days
 as active history rows.
 Good example: Gap fill + group wrapper with rests above their session; rest
 `onPress` → `SessionDetail`.
+
+## rule/chart-viewport-holds-at-most-three-months
+Status: proposed
+Scope: History chart tab
+Rule: One chart viewport shows at most 12 points **and** at most 3 calendar
+months, whichever is fewer. Month marks are equidistant, never data-anchored:
+one centres, two take the gutters, three space evenly between them, and further
+months hold that same pitch offscreen, sliding in as the chart scrolls. Because
+point spacing is uniform, the sparsest stretch of the series sets the window for
+the whole series.
+Why: Squeezing every month of history into one fixed row crowds the labels
+(five months wrapped mid-word at 390pt). Equal pitch keeps the row legible as a
+ruler; anchoring each mark to its own points reintroduces uneven gaps.
+Exceptions: A series shorter than one viewport cannot scroll, so it is left
+uncapped — every point has to be drawn whatever range it covers.
+Source: `src/theme/chartGeometry.ts` `getChartVisiblePoints` /
+`getChartMonthMarks`, `src/components/HistoryChartView.tsx`, Paper History
+`# design` timeline (oct / nov / dec)
+Bad example: One label per distinct month in the whole series spread
+`space-between` across a fixed row, with a 36pt box that wraps `may` onto two
+lines.
+Good example: Three marks at a fixed pitch, offset by scroll progress, in a box
+wide enough for the longest abbreviation.
+
+## rule/chart-tap-reveals-nearest-session
+Status: proposed
+Scope: History chart tab
+Rule: A single tap within the line's touch band reveals the nearest workout
+session as the existing point + pill treatment. The pill persists after release
+and opens that date in Session detail. A tap outside the graph area dismisses
+the pill; horizontal scrolling still takes precedence over tap selection.
+Why: Chart inspection should use the same direct, durable tap model as History
+list navigation instead of requiring a hold that hides the value on release.
+Exceptions: A tap outside the line's touch band selects nothing. If a selected
+point scrolls outside the viewport, dismiss its pill.
+Source: User decision 2026-08-16, `src/components/HistoryChartView.tsx`,
+`src/theme/chartGeometry.ts` `getChartTapPointIndex`
+Bad example: Requiring a long press, clearing the pill on touch release, or
+making the tiny visual point the only hit target.
+Good example: A token-bound touch band selects the nearest date; the pill is a
+44pt-class navigation target to Session detail.
+
+## rule/history-title-toggles-list-and-chart
+Status: proposed
+Scope: History chrome
+Rule: History has one title (`history`) with a trailing `IconButton` the same
+size as back. The button shows the other view's icon (chart while on list, list
+while on chart) and toggles on a single tap. Do not use tab labels or a
+horizontal page slide.
+Why: Two viewing modes of the same filtered history do not need a second
+navigation row. A title plus one control is enough, and a slide made the chart
+gradient look like it was being pushed sideways.
+Exceptions: Empty History still hides this chrome and uses the shared empty
+state.
+Source: User decision 2026-08-16, Paper History `# design` list + chart,
+`src/components/HistoryNavigation.tsx`
+Bad example: LIST / CHART tab labels, or `SlidePager` between the two views.
+Good example: Back + `history` + icon toggle; incoming pane fades in from
+`INTERACTIVE_SCALE` on the house spring, leaving pane hides immediately.
+
+## rule/history-exercise-filter-follows-muscle
+Status: proposed
+Scope: History list and chart filters
+Rule: Duration and muscle group are visible by default. Exercise appears only
+after a muscle group is selected and offers active-plan exercises whose
+catalogue `primaryMuscle` matches. Selecting an exercise keeps its muscle group
+active. Changing muscle resets exercise to `all`; clearing exercise retains the
+muscle group.
+Why: Muscle and exercise are one narrowing path, not competing dimensions.
+The dependency prevents impossible combinations and keeps the current scope
+visible.
+Exceptions: None.
+Source: User decision 2026-08-16, `src/domain/history-filter.ts`,
+`src/components/HistoryFilterBar.tsx`, `docs/blueprint.md` FL7 / BR23
+Bad example: Showing exercise before a muscle is selected, offering secondary
+muscle matches, or clearing muscle when exercise returns to `all`.
+Good example: Chest reveals bench press and crossover; changing to Shoulders
+returns exercise to `all` before showing shoulder-primary options.
+
+## rule/history-filter-row-parks-at-an-edge
+Status: proposed
+Scope: History shared filter row
+Rule: With only duration and muscle group present the row fits, so scrolling is
+disabled outright — no drag, no bounce, no indicator. Once the exercise filter
+exists the row scrolls, manual drag always wins, and the row parks itself at one
+edge in exactly three cases: a filter is applied (duration → start; muscle group
+or exercise → end), or a trigger that a viewport edge clips is tapped (duration →
+start, muscle group and exercise → end). Parking is a full move to that edge, not
+a nudge into view, and runs on `autoScrollTiming` (90ms). A menu opened by the
+same press is anchored to where its trigger lands, not where it was measured.
+Why: Applying a filter changes a trigger's label width and can add or remove the
+third trigger, which otherwise leaves the row clamped to the start or the active
+filter clipped. Parking at an edge keeps whichever filters the user is working
+with fully readable, and full moves stay predictable where partial nudges read as
+drift.
+Exceptions: A row already at the target edge does not re-scroll. Reduce Motion
+jumps instead of animating.
+Source: User decision 2026-08-16, `src/components/HistoryFilterBar.tsx`,
+`src/components/historyFilterScroll.ts`, `src/theme/motion.ts`
+Bad example: A once-per-visit reveal scroll that dies after the filters are
+cleared, scrolling only far enough to fit the trigger, letting a two-filter row
+swipe, or leaving a dropdown behind at a pre-scroll anchor.
+Good example: `parkBarAt('end')` on muscle apply plus a re-park on the next
+content measure; `scrollEnabled={canScroll}`; `getAnchorAfterScroll` shifting the
+menu anchor by the scroll delta.
 
 ## rule/session-detail-has-no-screen-mode
 Status: proposed

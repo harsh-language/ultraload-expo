@@ -71,7 +71,7 @@ export async function clearDemoWorkouts(db: AppDatabase): Promise<void> {
 
 /**
  * DEV-only: after a full wipe + reseed, drop leftover rolling-today days
- * (e.g. Aug 3 when today is Aug 8). Keeps fixed demo sessions + today only.
+ * (e.g. Aug 10 when today is Aug 15). Keeps fixed demo sessions + today only.
  */
 export async function pruneStaleDemoWorkouts(db: AppDatabase): Promise<void> {
   if (!__DEV__) {
@@ -126,7 +126,7 @@ async function seedRollingToday(db: AppDatabase): Promise<void> {
  * DEV-only: seed workouts + metadata from docs/demo-data.md (via demoData.ts).
  * No-ops when the homepage demo-data toggle is off.
  * Workouts: inserts only missing demo session days.
- * Rolling today: injects next-from-July-24 when today is empty and not yet tagged.
+ * Rolling today: injects next-from-August-9 when today is empty and not yet tagged.
  * Metadata: applies demo profile/plan when onboarding is incomplete or plan is empty.
  * Also deletes the retired Jan 1 baseline day if present.
  */

@@ -1,28 +1,34 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { IconButton } from './IconButton';
 import { BackIcon } from './icons/BackIcon';
+import { ChartIcon } from './icons/ChartIcon';
+import { ListIcon } from './icons/ListIcon';
 import { shadowBelow } from '../theme/shadow';
 import { titleBarGradientColors } from '../theme/titleBar';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
 
-export type HistoryTab = 'list' | 'chart';
-
-export const HISTORY_TABS = ['list', 'chart'] as const satisfies readonly HistoryTab[];
+export type HistoryView = 'list' | 'chart';
 
 interface HistoryNavigationProps {
-  activeTab: HistoryTab;
-  onTabChange: (tab: HistoryTab) => void;
+  activeView: HistoryView;
+  onViewChange: (view: HistoryView) => void;
   onBack: () => void;
+  /** Filter row under the title (Paper History `# design`). */
+  filters?: ReactNode;
 }
 
 export function HistoryNavigation({
-  activeTab,
-  onTabChange,
+  activeView,
+  onViewChange,
   onBack,
+  filters,
 }: HistoryNavigationProps) {
+  const showingList = activeView === 'list';
+
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -40,47 +46,19 @@ export function HistoryNavigation({
         >
           <BackIcon />
         </IconButton>
-        <View style={styles.tabs}>
-          <TabLabel
-            active={activeTab === 'list'}
-            label="list"
-            onPress={() => {
-              onTabChange('list');
-            }}
-          />
-          <TabLabel
-            active={activeTab === 'chart'}
-            label="chart"
-            onPress={() => {
-              onTabChange('chart');
-            }}
-          />
-        </View>
+        <Text style={styles.title}>history</Text>
+        <IconButton
+          accessibilityLabel={showingList ? 'show chart' : 'show list'}
+          onPress={() => {
+            onViewChange(showingList ? 'chart' : 'list');
+          }}
+          size="small"
+        >
+          {showingList ? <ChartIcon /> : <ListIcon />}
+        </IconButton>
       </View>
+      {filters}
     </View>
-  );
-}
-
-function TabLabel({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="tab"
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      style={styles.tab}
-    >
-      <Text style={[styles.tabLabel, !active && styles.tabLabelInactive]}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -89,34 +67,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: spacing['s-1'],
     borderBottomColor: colors['border-2'],
     paddingTop: spacing['s-8'],
-    paddingHorizontal: spacing['s-8'],
-    paddingBottom: spacing['s-8'],
     backgroundColor: colors['bg-1'],
     zIndex: 1,
+    gap: spacing['s-8'],
     ...shadowBelow,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing['s-8'],
+    paddingHorizontal: spacing['s-8'],
   },
-  tabs: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing['s-7'],
-    overflow: 'hidden',
-  },
-  tab: {
-    height: spacing['s-11'],
-    justifyContent: 'center',
-  },
-  tabLabel: {
+  title: {
     ...typography.brand1,
-    color: colors['content-1'],
     ...textCase.upper,
-  },
-  tabLabelInactive: {
-    color: colors['content-3'],
+    flex: 1,
+    minWidth: 0,
   },
 });

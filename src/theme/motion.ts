@@ -44,9 +44,23 @@ export const INTERACTIVE_SCALE = 0.97;
 /** Press scale transition duration. */
 export const PRESS_FEEDBACK_MS = 150;
 
+/** Short interactive ease-out — press feedback and programmatic scroll. */
+export const interactiveEasing = Easing.bezier(0.23, 1, 0.32, 1);
+
 export const pressFeedbackTiming = {
   duration: PRESS_FEEDBACK_MS,
-  easing: Easing.bezier(0.23, 1, 0.32, 1),
+  easing: interactiveEasing,
+} as const;
+
+/**
+ * Programmatic scroll correction (parking a filter row at an edge). Shorter
+ * than the platform default so the row lands with the press, not after it.
+ */
+export const AUTO_SCROLL_MS = 90;
+
+export const autoScrollTiming = {
+  duration: AUTO_SCROLL_MS,
+  easing: interactiveEasing,
 } as const;
 
 /** Apple-style flick projection (snappier than scroll’s 0.998). */
