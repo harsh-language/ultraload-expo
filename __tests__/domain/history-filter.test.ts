@@ -14,6 +14,7 @@ import {
   getDirectExerciseIdsForMuscle,
   getFilteredSessionValue,
   getMuscleGroupWeightedTotal,
+  historyRangesEqual,
   listHistoryPeriods,
   type HistoryFilter,
 } from '../../src/domain/history-filter';
@@ -32,6 +33,27 @@ function setsForTotal(totalKg: number): ProgressWorkout['loggedExercises'][0]['s
 }
 
 describe('history filter domain', () => {
+  describe('historyRangesEqual', () => {
+    it('matches all / year / month ranges by value', () => {
+      expect(historyRangesEqual({ kind: 'all' }, { kind: 'all' })).toBe(true);
+      expect(
+        historyRangesEqual({ kind: 'year', year: 2026 }, { kind: 'year', year: 2026 }),
+      ).toBe(true);
+      expect(
+        historyRangesEqual(
+          { kind: 'month', year: 2026, month: 7 },
+          { kind: 'month', year: 2026, month: 7 },
+        ),
+      ).toBe(true);
+      expect(
+        historyRangesEqual({ kind: 'year', year: 2026 }, { kind: 'year', year: 2025 }),
+      ).toBe(false);
+      expect(
+        historyRangesEqual({ kind: 'all' }, { kind: 'year', year: 2026 }),
+      ).toBe(false);
+    });
+  });
+
   describe('dependent muscle and exercise filters', () => {
     it('shows only plan exercises whose primary muscle matches', () => {
       expect(

@@ -227,7 +227,7 @@ export function findPriorExerciseTotal(
   return prior;
 }
 
-function sortOldestFirst(
+export function sortOldestFirst(
   workouts: ProgressWorkout[],
 ): ProgressWorkout[] {
   return [...workouts].sort((a, b) => a.date.localeCompare(b.date));

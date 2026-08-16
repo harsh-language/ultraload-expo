@@ -6,8 +6,8 @@ import {
 
 describe('history-date', () => {
   it('formats calendar labels without a trailing period', () => {
-    expect(formatHistoryDateLabel('2026-07-01')).toBe('1 JUL');
-    expect(formatHistoryDateLabel('2026-11-09')).toBe('9 NOV');
+    expect(formatHistoryDateLabel('2026-07-01')).toBe('1 jul');
+    expect(formatHistoryDateLabel('2026-11-09')).toBe('9 nov');
   });
 
   it('shifts calendar dates across month boundaries', () => {

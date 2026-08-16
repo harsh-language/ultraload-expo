@@ -1,9 +1,6 @@
 import type { FC } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Modal,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -13,11 +10,9 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import Animated, {
-  runOnJS,
   scrollTo,
   useAnimatedReaction,
   useAnimatedRef,
-  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
@@ -28,6 +23,7 @@ import {
   FILTERABLE_MUSCLE_GROUPS,
   getActiveHistoryMuscle,
   getDirectExerciseIdsForMuscle,
+  historyRangesEqual,
   type FilterableMuscleGroup,
   type HistoryDimension,
   type HistoryFilter,
@@ -35,17 +31,12 @@ import {
   type HistoryRange,
 } from '../domain/history-filter';
 import { getExerciseLabel } from '../domain/catalogue';
-import { animateWithMotionPreference } from '../theme/animateWithMotionPreference';
 import { interactiveContentColor } from '../theme/interactiveContentColor';
-import {
-  autoScrollTiming,
-  INTERACTIVE_SCALE,
-  menuSpringConfig,
-} from '../theme/motion';
-import { shadowAbove } from '../theme/shadow';
-import { colors, radii, spacing } from '../theme/tokens';
+import { autoScrollTiming } from '../theme/motion';
+import { colors, spacing } from '../theme/tokens';
 import { textCase } from '../theme/textCase';
 import { typography } from '../theme/typography';
+import { AnchoredMenu } from './AnchoredMenu';
 import {
   getAnchorAfterScroll,
   getFilterScrollOffset,
@@ -86,23 +77,6 @@ interface MenuOption {
   onSelect: () => void;
 }
 
-function rangesEqual(a: HistoryRange, b: HistoryRange): boolean {
-  switch (a.kind) {
-    case 'all':
-      return b.kind === 'all';
-    case 'year':
-      return b.kind === 'year' && b.year === a.year;
-    case 'month':
-      return (
-        b.kind === 'month' && b.year === a.year && b.month === a.month
-      );
-    default: {
-      const _exhaustive: never = a;
-      return _exhaustive;
-    }
-  }
-}
-
 function periodAppliedLabel(
   range: HistoryRange,
   periodOptions: HistoryPeriodOption[],
@@ -111,7 +85,7 @@ function periodAppliedLabel(
     return null;
   }
   const match = periodOptions.find((option) =>
-    rangesEqual(option.range, range),
+    historyRangesEqual(option.range, range),
   );
   return match?.appliedLabel ?? null;
 }
@@ -150,7 +124,6 @@ export function HistoryFilterBar({
 
   const close = useCallback(() => {
     setOpen(null);
-    setMenuAnchor(null);
   }, []);
 
   const openMenu = useCallback((key: FilterKey, anchor: LayoutRectangle) => {
@@ -304,7 +277,7 @@ export function HistoryFilterBar({
                 ? `year-${option.range.year}`
                 : `month-${option.range.year}-${option.range.month}`,
           label: option.label,
-          selected: rangesEqual(option.range, filter.range),
+          selected: historyRangesEqual(option.range, filter.range),
           onSelect: () => {
             onChange({ ...filter, range: option.range });
             parkBarAt('start');
@@ -375,6 +348,19 @@ export function HistoryFilterBar({
     parkBarAt,
     periodOptions,
   ]);
+  const menuWidth = Math.min(
+    MENU_ITEM_WIDTH + spacing['s-4'] * 2,
+    windowWidth - spacing['s-8'] * 2,
+  );
+  const menuTop =
+    (menuAnchor?.y ?? 0) +
+    (menuAnchor?.height ?? 0) +
+    spacing['s-5'];
+  const maxMenuViewportHeight = Math.max(
+    0,
+    Math.min(spacing['s-20'], windowHeight - menuTop - spacing['s-8']) -
+      spacing['s-4'] * 2,
+  );
 
   return (
     <>
@@ -420,13 +406,15 @@ export function HistoryFilterBar({
           />
         ) : null}
       </Animated.ScrollView>
-      <FilterMenu
-        options={menuOptions}
-        visible={open != null && menuAnchor != null}
-        anchor={menuAnchor}
-        windowHeight={windowHeight}
-        windowWidth={windowWidth}
+      <AnchoredMenu
+        align="anchor-left"
+        anchorLayout={menuAnchor}
+        closeLabel="close filter"
+        items={menuOptions}
+        maxViewportHeight={maxMenuViewportHeight}
         onClose={close}
+        visible={open != null && menuAnchor != null}
+        width={menuWidth}
       />
     </>
   );
@@ -481,154 +469,6 @@ function FilterTrigger({
   );
 }
 
-function FilterMenu({
-  visible,
-  anchor,
-  options,
-  windowWidth,
-  windowHeight,
-  onClose,
-}: {
-  visible: boolean;
-  anchor: LayoutRectangle | null;
-  options: MenuOption[];
-  windowWidth: number;
-  windowHeight: number;
-  onClose: () => void;
-}) {
-  const [mounted, setMounted] = useState(false);
-  const wasVisibleRef = useRef(false);
-  const reduceMotion = useReducedMotion();
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(INTERACTIVE_SCALE);
-
-  useEffect(() => {
-    const wasVisible = wasVisibleRef.current;
-    const shouldShow = visible && anchor != null;
-    wasVisibleRef.current = shouldShow;
-    const reduced = reduceMotion === true;
-
-    if (shouldShow && !wasVisible) {
-      setMounted(true);
-      opacity.value = 0;
-      scale.value = reduced ? 1 : INTERACTIVE_SCALE;
-      opacity.value = animateWithMotionPreference(
-        1,
-        reduced,
-        menuSpringConfig,
-      );
-      if (!reduced) {
-        scale.value = animateWithMotionPreference(1, false, menuSpringConfig);
-      }
-      return;
-    }
-
-    if (!shouldShow && wasVisible) {
-      opacity.value = animateWithMotionPreference(
-        0,
-        reduced,
-        menuSpringConfig,
-        (finished) => {
-          'worklet';
-          if (finished) {
-            runOnJS(setMounted)(false);
-          }
-        },
-      );
-      if (!reduced) {
-        scale.value = animateWithMotionPreference(
-          INTERACTIVE_SCALE,
-          false,
-          menuSpringConfig,
-        );
-      }
-    }
-  }, [anchor, opacity, reduceMotion, scale, visible]);
-
-  const menuStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
-
-  if (!mounted || anchor == null) {
-    return null;
-  }
-
-  const menuWidth = Math.min(
-    MENU_ITEM_WIDTH + spacing['s-4'] * 2,
-    windowWidth - spacing['s-8'] * 2,
-  );
-  // Figma: menu left-aligned under trigger with slight inset (-6).
-  const menuLeft = Math.min(
-    Math.max(spacing['s-8'], anchor.x - spacing['s-4']),
-    windowWidth - menuWidth - spacing['s-8'],
-  );
-  const menuTop = anchor.y + anchor.height + spacing['s-5'];
-  const maxHeight = Math.min(spacing['s-20'], windowHeight - menuTop - spacing['s-8']);
-
-  return (
-    <Modal
-      animationType="none"
-      onRequestClose={onClose}
-      transparent
-      visible={mounted}
-    >
-      <View
-        pointerEvents="box-none"
-        style={[styles.overlay, { width: windowWidth, height: windowHeight }]}
-      >
-        <Pressable
-          accessibilityLabel="close filter"
-          onPress={onClose}
-          style={styles.backdrop}
-        />
-        <Animated.View
-          style={[
-            styles.menu,
-            menuStyle,
-            {
-              top: menuTop,
-              left: menuLeft,
-              width: menuWidth,
-              maxHeight,
-            },
-          ]}
-        >
-          <ScrollView
-            bounces={options.length > 6}
-            showsVerticalScrollIndicator={false}
-          >
-            {options.map((option) => (
-              <ScaledPressable
-                key={option.key}
-                accessibilityRole="button"
-                accessibilityState={{ selected: option.selected }}
-                onPress={option.onSelect}
-                style={({ pressed }) => [
-                  styles.menuItem,
-                  (option.selected || pressed) && styles.menuItemActive,
-                ]}
-              >
-                {({ pressed }) => {
-                  const color =
-                    option.selected || pressed
-                      ? colors['content-1']
-                      : colors['content-2'];
-                  return (
-                    <Text style={[styles.menuItemLabel, { color }]} numberOfLines={1}>
-                      {option.label}
-                    </Text>
-                  );
-                }}
-              </ScaledPressable>
-            ))}
-          </ScrollView>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
-
 const styles = StyleSheet.create({
   bar: {
     flexGrow: 0,
@@ -651,42 +491,6 @@ const styles = StyleSheet.create({
   },
   triggerLabel: {
     ...typography.para1,
-    ...textCase.lower,
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 30,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-  },
-  menu: {
-    position: 'absolute',
-    backgroundColor: colors['bg-2'],
-    borderWidth: spacing['s-1'],
-    borderColor: colors['border-2'],
-    borderRadius: radii['r-h-60'],
-    padding: spacing['s-4'],
-    gap: spacing['s-4'],
-    transformOrigin: 'top left',
-    overflow: 'hidden',
-    ...shadowAbove,
-  },
-  /** Figma `dropdown-unit` size M — 48 tall so `r-pill` (24) nests inside the container's 30. */
-  menuItem: {
-    height: spacing['s-11'],
-    justifyContent: 'center',
-    paddingHorizontal: spacing['s-7'],
-    borderRadius: radii['r-pill'],
-    backgroundColor: colors['bg-2'],
-  },
-  menuItemActive: {
-    backgroundColor: colors['bg-trans-1'],
-  },
-  menuItemLabel: {
-    ...typography.para2,
     ...textCase.lower,
   },
 });

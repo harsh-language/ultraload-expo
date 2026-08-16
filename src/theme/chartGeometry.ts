@@ -131,15 +131,20 @@ export function getChartPointY(value: number, maxValue: number): number {
  * touch band. Segment distance makes the full line tappable, not only its
  * visible session dots.
  */
+export interface ChartTapGeometry {
+  scrollX: number;
+  initialSpacing: number;
+  pointSpacing: number;
+  maxValue: number;
+}
+
 export function getChartTapPointIndex(
   values: readonly number[],
   tapX: number,
   tapY: number,
-  scrollX: number,
-  initialSpacing: number,
-  pointSpacing: number,
-  maxValue: number,
+  geometry: ChartTapGeometry,
 ): number | null {
+  const { scrollX, initialSpacing, pointSpacing, maxValue } = geometry;
   if (values.length === 0 || pointSpacing <= 0) {
     return null;
   }

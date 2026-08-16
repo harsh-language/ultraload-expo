@@ -194,60 +194,53 @@ describe('chartGeometry', () => {
 
     it('selects the nearest workout from anywhere along the line', () => {
       expect(
-        getChartTapPointIndex(
-          values,
-          spacing * 0.25,
-          (y(25) * 3 + y(75)) / 4,
-          0,
-          0,
-          spacing,
-          100,
-        ),
+        getChartTapPointIndex(values, spacing * 0.25, (y(25) * 3 + y(75)) / 4, {
+          scrollX: 0,
+          initialSpacing: 0,
+          pointSpacing: spacing,
+          maxValue: 100,
+        }),
       ).toBe(0);
       expect(
-        getChartTapPointIndex(values, spacing, y(75), 0, 0, spacing, 100),
+        getChartTapPointIndex(values, spacing, y(75), {
+          scrollX: 0,
+          initialSpacing: 0,
+          pointSpacing: spacing,
+          maxValue: 100,
+        }),
       ).toBe(1);
     });
 
     it('accounts for horizontal chart scrolling', () => {
       expect(
-        getChartTapPointIndex(
-          values,
-          spacing,
-          y(50),
-          spacing,
-          0,
-          spacing,
-          100,
-        ),
+        getChartTapPointIndex(values, spacing, y(50), {
+          scrollX: spacing,
+          initialSpacing: 0,
+          pointSpacing: spacing,
+          maxValue: 100,
+        }),
       ).toBe(2);
     });
 
     it('ignores taps outside the line touch band', () => {
       expect(
-        getChartTapPointIndex(
-          values,
-          spacing,
-          CHART_HEIGHT,
-          0,
-          0,
-          spacing,
-          100,
-        ),
+        getChartTapPointIndex(values, spacing, CHART_HEIGHT, {
+          scrollX: 0,
+          initialSpacing: 0,
+          pointSpacing: spacing,
+          maxValue: 100,
+        }),
       ).toBeNull();
     });
 
     it('supports a lone workout point', () => {
       expect(
-        getChartTapPointIndex(
-          [50],
-          width / 2,
-          y(50),
-          0,
-          width / 2,
-          width,
-          100,
-        ),
+        getChartTapPointIndex([50], width / 2, y(50), {
+          scrollX: 0,
+          initialSpacing: width / 2,
+          pointSpacing: width,
+          maxValue: 100,
+        }),
       ).toBe(0);
     });
   });

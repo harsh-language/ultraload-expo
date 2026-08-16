@@ -1,6 +1,6 @@
 import { getLocalCalendarDate } from './day-record';
 
-/** Format a YYYY-MM-DD calendar date for session/history chrome (e.g. "31 OCT"). */
+/** Format a YYYY-MM-DD calendar date for session/history chrome (e.g. "31 oct"). */
 export function formatHistoryDateLabel(calendarDate: string): string {
   const [year, month, day] = calendarDate.split('-').map(Number);
   if (year == null || month == null || day == null) {
@@ -11,7 +11,7 @@ export function formatHistoryDateLabel(calendarDate: string): string {
   const monthLabel = date
     .toLocaleDateString('en-GB', { month: 'short' })
     .replace('.', '')
-    .toUpperCase();
+    .toLowerCase();
   return `${day} ${monthLabel}`;
 }
 

@@ -13,7 +13,7 @@ needed.
 Why: Lowercase authoring is a repo-wide convention already enforced through
 theme text-case helpers.
 Exceptions: Semantic tokens that deliberately render `none` or `upper`, such as
-weight labels (`100 kg`) and date labels (`JUL 17`), still start from the
+weight labels (`100 kg`) and date labels (`31 oct`), still start from the
 owning component's rendering rule rather than ad-hoc author text.
 Source: `AGENTS.md`, `.cursor/rules/typography-text-case.mdc`, `src/components/AppBottomSheet.tsx`, `src/components/OptionsMenuDropdown.tsx`
 Bad example: Authoring `Add Set`, `History`, or `Finish Profile` directly in

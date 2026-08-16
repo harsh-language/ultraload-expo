@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -167,43 +168,50 @@ export function AnchoredMenu({
   });
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={[styles.overlay, { width: windowWidth, height: windowHeight }]}
+    <Modal
+      animationType="none"
+      onRequestClose={onClose}
+      transparent
+      visible={mounted}
     >
-      <Pressable
-        accessibilityLabel={closeLabel}
-        onPress={onClose}
-        style={styles.backdrop}
-      />
-      <Animated.View
+      <View
         pointerEvents="box-none"
-        style={[
-          styles.menu,
-          menuStyle,
-          placement,
-          {
-            top: anchorLayout.y + anchorLayout.height + spacing['s-5'],
-            width,
-            transformOrigin:
-              align === 'page-right' ? 'top right' : 'top left',
-          },
-        ]}
+        style={[styles.overlay, { width: windowWidth, height: windowHeight }]}
       >
-        {maxViewportHeight == null ? (
-          <View style={[styles.viewport, styles.list]}>{rows}</View>
-        ) : (
-          <ScrollView
-            bounces={false}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-            style={[styles.viewport, { maxHeight: maxViewportHeight }]}
-          >
-            {rows}
-          </ScrollView>
-        )}
-      </Animated.View>
-    </View>
+        <Pressable
+          accessibilityLabel={closeLabel}
+          onPress={onClose}
+          style={styles.backdrop}
+        />
+        <Animated.View
+          pointerEvents="box-none"
+          style={[
+            styles.menu,
+            menuStyle,
+            placement,
+            {
+              top: anchorLayout.y + anchorLayout.height + spacing['s-5'],
+              width,
+              transformOrigin:
+                align === 'page-right' ? 'top right' : 'top left',
+            },
+          ]}
+        >
+          {maxViewportHeight == null ? (
+            <View style={[styles.viewport, styles.list]}>{rows}</View>
+          ) : (
+            <ScrollView
+              bounces={false}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+              style={[styles.viewport, { maxHeight: maxViewportHeight }]}
+            >
+              {rows}
+            </ScrollView>
+          )}
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 

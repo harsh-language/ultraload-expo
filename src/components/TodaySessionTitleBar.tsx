@@ -1,6 +1,8 @@
 import type { RefObject } from 'react';
 import { View } from 'react-native';
 import type { DisplayUnit } from '../data/exercise-catalogue';
+import { getLocalCalendarDate } from '../domain/day-record';
+import { formatHistoryDateLabel } from '../domain/history-date';
 import {
   formatSessionTotalWeightLabel,
   getSessionTotalWeightMoved,
@@ -10,15 +12,6 @@ import {
 import { IconButton } from './IconButton';
 import { SessionTitleBar } from './SessionTitleBar';
 import { ChevronBottomIcon } from './icons';
-
-function formatSessionDateLabel(date: Date = new Date()): string {
-  const month = date
-    .toLocaleDateString('en-GB', { month: 'short' })
-    .replace('.', '')
-    .toUpperCase();
-  const day = date.getDate();
-  return `${month} ${day}`;
-}
 
 interface TodaySessionTitleBarProps {
   workout: WorkoutForSessionTotal | null;
@@ -41,7 +34,7 @@ export function TodaySessionTitleBar({
 
   return (
     <SessionTitleBar
-      dateLabel={formatSessionDateLabel(new Date())}
+      dateLabel={formatHistoryDateLabel(getLocalCalendarDate())}
       totalLabel={totalLabel}
       trailing={
         onMenuPress ? (

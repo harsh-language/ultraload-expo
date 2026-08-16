@@ -7,8 +7,10 @@ import {
 import {
   fillHistoryCalendarGaps,
   filterWorkoutByPlan,
+  findPriorExerciseTotal,
   getExercisePercentChange,
   isSessionBestRecord,
+  sortOldestFirst,
   type HistoryListRow,
   type ProgressWorkout,
 } from './progress';
@@ -25,6 +27,23 @@ export type HistoryRange =
   | { kind: 'all' }
   | { kind: 'month'; year: number; month: number }
   | { kind: 'year'; year: number };
+
+export function historyRangesEqual(a: HistoryRange, b: HistoryRange): boolean {
+  switch (a.kind) {
+    case 'all':
+      return b.kind === 'all';
+    case 'year':
+      return b.kind === 'year' && b.year === a.year;
+    case 'month':
+      return (
+        b.kind === 'month' && b.year === a.year && b.month === a.month
+      );
+    default: {
+      const _exhaustive: never = a;
+      return _exhaustive;
+    }
+  }
+}
 
 export type HistoryDimension =
   | { kind: 'session' }
@@ -354,10 +373,6 @@ export function listHistoryPeriods(
   return options;
 }
 
-function sortOldestFirst(workouts: ProgressWorkout[]): ProgressWorkout[] {
-  return [...workouts].sort((a, b) => a.date.localeCompare(b.date));
-}
-
 function findPriorFilteredTotal(
   workoutsOldestFirst: ProgressWorkout[],
   dimension: HistoryDimension,
@@ -417,6 +432,7 @@ export function getFilteredDayPercent(
 ): number | null {
   switch (dimension.kind) {
     case 'session': {
+      // Caller must pass plan-filtered workouts (see buildHistoryListRows).
       const scoped = filterWorkoutByPlan(workout, activeExerciseIds);
       const percents: Array<number | null> = [];
       for (const logged of scoped.loggedExercises) {
@@ -424,22 +440,11 @@ export function getFilteredDayPercent(
           continue;
         }
         const current = getExerciseTotalWeightMoved(logged.sets);
-        let prior: number | null = null;
-        for (const older of workoutsOldestFirst) {
-          if (older.date >= workout.date) {
-            break;
-          }
-          const olderLogged = filterWorkoutByPlan(
-            older,
-            activeExerciseIds,
-          ).loggedExercises.find((entry) => entry.exerciseId === logged.exerciseId);
-          if (
-            olderLogged &&
-            hasStandardSetsForExercise(olderLogged.sets)
-          ) {
-            prior = getExerciseTotalWeightMoved(olderLogged.sets);
-          }
-        }
+        const prior = findPriorExerciseTotal(
+          workoutsOldestFirst,
+          logged.exerciseId,
+          workout.date,
+        );
         percents.push(
           prior == null ? null : getExercisePercentChange(current, prior),
         );

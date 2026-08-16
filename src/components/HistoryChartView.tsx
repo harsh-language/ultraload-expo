@@ -13,6 +13,7 @@ import { LineChart } from 'react-native-gifted-charts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { DisplayUnit } from '../data/exercise-catalogue';
 import type { ChartPoint } from '../domain/history-filter';
+import { formatHistoryDateLabel } from '../domain/history-date';
 import { formatSessionTotalWeightLabel } from '../domain/session-totals';
 import { ForwardIcon } from './icons';
 import {
@@ -59,18 +60,6 @@ const VALUE_HEADROOM = 1.15;
 
 /** Finger travel that still counts as a tap rather than a scroll of the chart. */
 const TAP_SLOP = spacing['s-5'];
-
-function formatTooltipDate(calendarDate: string): string {
-  const [year, month, day] = calendarDate.split('-').map(Number);
-  if (year == null || month == null || day == null) {
-    return calendarDate;
-  }
-  const date = new Date(year, month - 1, day);
-  const monthLabel = date
-    .toLocaleDateString('en-GB', { month: 'short' })
-    .replace('.', '');
-  return `${monthLabel} ${day}`;
-}
 
 function monthAbbrev(calendarDate: string): string {
   const [year, month] = calendarDate.split('-').map(Number);
@@ -195,10 +184,12 @@ export function HistoryChartView({
           points.map((point) => point.value),
           pageX - frameOrigin.current.x,
           pageY - frameOrigin.current.y,
-          scrollX,
-          initialSpacing,
-          pointSpacing,
-          maxValue,
+          {
+            scrollX,
+            initialSpacing,
+            pointSpacing,
+            maxValue,
+          },
         ),
       );
     },
@@ -327,7 +318,7 @@ export function HistoryChartView({
                 ]}
               >
                 <Pressable
-                  accessibilityLabel={`open workout session ${formatTooltipDate(focused.date)}`}
+                  accessibilityLabel={`open workout session ${formatHistoryDateLabel(focused.date)}`}
                   accessibilityRole="button"
                   hitSlop={spacing['s-4']}
                   onPress={() => {
@@ -339,7 +330,7 @@ export function HistoryChartView({
                   style={styles.tooltip}
                 >
                   <Text style={styles.tooltipDate}>
-                    {formatTooltipDate(focused.date)}
+                    {formatHistoryDateLabel(focused.date)}
                   </Text>
                   <Text style={styles.tooltipColon}>:</Text>
                   <Text style={styles.tooltipValue}>
@@ -440,6 +431,7 @@ const styles = StyleSheet.create({
   tooltipDate: {
     ...typography.para2,
     color: colors['content-3'],
+    ...textCase.lower,
   },
   tooltipColon: {
     ...typography.para2,

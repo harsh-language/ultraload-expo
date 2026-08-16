@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   date: {
     ...typography.brand1,
-    ...textCase.upper,
+    ...textCase.lower,
   },
   total: {
     ...typography.brand3,

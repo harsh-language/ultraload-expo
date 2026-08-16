@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     ...typography.brand1,
     color: colors['content-1'],
     flex: 1,
-    ...textCase.upper,
+    ...textCase.lower,
   },
   scroll: {
     flex: 1,
