@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import Constants from 'expo-constants';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   Keyboard,
@@ -9,12 +10,22 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Accordion } from '../components/Accordion';
+import { ExportOverlay, type ExportOverlayHandle } from '../components/ExportOverlay';
 import { IconButton } from '../components/IconButton';
+import {
+  ImportConfirmOverlay,
+  type ImportConfirmOverlayHandle,
+} from '../components/ImportConfirmOverlay';
+import {
+  ImportErrorOverlay,
+  type ImportErrorOverlayHandle,
+} from '../components/ImportErrorOverlay';
 import { InputComboUnit } from '../components/InputComboUnit';
 import { InputHeightField } from '../components/InputHeightField';
 import { InputSlider } from '../components/InputSlider';
 import { InputToggle } from '../components/InputToggle';
 import { PlanExerciseTagRow } from '../components/PlanExerciseTagRow';
+import { ResetOverlay, type ResetOverlayHandle } from '../components/ResetOverlay';
 import { ScrollFadeView } from '../components/ScrollFadeView';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { SectionDivider } from '../components/SectionDivider';
@@ -24,6 +35,11 @@ import { CircleCheckIcon } from '../components/icons/CircleCheckIcon';
 import { CircleXIcon } from '../components/icons/CircleXIcon';
 import { BackIcon } from '../components/icons/BackIcon';
 import { getDatabase } from '../db/client';
+import {
+  buildExportSnapshotFromDb,
+  replaceAllFromSnapshot,
+  resetUserDataForOnboarding,
+} from '../db/portability';
 import type { DisplayUnit } from '../data/exercise-catalogue';
 import { getExerciseById } from '../domain/catalogue';
 import {
@@ -31,6 +47,12 @@ import {
   inchesToHeightDigits,
   parseHeightForSave,
 } from '../domain/height-input';
+import { importFailureMessage } from '../domain/import';
+import type { ExportSnapshot } from '../domain/exportSchema';
+import {
+  pickAndValidateImportFile,
+  shareExportSnapshot,
+} from '../domain/portabilityIo';
 import {
   parseAgeForSave,
   parseBodyweightForSave,
@@ -51,7 +73,9 @@ import {
   sanitizeDisplayWeightInput,
 } from '../domain/units';
 import type { MainStackParamList } from '../navigation/types';
-import { usePlanStore, useProfileStore } from '../stores';
+import { hydrateStores, usePlanStore, useProfileStore } from '../stores';
+import { useDevAppResetStore } from '../stores/devAppResetSlice';
+import { useTimerStore } from '../stores/timerSlice';
 import { colors, radii, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 import { textCase } from '../theme/textCase';
@@ -131,6 +155,13 @@ export function SettingsScreen({ navigation }: Props) {
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [dragHoverIndex, setDragHoverIndex] = useState<number | null>(null);
   const [allowPlanStagger, setAllowPlanStagger] = useState(true);
+  const [portabilityBusy, setPortabilityBusy] = useState(false);
+
+  const exportOverlayRef = useRef<ExportOverlayHandle>(null);
+  const resetOverlayRef = useRef<ResetOverlayHandle>(null);
+  const importConfirmOverlayRef = useRef<ImportConfirmOverlayHandle>(null);
+  const importErrorOverlayRef = useRef<ImportErrorOverlayHandle>(null);
+  const pendingImportRef = useRef<ExportSnapshot | null>(null);
 
   useEffect(() => {
     setBodyweightText(bodyweightDisplayString(bodyweightKg, units));
@@ -266,6 +297,115 @@ export function SettingsScreen({ navigation }: Props) {
     },
     [exerciseIds, updatePlan],
   );
+
+  const appVersion =
+    Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.0';
+
+  const remountAfterDataChange = useCallback(async () => {
+    useTimerStore.getState().hide();
+    await hydrateStores(getDatabase());
+    useDevAppResetStore.getState().trigger();
+  }, []);
+
+  const handleExportConfirm = useCallback(async () => {
+    if (portabilityBusy) {
+      return;
+    }
+    setPortabilityBusy(true);
+    try {
+      const snapshot = await buildExportSnapshotFromDb(getDatabase(), {
+        appVersion,
+      });
+      const result = await shareExportSnapshot(snapshot);
+      exportOverlayRef.current?.dismiss();
+      if (result === 'unavailable') {
+        importErrorOverlayRef.current?.present(
+          'sharing is not available on this device.',
+          'export failed',
+        );
+      }
+    } catch {
+      exportOverlayRef.current?.dismiss();
+      importErrorOverlayRef.current?.present(
+        'could not export data. try again.',
+        'export failed',
+      );
+    } finally {
+      setPortabilityBusy(false);
+    }
+  }, [appVersion, portabilityBusy]);
+
+  const handleImportPress = useCallback(async () => {
+    if (portabilityBusy) {
+      return;
+    }
+    setPortabilityBusy(true);
+    try {
+      const pick = await pickAndValidateImportFile();
+      if (pick.status === 'canceled') {
+        return;
+      }
+      if (pick.status === 'read_error') {
+        importErrorOverlayRef.current?.present(pick.message);
+        return;
+      }
+      if (!pick.result.ok) {
+        importErrorOverlayRef.current?.present(
+          importFailureMessage(pick.result.reason, pick.result.detail),
+        );
+        return;
+      }
+      pendingImportRef.current = pick.result.snapshot;
+      importConfirmOverlayRef.current?.present();
+    } catch {
+      importErrorOverlayRef.current?.present(
+        'could not open the document picker.',
+      );
+    } finally {
+      setPortabilityBusy(false);
+    }
+  }, [portabilityBusy]);
+
+  const handleImportConfirm = useCallback(async () => {
+    const snapshot = pendingImportRef.current;
+    if (snapshot == null || portabilityBusy) {
+      return;
+    }
+    setPortabilityBusy(true);
+    try {
+      await replaceAllFromSnapshot(getDatabase(), snapshot);
+      pendingImportRef.current = null;
+      importConfirmOverlayRef.current?.dismiss();
+      await remountAfterDataChange();
+    } catch {
+      importConfirmOverlayRef.current?.dismiss();
+      importErrorOverlayRef.current?.present(
+        'could not replace data. your previous data was kept.',
+      );
+    } finally {
+      setPortabilityBusy(false);
+    }
+  }, [portabilityBusy, remountAfterDataChange]);
+
+  const handleResetConfirm = useCallback(async () => {
+    if (portabilityBusy) {
+      return;
+    }
+    setPortabilityBusy(true);
+    try {
+      await resetUserDataForOnboarding(getDatabase());
+      resetOverlayRef.current?.dismiss();
+      await remountAfterDataChange();
+    } catch {
+      resetOverlayRef.current?.dismiss();
+      importErrorOverlayRef.current?.present(
+        'could not reset. try again.',
+        'reset failed',
+      );
+    } finally {
+      setPortabilityBusy(false);
+    }
+  }, [portabilityBusy, remountAfterDataChange]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -433,8 +573,56 @@ export function SettingsScreen({ navigation }: Props) {
           suffix={restSettingSuffix(restTimerSeconds)}
           value={restTimerSeconds}
         />
+
+        <SectionDivider label="data" />
+        <View style={styles.stackGap5}>
+          <SecondaryButton
+            disabled={portabilityBusy}
+            label="export data"
+            onPress={() => {
+              exportOverlayRef.current?.present();
+            }}
+          />
+          <SecondaryButton
+            disabled={portabilityBusy}
+            label="import data"
+            onPress={() => {
+              void handleImportPress();
+            }}
+          />
+          <SecondaryButton
+            disabled={portabilityBusy}
+            label="reset profile"
+            onPress={() => {
+              resetOverlayRef.current?.present();
+            }}
+          />
+        </View>
         </Pressable>
       </ScrollFadeView>
+
+      <ExportOverlay
+        busy={portabilityBusy}
+        onConfirm={() => {
+          void handleExportConfirm();
+        }}
+        ref={exportOverlayRef}
+      />
+      <ImportConfirmOverlay
+        busy={portabilityBusy}
+        onConfirm={() => {
+          void handleImportConfirm();
+        }}
+        ref={importConfirmOverlayRef}
+      />
+      <ImportErrorOverlay ref={importErrorOverlayRef} />
+      <ResetOverlay
+        busy={portabilityBusy}
+        onConfirm={() => {
+          void handleResetConfirm();
+        }}
+        ref={resetOverlayRef}
+      />
     </View>
   );
 }

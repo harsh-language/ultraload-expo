@@ -3,7 +3,7 @@ title: Application Blueprint
 product: UltraLoad
 status: approved
 created: 2026-06-22
-last_updated: 2026-08-16
+last_updated: 2026-09-14
 approved: 2026-06-22
 design_references:
   - "Figma screens (ultraload-v1): https://www.figma.com/design/O7SlK5o3Ozt8ztG4Ds8iZY/experiment----ultraload?node-id=2008-2004"

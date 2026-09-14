@@ -5,7 +5,10 @@ interface DevAppResetSlice {
   trigger: () => void;
 }
 
-/** Dev-only — bump to remount app flow after wiping persisted data. */
+/**
+ * Bump to remount splash → onboarding/main after a full data wipe.
+ * Used by DEV homepage reset and shipping Settings reset/import (SCR17 / FL10).
+ */
 export const useDevAppResetStore = create<DevAppResetSlice>((set) => ({
   generation: 0,
   trigger: () => set((state) => ({ generation: state.generation + 1 })),
